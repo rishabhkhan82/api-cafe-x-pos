@@ -179,12 +179,12 @@ public class User {
     }
 
     public enum UserRole {
-        PLATFORM_OWNER,
-        RESTAURANT_OWNER,
-        RESTAURANT_MANAGER,
-        KITCHEN_MANAGER,
-        CASHIER,
-        WAITER,
-        CUSTOMER
+        platform_owner,
+        restaurant_owner,
+        restaurant_manager,
+        kitchen_manager,
+        cashier,
+        waiter,
+        customer
     }
 }
