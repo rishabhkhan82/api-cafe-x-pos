@@ -22,7 +22,7 @@ public interface SystemSettingsRepository extends JpaRepository<SystemSetting, S
     /**
      * Find public settings by category
      */
-    List<SystemSetting> findByCategoryAndIsPublicTrue(String category, boolean isPublic);
+    List<SystemSetting> findByCategoryAndIsPublicTrue(String category);
 
     /**
      * Find settings that require restart

@@ -140,7 +140,7 @@ public class SystemSettingsService {
                      "general", "select", "daily", "daily", List.of("daily", "weekly", "monthly"), null, false, true);
 
         createSetting("support_email", "Support Email", "Email address for support",
-                     "general", "text", "", "", null, Map.of("pattern", "^[^\s@]+@[^\s@]+\.[^\s@]+$"), false, true);
+                      "general", "text", "", "", null, Map.of("pattern", "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"), false, true);
 
         createSetting("support_phone", "Support Phone", "Phone number for support",
                      "general", "text", "", "", null, Map.of("pattern", "^[+\\d\\s\\-\\(\\)]+$"), false, true);
