@@ -24,6 +24,7 @@ com\cafex\pos\entity\Transaction$TransactionStatus.class
 com\cafex\pos\entity\AccountLockouts.class
 com\cafex\pos\entity\MenuAccessPermissions.class
 com\cafex\pos\entity\ShoppingCart.class
+com\cafex\pos\config\AppConfig.class
 com\cafex\pos\entity\SupplierInformation$Address.class
 com\cafex\pos\entity\FeatureAccessControl.class
 com\cafex\pos\entity\InventoryAlerts.class
@@ -64,6 +65,7 @@ com\cafex\pos\entity\ApiKeys.class
 com\cafex\pos\entity\UserSessions.class
 com\cafex\pos\entity\IntegrationConfigurations.class
 com\cafex\pos\entity\ShoppingCartItem.class
+com\cafex\pos\config\JwtAuthenticationFilter.class
 com\cafex\pos\entity\PasswordResetTokens.class
 com\cafex\pos\service\AuthService.class
 com\cafex\pos\entity\SecurityConfigurations.class

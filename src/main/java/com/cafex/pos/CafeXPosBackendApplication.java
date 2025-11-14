@@ -10,16 +10,8 @@ import org.springframework.context.event.EventListener;
 @SpringBootApplication
 public class CafeXPosBackendApplication {
 
-	@Autowired
-	private SystemSettingsService systemSettingsService;
-
 	public static void main(String[] args) {
 		SpringApplication.run(CafeXPosBackendApplication.class, args);
-	}
-
-	@EventListener(ApplicationReadyEvent.class)
-	public void initializeSystemSettings() {
-		systemSettingsService.initializeDefaultSettings();
 	}
 
 }
