@@ -7,9 +7,11 @@ com\cafex\pos\entity\SubscriptionHistory.class
 com\cafex\pos\entity\KitchenPerformanceMetrics.class
 com\cafex\pos\entity\NavigationMenu.class
 com\cafex\pos\entity\LoyaltyTransactions.class
+com\cafex\pos\controller\UserController.class
 com\cafex\pos\entity\ReceiptLogs.class
 com\cafex\pos\entity\RecipeIngredient.class
 com\cafex\pos\entity\MenuCategories.class
+com\cafex\pos\dto\OperationResponse.class
 com\cafex\pos\entity\StockAdjustments.class
 com\cafex\pos\entity\CustomerPaymentMethods.class
 com\cafex\pos\entity\Transaction.class
@@ -28,6 +30,7 @@ com\cafex\pos\config\AppConfig.class
 com\cafex\pos\entity\SupplierInformation$Address.class
 com\cafex\pos\entity\FeatureAccessControl.class
 com\cafex\pos\entity\InventoryAlerts.class
+com\cafex\pos\service\UserService.class
 com\cafex\pos\entity\OrderItem.class
 com\cafex\pos\entity\Offers.class
 com\cafex\pos\dto\LoginRequest.class
@@ -78,6 +81,7 @@ com\cafex\pos\controller\AuthController.class
 com\cafex\pos\entity\AnalyticsData.class
 com\cafex\pos\entity\PointsTransactions.class
 com\cafex\pos\entity\SystemSetting.class
+com\cafex\pos\dto\UserResponse.class
 com\cafex\pos\entity\Transaction$PaymentGateway.class
 com\cafex\pos\entity\NavigationMenu$MenuType.class
 com\cafex\pos\entity\Customer.class
@@ -90,14 +94,17 @@ com\cafex\pos\App.class
 com\cafex\pos\entity\Order$OrderType.class
 com\cafex\pos\entity\Transaction$PaymentMethod.class
 com\cafex\pos\entity\Restaurant$RestaurantStatus.class
+com\cafex\pos\entity\User$ActiveStatus.class
 com\cafex\pos\entity\LoginAttempts.class
 com\cafex\pos\entity\RecipeUsageLogs.class
 com\cafex\pos\entity\Order$PaymentStatus.class
 com\cafex\pos\entity\CustomerAddresses.class
 com\cafex\pos\entity\RestaurantNotifications.class
+com\cafex\pos\dto\UserRequest.class
 com\cafex\pos\entity\MenuItemAnalytics.class
 com\cafex\pos\entity\BroadcastMessages.class
 com\cafex\pos\entity\Order$OrderPriority.class
 com\cafex\pos\entity\MenuCustomization.class
 com\cafex\pos\entity\EmailServiceConfigurations.class
+com\cafex\pos\dto\UserPageResponse.class
 com\cafex\pos\entity\MenuCustomization$CustomizationType.class

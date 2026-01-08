@@ -51,8 +51,12 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "is_active", nullable = false)
-    private Boolean isActive = true;
+    private ActiveStatus isActive = ActiveStatus.Y;
 
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
@@ -65,5 +69,10 @@ public class User {
         cashier,
         waiter,
         customer
+    }
+
+    public enum ActiveStatus {
+        Y,
+        N
     }
 }

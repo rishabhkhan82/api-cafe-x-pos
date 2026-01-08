@@ -43,7 +43,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .accountExpired(false)
                         .accountLocked(false)
                         .credentialsExpired(false)
-                        .disabled(!user.getIsActive())
+                        .disabled(user.getIsActive() != com.cafex.pos.entity.User.ActiveStatus.Y)
                         .build();
 
                     UsernamePasswordAuthenticationToken authentication =
