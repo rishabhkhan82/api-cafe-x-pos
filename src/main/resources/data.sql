@@ -34,3 +34,11 @@ INSERT INTO system_settings (id, name, description, category, type, value, defau
 ('api_rate_limit', 'API Rate Limit', 'Maximum API requests per minute', 'integrations', 'number', '1000', '1000', NULL, '{"required": true, "min": 10, "max": 10000}', false, true, NOW(), NOW()),
 ('webhook_retries', 'Webhook Retry Attempts', 'Number of retry attempts for failed webhooks', 'integrations', 'number', '3', '3', NULL, '{"required": true, "min": 0, "max": 10}', false, true, NOW(), NOW()),
 ('maintenance_mode', 'Maintenance Mode', 'Put the platform in maintenance mode', 'general', 'boolean', 'false', 'false', NULL, NULL, true, true, NOW(), NOW());
+
+-- Create user_role_permissions table if it doesn't exist
+CREATE TABLE IF NOT EXISTS user_role_permissions (
+    role_id VARCHAR(255) NOT NULL,
+    permission VARCHAR(255) NOT NULL,
+    PRIMARY KEY (role_id, permission),
+    FOREIGN KEY (role_id) REFERENCES user_roles(role_id) ON DELETE CASCADE
+);

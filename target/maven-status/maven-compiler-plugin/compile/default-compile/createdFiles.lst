@@ -16,6 +16,7 @@ com\cafex\pos\dto\OrderRequest.class
 com\cafex\pos\entity\CustomerPaymentMethods.class
 com\cafex\pos\entity\AuditLogs.class
 com\cafex\pos\entity\PaymentMethods.class
+com\cafex\pos\dto\UserRolesPageResponse.class
 com\cafex\pos\entity\Order$OrderStatus.class
 com\cafex\pos\entity\AccountLockouts.class
 com\cafex\pos\entity\MenuAccessPermissions.class
