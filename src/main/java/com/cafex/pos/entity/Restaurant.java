@@ -1,6 +1,7 @@
 package com.cafex.pos.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -10,9 +11,6 @@ public class Restaurant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(name = "restaurant_id", nullable = false, unique = true)
-    private String restaurantId;
 
     @Column(nullable = false)
     private String name;
@@ -60,6 +58,30 @@ public class Restaurant {
     @Column(name = "subscription_end_date")
     private LocalDateTime subscriptionEndDate;
 
+    @Column(name = "logo_image")
+    private String logoImage;
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    @Column
+    private Integer state;
+
+    @Column
+    private String city;
+
+    @Column
+    private Integer pincode;
+
+    @Column(precision = 10, scale = 8)
+    private BigDecimal lat;
+
+    @Column(precision = 11, scale = 8)
+    private BigDecimal lng;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -69,8 +91,7 @@ public class Restaurant {
     // Constructors
     public Restaurant() {}
 
-    public Restaurant(String restaurantId, String name, String address, String phone, String email) {
-        this.restaurantId = restaurantId;
+    public Restaurant(String name, String address, String phone, String email) {
         this.name = name;
         this.address = address;
         this.phone = phone;
@@ -86,14 +107,6 @@ public class Restaurant {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getRestaurantId() {
-        return restaurantId;
-    }
-
-    public void setRestaurantId(String restaurantId) {
-        this.restaurantId = restaurantId;
     }
 
     public String getName() {
@@ -230,6 +243,70 @@ public class Restaurant {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getLogoImage() {
+        return logoImage;
+    }
+
+    public void setLogoImage(String logoImage) {
+        this.logoImage = logoImage;
+    }
+
+    public Long getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Long getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(Long updatedBy) {
+        this.updatedBy = updatedBy;
+    }
+
+    public Integer getState() {
+        return state;
+    }
+
+    public void setState(Integer state) {
+        this.state = state;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public Integer getPincode() {
+        return pincode;
+    }
+
+    public void setPincode(Integer pincode) {
+        this.pincode = pincode;
+    }
+
+    public BigDecimal getLat() {
+        return lat;
+    }
+
+    public void setLat(BigDecimal lat) {
+        this.lat = lat;
+    }
+
+    public BigDecimal getLng() {
+        return lng;
+    }
+
+    public void setLng(BigDecimal lng) {
+        this.lng = lng;
     }
 
     // Enums
