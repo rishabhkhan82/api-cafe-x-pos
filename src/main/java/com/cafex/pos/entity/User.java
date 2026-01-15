@@ -36,6 +36,10 @@ public class User {
     @Column(nullable = false)
     private UserRole role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_type", nullable = false)
+    private UserType userType;
+
     @Column
     private String avatar;
 
@@ -74,5 +78,11 @@ public class User {
     public enum ActiveStatus {
         Y,
         N
+    }
+
+    public enum UserType {
+        admin,
+        custom,
+        customer
     }
 }

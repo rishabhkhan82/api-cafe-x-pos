@@ -26,6 +26,9 @@ public class UserResponse {
     @JsonProperty("role")
     private User.UserRole role;
 
+    @JsonProperty("user_type")
+    private User.UserType userType;
+
     @JsonProperty("avatar")
     private String avatar;
 

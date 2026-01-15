@@ -58,12 +58,13 @@ public class UserController {
             @RequestParam(required = false) String restaurantId,
             @RequestParam(required = false) String role,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String userType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        log.info("Get users request received with filters - name: {}, restaurantId: {}, role: {}, status: {}, page: {}, size: {}",
-                name, restaurantId, role, status, page, size);
+        log.info("Get users request received with filters - name: {}, restaurantId: {}, role: {}, status: {}, userType: {}, page: {}, size: {}",
+                name, restaurantId, role, status, userType, page, size);
         try {
-            UserPageResponse response = userService.getUsersWithFilters(name, restaurantId, role, status, page, size);
+            UserPageResponse response = userService.getUsersWithFilters(name, restaurantId, role, status, userType, page, size);
             log.info("Retrieved {} users (page {} of {})", response.getData().size(), response.getCurrentPage(), response.getPageCount());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
