@@ -20,8 +20,6 @@ public class NavigationMenu {
     @Column(name = "parent_id")
     private String parentId;
 
-    @Column(nullable = false)
-    private String role;
 
     @Column(nullable = false)
     private String path;
@@ -45,16 +43,31 @@ public class NavigationMenu {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "created_by")
+    private String createdBy;
+
+    @Column(name = "updated_by")
+    private String updatedBy;
+
     // Constructors
     public NavigationMenu() {}
 
-    public NavigationMenu(String menuId, String name, String role, String path) {
+    public NavigationMenu(String menuId, String name, String path) {
         this.menuId = menuId;
         this.name = name;
-        this.role = role;
         this.path = path;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public NavigationMenu(String menuId, String name, String path, String createdBy, String updatedBy) {
+        this.menuId = menuId;
+        this.name = name;
+        this.path = path;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        this.createdBy = createdBy;
+        this.updatedBy = updatedBy;
     }
 
     // Getters and Setters
@@ -90,13 +103,6 @@ public class NavigationMenu {
         this.parentId = parentId;
     }
 
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
 
     public String getPath() {
         return path;
@@ -152,6 +158,22 @@ public class NavigationMenu {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
     }
 
     // Helper methods

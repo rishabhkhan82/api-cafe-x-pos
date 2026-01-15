@@ -35,21 +35,18 @@ public class MenuAccessPermissions {
     @Column(name = "can_create", nullable = false)
     private Boolean canCreate = false;
 
-    @ElementCollection
-    @CollectionTable(name = "menu_access_allowed_users", joinColumns = @JoinColumn(name = "permission_id"))
-    @Column(name = "user_id")
-    private List<String> allowedUsers;
-
-    @ElementCollection
-    @CollectionTable(name = "menu_access_additional_permissions", joinColumns = @JoinColumn(name = "permission_id"))
-    @Column(name = "permission")
-    private List<String> additionalPermissions;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
 
     // Constructors
     public MenuAccessPermissions() {}
@@ -127,22 +124,6 @@ public class MenuAccessPermissions {
         this.canCreate = canCreate;
     }
 
-    public List<String> getAllowedUsers() {
-        return allowedUsers;
-    }
-
-    public void setAllowedUsers(List<String> allowedUsers) {
-        this.allowedUsers = allowedUsers;
-    }
-
-    public List<String> getAdditionalPermissions() {
-        return additionalPermissions;
-    }
-
-    public void setAdditionalPermissions(List<String> additionalPermissions) {
-        this.additionalPermissions = additionalPermissions;
-    }
-
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
@@ -157,5 +138,21 @@ public class MenuAccessPermissions {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Long getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Long getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(Long updatedBy) {
+        this.updatedBy = updatedBy;
     }
 }
