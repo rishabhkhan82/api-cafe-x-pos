@@ -46,9 +46,9 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public UserPageResponse getUsersWithFilters(String name, String restaurantId, String role, String status, int page, int size) {
-        log.info("Fetching users with filters - name: {}, restaurantId: {}, role: {}, status: {}, page: {}, size: {}",
-                name, restaurantId, role, status, page, size);
+    public UserPageResponse getUsersWithFilters(String name, String restaurantId, String role, String status, String userType, int page, int size) {
+        log.info("Fetching users with filters - name: {}, restaurantId: {}, role: {}, status: {}, userType: {}, page: {}, size: {}",
+                name, restaurantId, role, status, userType, page, size);
 
         Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
@@ -86,6 +86,16 @@ public class UserService {
                     predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("isActive"), "Y"));
                 } else if ("inactive".equals(status)) {
                     predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("isActive"), "N"));
+                }
+            }
+
+            // UserType filter
+            if (userType != null && !userType.trim().isEmpty() && !"all".equals(userType)) {
+                try {
+                    User.UserType type = User.UserType.valueOf(userType);
+                    predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("userType"), type));
+                } catch (IllegalArgumentException e) {
+                    log.warn("Invalid userType value: {}", userType);
                 }
             }
 
@@ -258,6 +268,7 @@ public class UserService {
         response.setEmail(user.getEmail());
         response.setPhone(user.getPhone());
         response.setRole(user.getRole());
+        response.setUserType(user.getUserType());
         response.setAvatar(user.getAvatar());
         response.setRestaurantId(user.getRestaurantId());
         response.setMemberSince(user.getMemberSince());
