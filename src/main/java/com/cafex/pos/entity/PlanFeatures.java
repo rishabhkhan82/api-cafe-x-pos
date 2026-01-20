@@ -23,6 +23,9 @@ public class PlanFeatures {
     @Column(name = "category", nullable = false)
     private String category;
 
+    @Column(name = "category_icon")
+    private String categoryIcon;
+
     @Column(name = "is_enabled", nullable = false)
     private Boolean isEnabled = true;
 
@@ -35,17 +38,33 @@ public class PlanFeatures {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "feature_type", nullable = false)
+    private FeatureType featureType;
+
     // Constructors
     public PlanFeatures() {}
 
-    public PlanFeatures(String featureId, String name, String category, Boolean isEnabled, Integer sortOrder) {
+    public PlanFeatures(String featureId, String name, String category, String categoryIcon, Boolean isEnabled, Integer sortOrder, FeatureType featureType) {
         this.featureId = featureId;
         this.name = name;
         this.category = category;
+        this.categoryIcon = categoryIcon;
         this.isEnabled = isEnabled != null ? isEnabled : true;
         this.sortOrder = sortOrder != null ? sortOrder : 0;
+        this.featureType = featureType;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public enum FeatureType {
+        BASIC, PREMIUM, ENTERPRISE
     }
 
     // Getters and Setters
@@ -89,6 +108,14 @@ public class PlanFeatures {
         this.category = category;
     }
 
+    public String getCategoryIcon() {
+        return categoryIcon;
+    }
+
+    public void setCategoryIcon(String categoryIcon) {
+        this.categoryIcon = categoryIcon;
+    }
+
     public Boolean getIsEnabled() {
         return isEnabled;
     }
@@ -119,5 +146,29 @@ public class PlanFeatures {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Long getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Long getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(Long updatedBy) {
+        this.updatedBy = updatedBy;
+    }
+
+    public FeatureType getFeatureType() {
+        return featureType;
+    }
+
+    public void setFeatureType(FeatureType featureType) {
+        this.featureType = featureType;
     }
 }
