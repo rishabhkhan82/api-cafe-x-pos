@@ -122,7 +122,6 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
         subscriptionPlan.setBillingCycle(request.getBilling_cycle());
         subscriptionPlan.setMaxRestaurants(request.getMax_restaurants());
         subscriptionPlan.setMaxUsers(request.getMax_users());
-        subscriptionPlan.setFeatures(request.getFeatures());
         subscriptionPlan.setIsActive(request.getIs_active());
         subscriptionPlan.setIsPopular(request.getIs_popular());
         subscriptionPlan.setTrialDays(request.getTrial_days());
@@ -140,9 +139,7 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
         subscriptionPlan.setBillingCycle(request.getBilling_cycle());
         subscriptionPlan.setMaxRestaurants(request.getMax_restaurants());
         subscriptionPlan.setMaxUsers(request.getMax_users());
-        subscriptionPlan.setFeatures(request.getFeatures());
         subscriptionPlan.setIsActive(request.getIs_active());
-        subscriptionPlan.setIsPopular(request.getIs_popular());
         subscriptionPlan.setTrialDays(request.getTrial_days());
         subscriptionPlan.setSetupFee(request.getSetup_fee());
     }
@@ -159,7 +156,6 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
         response.setBilling_cycle(subscriptionPlan.getBillingCycle());
         response.setMax_restaurants(subscriptionPlan.getMaxRestaurants());
         response.setMax_users(subscriptionPlan.getMaxUsers());
-        response.setFeatures(subscriptionPlan.getFeatures());
         response.setIs_active(subscriptionPlan.getIsActive());
         response.setIs_popular(subscriptionPlan.getIsPopular());
         response.setSubscriber_count(subscriptionPlan.getSubscriberCount());

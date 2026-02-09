@@ -2,7 +2,6 @@ package com.cafex.pos.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 public class SubscriptionPlansResponse {
 
@@ -25,8 +24,6 @@ public class SubscriptionPlansResponse {
     private Integer max_restaurants;
 
     private Integer max_users;
-
-    private List<String> features;
 
     private Boolean is_active;
 
@@ -127,14 +124,6 @@ public class SubscriptionPlansResponse {
 
     public void setMax_users(Integer max_users) {
         this.max_users = max_users;
-    }
-
-    public List<String> getFeatures() {
-        return features;
-    }
-
-    public void setFeatures(List<String> features) {
-        this.features = features;
     }
 
     public Boolean getIs_active() {

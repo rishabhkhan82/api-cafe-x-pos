@@ -3,7 +3,6 @@ package com.cafex.pos.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "subscription_plans")
@@ -39,11 +38,6 @@ public class SubscriptionPlans {
 
     @Column(name = "max_users", nullable = false)
     private Integer maxUsers;
-
-    @ElementCollection
-    @CollectionTable(name = "plan_features", joinColumns = @JoinColumn(name = "plan_id"))
-    @Column(name = "feature_id")
-    private List<String> features;
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
@@ -178,14 +172,6 @@ public class SubscriptionPlans {
 
     public void setMaxUsers(Integer maxUsers) {
         this.maxUsers = maxUsers;
-    }
-
-    public List<String> getFeatures() {
-        return features;
-    }
-
-    public void setFeatures(List<String> features) {
-        this.features = features;
     }
 
     public Boolean getIsActive() {
