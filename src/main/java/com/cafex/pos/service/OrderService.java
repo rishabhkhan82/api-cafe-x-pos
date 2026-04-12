@@ -44,6 +44,15 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
+    public List<OrderResponse> getCurrentOrders() {
+        log.info("Fetching current orders (not completed)");
+        List<Order> orders = orderRepository.findAll();
+        return orders.stream()
+                .filter(order -> order.getStatus() != Order.OrderStatus.COMPLETED)
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
     public OrderPageResponse getOrdersWithFilters(String orderId, String status, String customerName, String date, int page, int size) {
         log.info("Fetching orders with filters - orderId: {}, status: {}, customerName: {}, date: {}, page: {}, size: {}",
                 orderId, status, customerName, date, page, size);
