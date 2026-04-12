@@ -57,12 +57,13 @@ public class OrderController {
             @RequestParam(required = false) String orderId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String customerName,
+            @RequestParam(required = false) String date,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        log.info("Get orders request received with filters - orderId: {}, status: {}, customerName: {}, page: {}, size: {}",
-                orderId, status, customerName, page, size);
+        log.info("Get orders request received with filters - orderId: {}, status: {}, customerName: {}, date: {}, page: {}, size: {}",
+                orderId, status, customerName, date, page, size);
         try {
-            OrderPageResponse response = orderService.getOrdersWithFilters(orderId, status, customerName, page, size);
+            OrderPageResponse response = orderService.getOrdersWithFilters(orderId, status, customerName, date, page, size);
             log.info("Retrieved {} orders (page {} of {})", response.getData().size(), response.getCurrentPage(), response.getPageCount());
             return ResponseEntity.ok(response);
         } catch (Exception e) {

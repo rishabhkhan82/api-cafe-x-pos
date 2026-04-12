@@ -3,10 +3,12 @@ package com.cafex.pos.dto;
 import com.cafex.pos.entity.Order;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
+import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Slf4j
@@ -57,7 +59,7 @@ public class OrderRequest {
     private LocalDateTime deliveredAt;
 
     @JsonProperty("priority")
-    private Order.OrderPriority priority = Order.OrderPriority.MEDIUM;
+    private Order.Priority priority = Order.Priority.MEDIUM;
 
     @DecimalMin(value = "0.0", inclusive = true, message = "Tax amount must be non-negative")
     @JsonProperty("tax_amount")
@@ -65,6 +67,11 @@ public class OrderRequest {
 
     @JsonProperty("restaurant_id")
     private Long restaurantId;
+
+    @NotEmpty(message = "Order items are required")
+    @Valid
+    @JsonProperty("order_items")
+    private List<OrderItemRequest> orderItems;
 
     // For updates - optional fields
     @JsonProperty("id")

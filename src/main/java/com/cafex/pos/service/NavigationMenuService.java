@@ -44,11 +44,7 @@ public class NavigationMenuService {
                     criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), searchTerm));
             }
 
-            // Role filter
-            if (role != null && !role.trim().isEmpty()) {
-                predicate = criteriaBuilder.and(predicate,
-                    criteriaBuilder.equal(root.get("role"), role));
-            }
+
 
             // IsActive filter
             if (isActive != null) {

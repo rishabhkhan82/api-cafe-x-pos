@@ -64,7 +64,7 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "priority")
-    private OrderPriority priority;
+    private Priority priority;
 
     @Column(name = "tax_amount")
     private BigDecimal taxAmount;
@@ -90,7 +90,7 @@ public class Order {
         this.updatedAt = updatedAt;
         this.paymentStatus = PaymentStatus.PENDING;
         this.orderType = OrderType.DINE_IN;
-        this.priority = OrderPriority.MEDIUM;
+        this.priority = Priority.MEDIUM;
     }
 
     // Getters and Setters
@@ -222,11 +222,11 @@ public class Order {
         this.deliveredAt = deliveredAt;
     }
 
-    public OrderPriority getPriority() {
+    public Priority getPriority() {
         return priority;
     }
 
-    public void setPriority(OrderPriority priority) {
+    public void setPriority(Priority priority) {
         this.priority = priority;
     }
 
@@ -259,7 +259,7 @@ public class Order {
         DINE_IN, TAKEAWAY, DELIVERY
     }
 
-    public enum OrderPriority {
-        LOW, MEDIUM, HIGH
+    public enum Priority {
+        HIGH, LOW, MEDIUM
     }
 }

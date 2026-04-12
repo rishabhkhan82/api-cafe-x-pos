@@ -2,13 +2,18 @@ package com.cafex.pos.service;
 
 import com.cafex.pos.dto.OrderRequest;
 import com.cafex.pos.dto.OrderResponse;
+import com.cafex.pos.dto.OrderItemRequest;
+import com.cafex.pos.dto.OrderItemResponse;
 import com.cafex.pos.entity.Order;
+import com.cafex.pos.entity.OrderItem;
 import com.cafex.pos.repository.OrderRepository;
+import com.cafex.pos.repository.OrderItemRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +34,7 @@ import jakarta.persistence.criteria.Predicate;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
 
     public List<OrderResponse> getAllOrders() {
         log.info("Fetching all orders");
@@ -38,9 +44,9 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-    public OrderPageResponse getOrdersWithFilters(String orderId, String status, String customerName, int page, int size) {
-        log.info("Fetching orders with filters - orderId: {}, status: {}, customerName: {}, page: {}, size: {}",
-                orderId, status, customerName, page, size);
+    public OrderPageResponse getOrdersWithFilters(String orderId, String status, String customerName, String date, int page, int size) {
+        log.info("Fetching orders with filters - orderId: {}, status: {}, customerName: {}, date: {}, page: {}, size: {}",
+                orderId, status, customerName, date, page, size);
 
         Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
@@ -67,6 +73,18 @@ public class OrderService {
             if (customerName != null && !customerName.trim().isEmpty()) {
                 predicate = criteriaBuilder.and(predicate,
                     criteriaBuilder.like(criteriaBuilder.lower(root.get("customerName")), "%" + customerName.toLowerCase() + "%"));
+            }
+
+            // Date filter
+            if (date != null && !date.trim().isEmpty()) {
+                try {
+                    LocalDate filterDate = LocalDate.parse(date);
+                    LocalDateTime startOfDay = filterDate.atStartOfDay();
+                    LocalDateTime endOfDay = filterDate.atTime(23, 59, 59, 999999999);
+                    predicate = criteriaBuilder.and(predicate, criteriaBuilder.between(root.get("createdAt"), startOfDay, endOfDay));
+                } catch (Exception e) {
+                    log.warn("Invalid date filter: {}", date);
+                }
             }
 
             return predicate;
@@ -118,6 +136,23 @@ public class OrderService {
         order.setUpdatedAt(orderRequest.getUpdatedAt() != null ? orderRequest.getUpdatedAt() : LocalDateTime.now());
 
         Order savedOrder = orderRepository.save(order);
+
+        // Save order items
+        if (orderRequest.getOrderItems() != null && !orderRequest.getOrderItems().isEmpty()) {
+            for (OrderItemRequest itemRequest : orderRequest.getOrderItems()) {
+                OrderItem orderItem = new OrderItem();
+                orderItem.setOrder(savedOrder);
+                orderItem.setMenuItemName(itemRequest.getMenuItemName());
+                orderItem.setQuantity(itemRequest.getQuantity());
+                orderItem.setUnitPrice(itemRequest.getUnitPrice());
+                orderItem.setTotalPrice(itemRequest.getTotalPrice());
+                orderItem.setCategory(itemRequest.getCategory());
+                orderItem.setSpecialInstructions(itemRequest.getSpecialInstructions());
+                orderItem.setStatus(itemRequest.getStatus());
+                orderItemRepository.save(orderItem);
+            }
+        }
+
         log.info("Order saved successfully with ID: {}", savedOrder.getId());
 
         return convertToResponse(savedOrder);
@@ -151,6 +186,23 @@ public class OrderService {
         existingOrder.setTaxAmount(orderRequest.getTaxAmount());
         existingOrder.setUpdatedAt(LocalDateTime.now());
 
+        // Delete existing order items and save new ones
+        orderItemRepository.deleteByOrderId(existingOrder.getId());
+        if (orderRequest.getOrderItems() != null && !orderRequest.getOrderItems().isEmpty()) {
+            for (OrderItemRequest itemRequest : orderRequest.getOrderItems()) {
+                OrderItem orderItem = new OrderItem();
+                orderItem.setOrder(existingOrder);
+                orderItem.setMenuItemName(itemRequest.getMenuItemName());
+                orderItem.setQuantity(itemRequest.getQuantity());
+                orderItem.setUnitPrice(itemRequest.getUnitPrice());
+                orderItem.setTotalPrice(itemRequest.getTotalPrice());
+                orderItem.setCategory(itemRequest.getCategory());
+                orderItem.setSpecialInstructions(itemRequest.getSpecialInstructions());
+                orderItem.setStatus(itemRequest.getStatus());
+                orderItemRepository.save(orderItem);
+            }
+        }
+
         Order updatedOrder = orderRepository.save(existingOrder);
         log.info("Order updated successfully with ID: {}", updatedOrder.getId());
 
@@ -163,6 +215,9 @@ public class OrderService {
         if (!orderRepository.existsById(id)) {
             throw new RuntimeException("Order not found with ID: " + id);
         }
+
+        // Delete order items first
+        orderItemRepository.deleteByOrderId(id);
 
         orderRepository.deleteById(id);
         log.info("Order deleted successfully with ID: {}", id);
@@ -192,6 +247,30 @@ public class OrderService {
         response.setPriority(order.getPriority());
         response.setTaxAmount(order.getTaxAmount());
         response.setRestaurantId(order.getRestaurant() != null ? order.getRestaurant().getId() : null);
+
+        // Convert order items
+        if (order.getItems() != null) {
+            List<OrderItemResponse> itemResponses = order.getItems().stream()
+                .map(this::convertOrderItemToResponse)
+                .collect(Collectors.toList());
+            response.setOrderItems(itemResponses);
+        }
+
+        return response;
+    }
+
+    private OrderItemResponse convertOrderItemToResponse(OrderItem orderItem) {
+        OrderItemResponse response = new OrderItemResponse();
+        response.setId(orderItem.getId());
+        response.setOrderId(orderItem.getOrder().getId());
+        response.setMenuItemId(orderItem.getMenuItem() != null ? orderItem.getMenuItem().getId() : null);
+        response.setMenuItemName(orderItem.getMenuItemName());
+        response.setQuantity(orderItem.getQuantity());
+        response.setUnitPrice(orderItem.getUnitPrice());
+        response.setTotalPrice(orderItem.getTotalPrice());
+        response.setCategory(orderItem.getCategory());
+        response.setSpecialInstructions(orderItem.getSpecialInstructions());
+        response.setStatus(orderItem.getStatus());
         return response;
     }
 }
