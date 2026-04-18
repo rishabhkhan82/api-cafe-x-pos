@@ -282,4 +282,49 @@ public class OrderService {
         response.setStatus(orderItem.getStatus());
         return response;
     }
+
+    public OrderPageResponse getOrdersForReports(String startDate, String endDate, String status) {
+        log.info("Fetching orders for reports - startDate: {}, endDate: {}, status: {}", startDate, endDate, status);
+
+        Specification<Order> spec = (root, query, criteriaBuilder) -> {
+            Predicate predicate = criteriaBuilder.conjunction();
+
+            // Date range filter
+            if (startDate != null && !startDate.trim().isEmpty() && endDate != null && !endDate.trim().isEmpty()) {
+                try {
+                    LocalDateTime startDateTime = LocalDate.parse(startDate).atStartOfDay();
+                    LocalDateTime endDateTime = LocalDate.parse(endDate).atTime(23, 59, 59, 999999999);
+                    predicate = criteriaBuilder.and(predicate,
+                        criteriaBuilder.between(root.get("createdAt"), startDateTime, endDateTime));
+                } catch (Exception e) {
+                    log.warn("Invalid date range filter - startDate: {}, endDate: {}", startDate, endDate);
+                }
+            }
+
+            // Status filter (default to COMPLETED for reports)
+            if (status != null && !status.trim().isEmpty()) {
+                try {
+                    Order.OrderStatus orderStatus = Order.OrderStatus.valueOf(status.toUpperCase());
+                    predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("status"), orderStatus));
+                } catch (IllegalArgumentException e) {
+                    log.warn("Invalid status filter for reports: {}", status);
+                }
+            }
+
+            return predicate;
+        };
+
+        List<Order> orders = orderRepository.findAll(spec);
+
+        List<OrderResponse> content = orders.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+
+        return new OrderPageResponse(
+            content,
+            0, // currentPage (not used for reports)
+            1, // pageCount (not used for reports)
+            content.size() // totalRowCount
+        );
+    }
 }

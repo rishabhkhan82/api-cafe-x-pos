@@ -72,6 +72,22 @@ public class OrderController {
         }
     }
 
+    @GetMapping("/reports")
+    public ResponseEntity<OrderPageResponse> getOrdersForReports(
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            @RequestParam(defaultValue = "COMPLETED") String status) {
+        log.info("Get orders for reports request received - startDate: {}, endDate: {}, status: {}", startDate, endDate, status);
+        try {
+            OrderPageResponse response = orderService.getOrdersForReports(startDate, endDate, status);
+            log.info("Retrieved {} orders for reports", response.getData().size());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Failed to get orders for reports: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long id) {
         log.info("Get order by ID request received for ID: {}", id);
