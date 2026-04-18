@@ -68,10 +68,11 @@ public class UserService {
 
             // Restaurant filter
             if (restaurantId != null && !restaurantId.trim().isEmpty()) {
-                if ("none".equals(restaurantId)) {
-                    predicate = criteriaBuilder.and(predicate, criteriaBuilder.isNull(root.get("restaurantId")));
-                } else {
-                    predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("restaurantId"), restaurantId));
+                try {
+                    Long id = Long.parseLong(restaurantId);
+                    predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("restaurantId"), id));
+                } catch (NumberFormatException e) {
+                    // invalid, ignore
                 }
             }
 
