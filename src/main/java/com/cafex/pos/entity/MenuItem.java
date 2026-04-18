@@ -3,7 +3,6 @@ package com.cafex.pos.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "menu_items")
@@ -58,23 +57,20 @@ public class MenuItem {
     @Column(name = "discount")
     private String discount;
 
-    @ElementCollection
-    @CollectionTable(name = "menu_item_allergens", joinColumns = @JoinColumn(name = "menu_item_id"))
-    @Column(name = "allergen")
-    private List<String> allergens;
-
-    @OneToMany(mappedBy = "menuItem", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<MenuCustomization> customizations;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "restaurant_id")
-    private Restaurant restaurant;
-
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "restaurant_id")
+    private Long restaurantId;
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
 
     // Constructors
     public MenuItem() {}
@@ -225,30 +221,6 @@ public class MenuItem {
         this.discount = discount;
     }
 
-    public List<String> getAllergens() {
-        return allergens;
-    }
-
-    public void setAllergens(List<String> allergens) {
-        this.allergens = allergens;
-    }
-
-    public List<MenuCustomization> getCustomizations() {
-        return customizations;
-    }
-
-    public void setCustomizations(List<MenuCustomization> customizations) {
-        this.customizations = customizations;
-    }
-
-    public Restaurant getRestaurant() {
-        return restaurant;
-    }
-
-    public void setRestaurant(Restaurant restaurant) {
-        this.restaurant = restaurant;
-    }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -263,5 +235,29 @@ public class MenuItem {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Long getRestaurantId() {
+        return restaurantId;
+    }
+
+    public void setRestaurantId(Long restaurantId) {
+        this.restaurantId = restaurantId;
+    }
+
+    public Long getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Long getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(Long updatedBy) {
+        this.updatedBy = updatedBy;
     }
 }
