@@ -16,9 +16,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +50,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         menuItem.setPrice(menuItemRequest.getPrice());
         menuItem.setOriginalPrice(menuItemRequest.getOriginalPrice());
         menuItem.setCategory(menuItemRequest.getCategory());
-        menuItem.setImage(menuItemRequest.getImage());
+        menuItem.setImage(null); // Ensure image is null initially
         menuItem.setIsAvailable(menuItemRequest.getIsAvailable() != null ? menuItemRequest.getIsAvailable() : true);
         menuItem.setIsActive(menuItemRequest.getIsActive() != null ? menuItemRequest.getIsActive() : true);
         menuItem.setIsVegetarian(menuItemRequest.getIsVegetarian() != null ? menuItemRequest.getIsVegetarian() : false);
@@ -54,12 +60,25 @@ public class MenuItemServiceImpl implements MenuItemService {
         menuItem.setPreparationTime(menuItemRequest.getPreparationTime());
         menuItem.setDiscount(menuItemRequest.getDiscount());
         menuItem.setRestaurantId(menuItemRequest.getRestaurantId());
-        menuItem.setCreatedAt(menuItemRequest.getCreatedAt() != null ? menuItemRequest.getCreatedAt() : LocalDateTime.now());
-        menuItem.setUpdatedAt(menuItemRequest.getUpdatedAt() != null ? menuItemRequest.getUpdatedAt() : LocalDateTime.now());
+        menuItem.setCreatedAt(menuItemRequest.getCreatedAt() != null ? menuItemRequest.getCreatedAt().toLocalDateTime() : LocalDateTime.now());
+        menuItem.setUpdatedAt(menuItemRequest.getUpdatedAt() != null ? menuItemRequest.getUpdatedAt().toLocalDateTime() : LocalDateTime.now());
         menuItem.setCreatedBy(menuItemRequest.getCreatedBy());
         menuItem.setUpdatedBy(menuItemRequest.getUpdatedBy());
 
         MenuItem savedMenuItem = menuItemRepository.save(menuItem);
+
+        // Handle image upload if provided as base64
+        if (menuItemRequest.getImage() != null && !menuItemRequest.getImage().isEmpty() && menuItemRequest.getImage().startsWith("data:image/")) {
+            try {
+                String imageUrl = saveImageFromBase64(menuItemRequest.getImage(), savedMenuItem.getId());
+                savedMenuItem.setImage(imageUrl);
+                savedMenuItem = menuItemRepository.save(savedMenuItem);
+            } catch (Exception e) {
+                log.error("Failed to save image for menu item {}: {}", savedMenuItem.getId(), e.getMessage());
+                // Continue without image, don't fail the save
+            }
+        }
+
         log.info("Menu item saved successfully with ID: {}", savedMenuItem.getId());
 
         return convertToResponse(savedMenuItem);
@@ -78,6 +97,22 @@ public class MenuItemServiceImpl implements MenuItemService {
             throw new RuntimeException("Item ID already exists: " + menuItemRequest.getItemId());
         }
 
+        // Handle image change if provided as base64
+        if (menuItemRequest.getImage() != null && !menuItemRequest.getImage().isEmpty() && menuItemRequest.getImage().startsWith("data:image/")) {
+            try {
+                // Delete old image if exists
+                if (existingMenuItem.getImage() != null && !existingMenuItem.getImage().isEmpty() && !existingMenuItem.getImage().startsWith("data:image/")) {
+                    deleteImageFile(existingMenuItem.getImage());
+                }
+                // Save new image
+                String imageUrl = saveImageFromBase64(menuItemRequest.getImage(), existingMenuItem.getId());
+                existingMenuItem.setImage(imageUrl);
+            } catch (Exception e) {
+                log.error("Failed to update image for menu item {}: {}", existingMenuItem.getId(), e.getMessage());
+                // Continue without image change
+            }
+        }
+
         // Update fields
         existingMenuItem.setItemId(menuItemRequest.getItemId());
         existingMenuItem.setName(menuItemRequest.getName());
@@ -85,7 +120,6 @@ public class MenuItemServiceImpl implements MenuItemService {
         existingMenuItem.setPrice(menuItemRequest.getPrice());
         existingMenuItem.setOriginalPrice(menuItemRequest.getOriginalPrice());
         existingMenuItem.setCategory(menuItemRequest.getCategory());
-        existingMenuItem.setImage(menuItemRequest.getImage());
         existingMenuItem.setIsAvailable(menuItemRequest.getIsAvailable());
         existingMenuItem.setIsActive(menuItemRequest.getIsActive());
         existingMenuItem.setIsVegetarian(menuItemRequest.getIsVegetarian());
@@ -95,7 +129,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         existingMenuItem.setPreparationTime(menuItemRequest.getPreparationTime());
         existingMenuItem.setDiscount(menuItemRequest.getDiscount());
         existingMenuItem.setRestaurantId(menuItemRequest.getRestaurantId());
-        existingMenuItem.setUpdatedAt(LocalDateTime.now());
+        existingMenuItem.setUpdatedAt(menuItemRequest.getUpdatedAt() != null ? menuItemRequest.getUpdatedAt().toLocalDateTime() : LocalDateTime.now());
         existingMenuItem.setUpdatedBy(menuItemRequest.getUpdatedBy());
 
         MenuItem updatedMenuItem = menuItemRepository.save(existingMenuItem);
@@ -191,12 +225,88 @@ public class MenuItemServiceImpl implements MenuItemService {
     public void deleteMenuItem(Long id) {
         log.info("Deleting menu item with ID: {}", id);
 
-        if (!menuItemRepository.existsById(id)) {
-            throw new RuntimeException("Menu item not found with ID: " + id);
+        MenuItem menuItem = menuItemRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Menu item not found with ID: " + id));
+
+        // Delete associated image if exists
+        if (menuItem.getImage() != null && !menuItem.getImage().isEmpty()) {
+            try {
+                deleteImageFile(menuItem.getImage());
+            } catch (Exception e) {
+                log.error("Failed to delete image for menu item {}: {}", id, e.getMessage());
+                // Continue with deletion
+            }
         }
 
         menuItemRepository.deleteById(id);
         log.info("Menu item deleted successfully with ID: {}", id);
+    }
+
+    private String saveImageFromBase64(String base64Data, Long menuItemId) throws IOException {
+        // Remove data URL prefix if present (e.g., "data:image/jpeg;base64,")
+        String base64Image = base64Data;
+        String mimeType = "image/jpeg"; // default
+        if (base64Data.contains(",")) {
+            String[] parts = base64Data.split(",");
+            if (parts.length == 2) {
+                String header = parts[0];
+                if (header.startsWith("data:") && header.contains(";base64")) {
+                    mimeType = header.substring(5, header.indexOf(";base64"));
+                }
+                base64Image = parts[1];
+            }
+        }
+
+        // Decode base64
+        byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+
+        // Determine file extension
+        String extension = getExtensionFromMimeType(mimeType);
+
+        // Create filename with menu item ID
+        String filename = menuItemId + "_image." + extension;
+
+        // Create upload directory
+        Path uploadDir = Paths.get("uploads", "images", "menu");
+        Files.createDirectories(uploadDir);
+
+        // Save file
+        Path filePath = uploadDir.resolve(filename);
+        Files.write(filePath, imageBytes);
+
+        // Return URL
+        return "/uploads/images/menu/" + filename;
+    }
+
+    private void deleteImageFile(String imageUrl) throws IOException {
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            return;
+        }
+
+        // Extract file path from URL
+        String filePath = imageUrl.replace("/uploads/", "uploads/");
+        Path path = Paths.get(filePath);
+
+        if (Files.exists(path)) {
+            Files.delete(path);
+            log.info("Deleted image file: {}", filePath);
+        }
+    }
+
+    private String getExtensionFromMimeType(String mimeType) {
+        switch (mimeType.toLowerCase()) {
+            case "image/jpeg":
+            case "image/jpg":
+                return "jpg";
+            case "image/png":
+                return "png";
+            case "image/gif":
+                return "gif";
+            case "image/webp":
+                return "webp";
+            default:
+                return "jpg";
+        }
     }
 
     private MenuItemResponse convertToResponse(MenuItem menuItem) {
