@@ -166,6 +166,21 @@ public class UserService {
         return avatar;
     }
 
+    private void deleteImageFile(String imageUrl) throws IOException {
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            return;
+        }
+
+        // Extract file path from URL
+        String filePath = imageUrl.replace("/uploads/", "uploads/");
+        Path path = Paths.get(filePath);
+
+        if (Files.exists(path)) {
+            Files.delete(path);
+            log.info("Deleted avatar file: {}", filePath);
+        }
+    }
+
     public UserResponse saveUser(UserRequest userRequest) {
         log.info("Saving new user: {}", userRequest.getUsername());
 
@@ -186,6 +201,7 @@ public class UserService {
         user.setEmail(userRequest.getEmail());
         user.setPhone(userRequest.getPhone());
         user.setRole(userRequest.getRole());
+        user.setUserType(userRequest.getUserType());
         user.setAvatar(processAvatar(userRequest.getAvatar()));
         user.setRestaurantId(userRequest.getRestaurantId());
         user.setIsActive(userRequest.getIsActive());
@@ -231,7 +247,25 @@ public class UserService {
         existingUser.setEmail(userRequest.getEmail());
         existingUser.setPhone(userRequest.getPhone());
         existingUser.setRole(userRequest.getRole());
-        existingUser.setAvatar(processAvatar(userRequest.getAvatar()));
+        existingUser.setUserType(userRequest.getUserType());
+
+        // Handle avatar change if provided as base64
+        if (userRequest.getAvatar() != null && !userRequest.getAvatar().isEmpty() && userRequest.getAvatar().startsWith("data:image/")) {
+            try {
+                // Delete old avatar if exists
+                if (existingUser.getAvatar() != null && !existingUser.getAvatar().isEmpty() && !existingUser.getAvatar().startsWith("data:image/")) {
+                    deleteImageFile(existingUser.getAvatar());
+                }
+                // Process new avatar
+                existingUser.setAvatar(processAvatar(userRequest.getAvatar()));
+            } catch (Exception e) {
+                log.error("Failed to update avatar for user {}: {}", existingUser.getId(), e.getMessage());
+                // Continue without avatar change
+            }
+        } else {
+            // If not a base64 image, just set it directly (could be URL or unchanged)
+            existingUser.setAvatar(userRequest.getAvatar());
+        }
         existingUser.setRestaurantId(userRequest.getRestaurantId());
         existingUser.setIsActive(userRequest.getIsActive());
         existingUser.setUpdatedAt(LocalDateTime.now());
@@ -245,8 +279,17 @@ public class UserService {
     public void deleteUser(Long id) {
         log.info("Deleting user with ID: {}", id);
 
-        if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User not found with ID: " + id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+
+        // Delete associated avatar if exists
+        if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
+            try {
+                deleteImageFile(user.getAvatar());
+            } catch (Exception e) {
+                log.error("Failed to delete avatar for user {}: {}", id, e.getMessage());
+                // Continue with deletion
+            }
         }
 
         userRepository.deleteById(id);
