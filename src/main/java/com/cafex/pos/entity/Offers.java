@@ -3,7 +3,6 @@ package com.cafex.pos.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "offers")
@@ -37,20 +36,7 @@ public class Offers {
     @Column(name = "min_order_value")
     private BigDecimal minOrderValue;
 
-    @ElementCollection
-    @CollectionTable(name = "offer_applicable_items", joinColumns = @JoinColumn(name = "offer_id"))
-    @Column(name = "item_id")
-    private List<String> applicableItems;
 
-    @ElementCollection
-    @CollectionTable(name = "offer_applicable_categories", joinColumns = @JoinColumn(name = "offer_id"))
-    @Column(name = "category_id")
-    private List<String> applicableCategories;
-
-    @ElementCollection
-    @CollectionTable(name = "offer_applicable_customers", joinColumns = @JoinColumn(name = "offer_id"))
-    @Column(name = "customer_id")
-    private List<String> applicableCustomers;
 
     @Column(name = "start_date", nullable = false)
     private LocalDateTime startDate;
@@ -79,13 +65,11 @@ public class Offers {
     @Column(columnDefinition = "TEXT")
     private String terms;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "restaurant_id")
-    private Restaurant restaurant;
+    @Column(name = "restaurant_id")
+    private Long restaurantId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by")
-    private User createdBy;
+    @Column(name = "created_by")
+    private Long createdBy;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -185,29 +169,7 @@ public class Offers {
         this.minOrderValue = minOrderValue;
     }
 
-    public List<String> getApplicableItems() {
-        return applicableItems;
-    }
 
-    public void setApplicableItems(List<String> applicableItems) {
-        this.applicableItems = applicableItems;
-    }
-
-    public List<String> getApplicableCategories() {
-        return applicableCategories;
-    }
-
-    public void setApplicableCategories(List<String> applicableCategories) {
-        this.applicableCategories = applicableCategories;
-    }
-
-    public List<String> getApplicableCustomers() {
-        return applicableCustomers;
-    }
-
-    public void setApplicableCustomers(List<String> applicableCustomers) {
-        this.applicableCustomers = applicableCustomers;
-    }
 
     public LocalDateTime getStartDate() {
         return startDate;
@@ -282,19 +244,19 @@ public class Offers {
         this.terms = terms;
     }
 
-    public Restaurant getRestaurant() {
-        return restaurant;
+    public Long getRestaurantId() {
+        return restaurantId;
     }
 
-    public void setRestaurant(Restaurant restaurant) {
-        this.restaurant = restaurant;
+    public void setRestaurantId(Long restaurantId) {
+        this.restaurantId = restaurantId;
     }
 
-    public User getCreatedBy() {
+    public Long getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(User createdBy) {
+    public void setCreatedBy(Long createdBy) {
         this.createdBy = createdBy;
     }
 
@@ -365,17 +327,7 @@ public class Offers {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public boolean appliesToItem(String itemId) {
-        return applicableItems == null || applicableItems.isEmpty() || applicableItems.contains(itemId);
-    }
 
-    public boolean appliesToCategory(String categoryId) {
-        return applicableCategories == null || applicableCategories.isEmpty() || applicableCategories.contains(categoryId);
-    }
-
-    public boolean appliesToCustomer(String customerId) {
-        return applicableCustomers == null || applicableCustomers.isEmpty() || applicableCustomers.contains(customerId);
-    }
 
     public boolean hasCode() {
         return code != null && !code.trim().isEmpty();
