@@ -1,0 +1,10 @@
+package com.cafex.pos.repository;
+
+import com.cafex.pos.entity.RestaurantSubscriptions;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface RestaurantSubscriptionRepository extends JpaRepository<RestaurantSubscriptions, Long>, JpaSpecificationExecutor<RestaurantSubscriptions> {
+}
