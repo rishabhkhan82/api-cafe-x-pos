@@ -295,7 +295,7 @@ public class OrderService {
                     LocalDateTime startDateTime = LocalDate.parse(startDate).atStartOfDay();
                     LocalDateTime endDateTime = LocalDate.parse(endDate).atTime(23, 59, 59, 999999999);
                     predicate = criteriaBuilder.and(predicate,
-                        criteriaBuilder.between(root.get("createdAt"), startDateTime, endDateTime));
+                        criteriaBuilder.between(root.get("updatedAt"), startDateTime, endDateTime));
                 } catch (Exception e) {
                     log.warn("Invalid date range filter - startDate: {}, endDate: {}", startDate, endDate);
                 }
