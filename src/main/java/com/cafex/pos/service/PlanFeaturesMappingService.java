@@ -121,21 +121,33 @@ public class PlanFeaturesMappingService {
         PlanFeaturesMapping existingMapping = planFeaturesMappingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Plan features mapping not found with ID: " + id));
 
-        // Check if plan exists
-        SubscriptionPlans plan = subscriptionPlansRepository.findById(planFeaturesMappingRequest.getPlanId())
-                .orElseThrow(() -> new RuntimeException("Subscription plan not found with ID: " + planFeaturesMappingRequest.getPlanId()));
+        // Update fields only if provided
+        if (planFeaturesMappingRequest.getPlanId() != null) {
+            // Check if plan exists
+            SubscriptionPlans plan = subscriptionPlansRepository.findById(planFeaturesMappingRequest.getPlanId())
+                    .orElseThrow(() -> new RuntimeException("Subscription plan not found with ID: " + planFeaturesMappingRequest.getPlanId()));
+            existingMapping.setPlan(plan);
+        }
+
+        if (planFeaturesMappingRequest.getFeatureId() != null && !planFeaturesMappingRequest.getFeatureId().trim().isEmpty()) {
+            existingMapping.setFeatureId(planFeaturesMappingRequest.getFeatureId());
+        }
 
         // Check for duplicate if plan or feature changed
-        if (!existingMapping.getPlan().getId().equals(planFeaturesMappingRequest.getPlanId()) ||
-            !existingMapping.getFeatureId().equals(planFeaturesMappingRequest.getFeatureId())) {
-            if (planFeaturesMappingRepository.existsByPlanIdAndFeatureId(planFeaturesMappingRequest.getPlanId(), planFeaturesMappingRequest.getFeatureId())) {
-                throw new RuntimeException("Plan-feature mapping already exists for planId: " + planFeaturesMappingRequest.getPlanId() + " and featureId: " + planFeaturesMappingRequest.getFeatureId());
+        if (planFeaturesMappingRequest.getPlanId() != null && planFeaturesMappingRequest.getFeatureId() != null &&
+            !planFeaturesMappingRequest.getFeatureId().trim().isEmpty()) {
+            if (!existingMapping.getPlan().getId().equals(planFeaturesMappingRequest.getPlanId()) ||
+                !existingMapping.getFeatureId().equals(planFeaturesMappingRequest.getFeatureId())) {
+                if (planFeaturesMappingRepository.existsByPlanIdAndFeatureId(planFeaturesMappingRequest.getPlanId(), planFeaturesMappingRequest.getFeatureId())) {
+                    throw new RuntimeException("Plan-feature mapping already exists for planId: " + planFeaturesMappingRequest.getPlanId() + " and featureId: " + planFeaturesMappingRequest.getFeatureId());
+                }
             }
         }
 
-        existingMapping.setPlan(plan);
-        existingMapping.setFeatureId(planFeaturesMappingRequest.getFeatureId());
-        existingMapping.setIsEnabled(planFeaturesMappingRequest.getIsEnabled());
+        if (planFeaturesMappingRequest.getIsEnabled() != null) {
+            existingMapping.setIsEnabled(planFeaturesMappingRequest.getIsEnabled());
+        }
+
         existingMapping.setUpdatedAt(LocalDateTime.now());
 
         PlanFeaturesMapping updatedMapping = planFeaturesMappingRepository.save(existingMapping);

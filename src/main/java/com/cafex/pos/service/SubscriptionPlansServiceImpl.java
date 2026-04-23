@@ -126,6 +126,17 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
         subscriptionPlan.setIsPopular(request.getIs_popular());
         subscriptionPlan.setTrialDays(request.getTrial_days());
         subscriptionPlan.setSetupFee(request.getSetup_fee());
+        if (request.getSubscriber_count() != null) {
+            subscriptionPlan.setSubscriberCount(request.getSubscriber_count());
+        }
+        if (request.getRevenue() != null) {
+            subscriptionPlan.setRevenue(request.getRevenue());
+        }
+        if (request.getCreated_by() != null) {
+            User user = userRepository.findById(request.getCreated_by())
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getCreated_by()));
+            subscriptionPlan.setCreatedBy(user);
+        }
         return subscriptionPlan;
     }
 
@@ -140,8 +151,20 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
         subscriptionPlan.setMaxRestaurants(request.getMax_restaurants());
         subscriptionPlan.setMaxUsers(request.getMax_users());
         subscriptionPlan.setIsActive(request.getIs_active());
+        subscriptionPlan.setIsPopular(request.getIs_popular());
         subscriptionPlan.setTrialDays(request.getTrial_days());
         subscriptionPlan.setSetupFee(request.getSetup_fee());
+        if (request.getSubscriber_count() != null) {
+            subscriptionPlan.setSubscriberCount(request.getSubscriber_count());
+        }
+        if (request.getRevenue() != null) {
+            subscriptionPlan.setRevenue(request.getRevenue());
+        }
+        if (request.getUpdated_by() != null) {
+            User user = userRepository.findById(request.getUpdated_by())
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUpdated_by()));
+            subscriptionPlan.setUpdatedBy(user);
+        }
     }
 
     private SubscriptionPlansResponse mapToResponse(SubscriptionPlans subscriptionPlan) {

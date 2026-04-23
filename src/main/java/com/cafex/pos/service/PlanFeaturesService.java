@@ -32,7 +32,7 @@ public class PlanFeaturesService {
         log.info("Fetching plan features with filters - name: {}, category: {}, isEnabled: {}, featureType: {}, page: {}, size: {}",
                 name, category, isEnabled, featureType, page, size);
 
-        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
+        Pageable pageable = PageRequest.of(page, size);
 
         Specification<PlanFeatures> spec = (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
