@@ -4,6 +4,7 @@ import com.cafex.pos.dto.RestaurantSubscriptionRequest;
 import com.cafex.pos.dto.RestaurantSubscriptionResponse;
 import com.cafex.pos.dto.OperationResponse;
 import com.cafex.pos.dto.RestaurantSubscriptionPageResponse;
+import com.cafex.pos.dto.TrialSubscriptionRequest;
 import com.cafex.pos.service.RestaurantSubscriptionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,47 @@ import java.util.List;
 public class RestaurantSubscriptionController {
 
     private final RestaurantSubscriptionService restaurantSubscriptionService;
+
+    @PostMapping("/trial")
+    public ResponseEntity<OperationResponse> createTrialSubscription(@Valid @RequestBody TrialSubscriptionRequest request) {
+        log.info("Create trial subscription request received for restaurantId: {}, planId: {}, userId: {}", request.getRestaurantId(), request.getPlanId(), request.getUserId());
+        try {
+            RestaurantSubscriptionResponse response = restaurantSubscriptionService.createTrialSubscription(request.getRestaurantId(), request.getPlanId(), request.getUserId());
+            log.info("Trial subscription created successfully with ID: {}", response.getId());
+            OperationResponse operationResponse = new OperationResponse("success", "TRIAL_SUBSCRIPTION_CREATED", response.getId(), response);
+            return ResponseEntity.ok(operationResponse);
+        } catch (Exception e) {
+            log.error("Failed to create trial subscription: {}", e.getMessage());
+            OperationResponse operationResponse = new OperationResponse("failure", "TRIAL_SUBSCRIPTION_CREATE_FAILED", null, e.getMessage());
+            return ResponseEntity.badRequest().body(operationResponse);
+        }
+    }
+
+    @GetMapping("/trial/check/{restaurantId}")
+    public ResponseEntity<Boolean> checkTrialEligibility(@PathVariable Long restaurantId) {
+        log.info("Check trial eligibility request received for restaurantId: {}", restaurantId);
+        try {
+            boolean hasUsedTrial = restaurantSubscriptionService.hasRestaurantUsedTrial(restaurantId);
+            log.info("Trial eligibility check for restaurant {}: eligible={}", restaurantId, !hasUsedTrial);
+            return ResponseEntity.ok(!hasUsedTrial); // Return true if eligible (not used trial)
+        } catch (Exception e) {
+            log.error("Failed to check trial eligibility: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/active/{restaurantId}")
+    public ResponseEntity<List<RestaurantSubscriptionResponse>> getActiveSubscriptions(@PathVariable Long restaurantId) {
+        log.info("Get active subscriptions request received for restaurantId: {}", restaurantId);
+        try {
+            List<RestaurantSubscriptionResponse> response = restaurantSubscriptionService.getActiveSubscriptions(restaurantId);
+            log.info("Retrieved {} active subscriptions for restaurant {}", response.size(), restaurantId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Failed to get active subscriptions: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
     @PostMapping
     public ResponseEntity<OperationResponse> saveRestaurantSubscription(@Valid @RequestBody RestaurantSubscriptionRequest restaurantSubscriptionRequest) {

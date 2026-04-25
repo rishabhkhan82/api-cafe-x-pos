@@ -57,6 +57,70 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
     }
 
     @Override
+    public RestaurantSubscriptionResponse createTrialSubscription(Long restaurantId, Long planId, Long userId) {
+        log.info("Creating trial subscription for restaurant ID: {}, plan ID: {}", restaurantId, planId);
+
+        // Check if restaurant has already used trial
+        Optional<RestaurantSubscriptions> existingTrial = restaurantSubscriptionRepository
+                .findByRestaurantIdAndIsTrialUsed(restaurantId, true);
+        if (existingTrial.isPresent()) {
+            throw new RuntimeException("Restaurant has already used trial period");
+        }
+
+        // Get plan details for trial days
+        SubscriptionPlans plan = subscriptionPlansRepository.findById(planId)
+                .orElseThrow(() -> new RuntimeException("Subscription plan not found with ID: " + planId));
+
+        // Check if plan has trial days configured
+        if (plan.getTrialDays() == null || plan.getTrialDays() <= 0) {
+            throw new RuntimeException("Plan does not support trial period");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime trialEnd = now.plusDays(plan.getTrialDays());
+        LocalDateTime subscriptionStart = trialEnd; // Subscription starts after trial ends
+        LocalDateTime subscriptionEnd = subscriptionStart.plusMonths(1); // Default 1 month after trial
+
+        RestaurantSubscriptions trialSubscription = new RestaurantSubscriptions();
+        trialSubscription.setSubscriptionId("trial_" + restaurantId + "_" + now.toString().replace(":", "").replace("-", "").substring(0, 15));
+        trialSubscription.setRestaurant(restaurantRepository.findById(restaurantId)
+                .orElseThrow(() -> new RuntimeException("Restaurant not found with ID: " + restaurantId)));
+        trialSubscription.setPlan(plan);
+        trialSubscription.setStatus("trial");
+        trialSubscription.setStartDate(subscriptionStart); // Actual subscription starts after trial
+        trialSubscription.setEndDate(subscriptionEnd);
+        trialSubscription.setTrialStartDate(now);
+        trialSubscription.setTrialEndDate(trialEnd);
+        trialSubscription.setIsTrialUsed(true); // Mark trial as used
+        trialSubscription.setBillingCycle(plan.getBillingCycle());
+        trialSubscription.setCancelAtPeriodEnd(false);
+        trialSubscription.setAutoRenew(false); // Trial subscriptions don't auto-renew
+        trialSubscription.setDiscountAmount(java.math.BigDecimal.ZERO);
+        trialSubscription.setFinalAmount(java.math.BigDecimal.ZERO);
+        trialSubscription.setCreatedBy(userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId)));
+        trialSubscription.setCreatedAt(now);
+        trialSubscription.setUpdatedAt(now);
+
+        RestaurantSubscriptions saved = restaurantSubscriptionRepository.save(trialSubscription);
+        log.info("Trial subscription created successfully with ID: {}", saved.getId());
+
+        return convertToResponse(saved);
+    }
+
+    @Override
+    public boolean hasRestaurantUsedTrial(Long restaurantId) {
+        return restaurantSubscriptionRepository.findByRestaurantIdAndIsTrialUsed(restaurantId, true).isPresent();
+    }
+
+    @Override
+    public List<RestaurantSubscriptionResponse> getActiveSubscriptions(Long restaurantId) {
+        List<RestaurantSubscriptions> subscriptions = restaurantSubscriptionRepository
+                .findByRestaurantIdAndStatusIn(restaurantId, List.of("trial", "active"));
+        return subscriptions.stream().map(this::convertToResponse).collect(Collectors.toList());
+    }
+
+    @Override
     public RestaurantSubscriptionResponse updateRestaurantSubscription(Long id, RestaurantSubscriptionRequest request) {
         log.info("Updating restaurant subscription with ID: {}", id);
 

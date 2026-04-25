@@ -34,8 +34,14 @@ public class RestaurantSubscriptionRequest {
     @JsonProperty("end_date")
     private LocalDateTime endDate;
 
+    @JsonProperty("trial_start_date")
+    private LocalDateTime trialStartDate;
+
     @JsonProperty("trial_end_date")
     private LocalDateTime trialEndDate;
+
+    @JsonProperty("is_trial_used")
+    private Boolean isTrialUsed = false;
 
     @JsonProperty("next_billing_date")
     private LocalDateTime nextBillingDate;

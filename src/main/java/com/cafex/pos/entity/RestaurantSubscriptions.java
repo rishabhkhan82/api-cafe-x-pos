@@ -32,8 +32,14 @@ public class RestaurantSubscriptions {
     @Column(name = "end_date")
     private LocalDateTime endDate;
 
+    @Column(name = "trial_start_date")
+    private LocalDateTime trialStartDate;
+
     @Column(name = "trial_end_date")
     private LocalDateTime trialEndDate;
+
+    @Column(name = "is_trial_used", nullable = false)
+    private Boolean isTrialUsed = false;
 
     @Column(name = "next_billing_date")
     private LocalDateTime nextBillingDate;
@@ -93,6 +99,7 @@ public class RestaurantSubscriptions {
         this.billingCycle = billingCycle;
         this.cancelAtPeriodEnd = false;
         this.autoRenew = true;
+        this.isTrialUsed = false;
         this.discountAmount = BigDecimal.ZERO;
         this.finalAmount = BigDecimal.ZERO;
         this.createdAt = LocalDateTime.now();
@@ -156,12 +163,28 @@ public class RestaurantSubscriptions {
         this.endDate = endDate;
     }
 
+    public LocalDateTime getTrialStartDate() {
+        return trialStartDate;
+    }
+
+    public void setTrialStartDate(LocalDateTime trialStartDate) {
+        this.trialStartDate = trialStartDate;
+    }
+
     public LocalDateTime getTrialEndDate() {
         return trialEndDate;
     }
 
     public void setTrialEndDate(LocalDateTime trialEndDate) {
         this.trialEndDate = trialEndDate;
+    }
+
+    public Boolean getIsTrialUsed() {
+        return isTrialUsed;
+    }
+
+    public void setIsTrialUsed(Boolean isTrialUsed) {
+        this.isTrialUsed = isTrialUsed;
     }
 
     public LocalDateTime getNextBillingDate() {
