@@ -3,7 +3,6 @@ package com.cafex.pos.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "customers")
@@ -19,17 +18,14 @@ public class Customer {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(name = "email", nullable = true)
     private String email;
 
-    @Column(name = "phone", nullable = false)
+    @Column(name = "phone")
     private String phone;
 
     @Column(name = "avatar")
     private String avatar;
-
-    @Column(name = "member_since")
-    private LocalDateTime memberSince;
 
     @Column(name = "total_orders", nullable = false)
     private Integer totalOrders = 0;
@@ -39,17 +35,6 @@ public class Customer {
 
     @Column(name = "loyalty_points", nullable = false)
     private Integer loyaltyPoints = 0;
-
-    @ElementCollection
-    @CollectionTable(name = "customer_favorite_items", joinColumns = @JoinColumn(name = "customer_id"))
-    @Column(name = "item_id")
-    private List<String> favoriteItems;
-
-    // Note: CustomerAddress relationship removed as CustomerAddress entity was deleted
-    // This will need to be restructured based on the schema requirements
-
-    @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private CustomerPreferences preferences;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id")
@@ -64,13 +49,16 @@ public class Customer {
     // Constructors
     public Customer() {}
 
-    public Customer(String customerId, String name, String email, String phone, String avatar) {
+    public Customer(String customerId, String name, String email, String phone, String avatar, Restaurant restaurant) {
         this.customerId = customerId;
         this.name = name;
         this.email = email;
         this.phone = phone;
         this.avatar = avatar;
-        this.memberSince = LocalDateTime.now();
+        this.restaurant = restaurant;
+        this.totalOrders = 0;
+        this.totalSpent = BigDecimal.ZERO;
+        this.loyaltyPoints = 0;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -124,12 +112,14 @@ public class Customer {
         this.avatar = avatar;
     }
 
-    public LocalDateTime getMemberSince() {
-        return memberSince;
+
+
+    public Restaurant getRestaurant() {
+        return restaurant;
     }
 
-    public void setMemberSince(LocalDateTime memberSince) {
-        this.memberSince = memberSince;
+    public void setRestaurant(Restaurant restaurant) {
+        this.restaurant = restaurant;
     }
 
     public Integer getTotalOrders() {
@@ -154,32 +144,6 @@ public class Customer {
 
     public void setLoyaltyPoints(Integer loyaltyPoints) {
         this.loyaltyPoints = loyaltyPoints;
-    }
-
-    public List<String> getFavoriteItems() {
-        return favoriteItems;
-    }
-
-    public void setFavoriteItems(List<String> favoriteItems) {
-        this.favoriteItems = favoriteItems;
-    }
-
-    // Addresses getter/setter removed as CustomerAddress entity was deleted
-
-    public CustomerPreferences getPreferences() {
-        return preferences;
-    }
-
-    public void setPreferences(CustomerPreferences preferences) {
-        this.preferences = preferences;
-    }
-
-    public Restaurant getRestaurant() {
-        return restaurant;
-    }
-
-    public void setRestaurant(Restaurant restaurant) {
-        this.restaurant = restaurant;
     }
 
     public LocalDateTime getCreatedAt() {
