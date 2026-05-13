@@ -3,7 +3,9 @@ package com.cafex.pos.service;
 import com.cafex.pos.dto.LoginRequest;
 import com.cafex.pos.dto.LoginResponse;
 import com.cafex.pos.entity.User;
+import com.cafex.pos.entity.Customer;
 import com.cafex.pos.repository.UserRepository;
+import com.cafex.pos.repository.CustomerRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -25,6 +27,7 @@ import java.util.Optional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final CustomerRepository customerRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Value("${app.jwt.secret}")
@@ -104,11 +107,24 @@ public class AuthService {
         return userRepository.findByUsername(username);
     }
 
+    public Optional<Customer> getCurrentCustomer(String customerId) {
+        return customerRepository.findByCustomerId(customerId);
+    }
+
     public String extractUsernameFromToken(String token) {
         try {
             return Jwts.parser().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody().getSubject();
         } catch (Exception e) {
             log.error("Error extracting username from token: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    public String extractTokenType(String token) {
+        try {
+            return Jwts.parser().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody().get("type", String.class);
+        } catch (Exception e) {
+            log.error("Error extracting token type from token: {}", e.getMessage());
             return null;
         }
     }

@@ -42,15 +42,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 if (isValid) {
                     String username = authService.extractUsernameFromToken(token);
-                    log.debug("Extracted username: {}", username);
+                    String tokenType = authService.extractTokenType(token);
+                    log.debug("Extracted username: {}, token type: {}", username, tokenType);
 
-                    authService.getCurrentUser(username).ifPresentOrElse(user -> {
-                        log.debug("User found: {}, active: {}", user.getUsername(), user.getIsActive());
-                        if (user.getIsActive() == com.cafex.pos.entity.User.ActiveStatus.Y) {
+                    if ("customer".equals(tokenType)) {
+                        // Handle customer token
+                        authService.getCurrentCustomer(username).ifPresentOrElse(customer -> {
+                            log.debug("Customer found: {}, id: {}", customer.getCustomerId(), customer.getId());
+
+                            // Create UserDetails for customer
                             UserDetails userDetails = org.springframework.security.core.userdetails.User
-                                .withUsername(user.getUsername())
+                                .withUsername(customer.getCustomerId())
                                 .password("")
-                                .authorities("ROLE_" + user.getRole().name())
+                                .authorities("ROLE_CUSTOMER")
                                 .accountExpired(false)
                                 .accountLocked(false)
                                 .credentialsExpired(false)
@@ -62,11 +66,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                             SecurityContextHolder.getContext().setAuthentication(authentication);
-                            log.debug("Authentication set for user: {}", username);
-                        } else {
-                            log.warn("User {} is not active", username);
-                        }
-                    }, () -> log.warn("User {} not found in database", username));
+                            log.debug("Authentication set for customer: {}", username);
+                        }, () -> log.warn("Customer {} not found in database", username));
+                    } else {
+                        // Handle regular user token
+                        authService.getCurrentUser(username).ifPresentOrElse(user -> {
+                            log.debug("User found: {}, active: {}", user.getUsername(), user.getIsActive());
+                            if (user.getIsActive() == com.cafex.pos.entity.User.ActiveStatus.Y) {
+                                UserDetails userDetails = org.springframework.security.core.userdetails.User
+                                    .withUsername(user.getUsername())
+                                    .password("")
+                                    .authorities("ROLE_" + user.getRole().name())
+                                    .accountExpired(false)
+                                    .accountLocked(false)
+                                    .credentialsExpired(false)
+                                    .disabled(false)
+                                    .build();
+
+                                UsernamePasswordAuthenticationToken authentication =
+                                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                                SecurityContextHolder.getContext().setAuthentication(authentication);
+                                log.debug("Authentication set for user: {}", username);
+                            } else {
+                                log.warn("User {} is not active", username);
+                            }
+                        }, () -> log.warn("User {} not found in database", username));
+                    }
                 } else {
                     log.warn("Invalid token for request: {}", requestURI);
                 }

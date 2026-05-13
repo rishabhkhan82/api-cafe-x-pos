@@ -24,7 +24,8 @@ public class Customer {
     @Column(name = "phone")
     private String phone;
 
-    @Column(name = "avatar")
+    @Lob
+    @Column(name = "avatar", columnDefinition = "LONGTEXT")
     private String avatar;
 
     @Column(name = "total_orders", nullable = false)
