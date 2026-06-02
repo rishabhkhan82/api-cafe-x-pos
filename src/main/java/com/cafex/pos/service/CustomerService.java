@@ -1,6 +1,8 @@
 package com.cafex.pos.service;
 
 import com.cafex.pos.dto.*;
+import com.cafex.pos.dto.CustomerWithTokenResponse;
+import com.cafex.pos.dto.CustomerValidateResponse;
 import com.cafex.pos.entity.Customer;
 import com.cafex.pos.entity.Restaurant;
 import com.cafex.pos.repository.CustomerRepository;
@@ -46,6 +48,45 @@ public class CustomerService {
     private SecretKey getSigningKey() {
         byte[] keyBytes = Base64.getDecoder().decode(jwtSecret);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public Optional<CustomerValidateResponse> validateCustomer(String customerId, Long restaurantId) {
+        log.info("Validating customer by customerId: {}, restaurantId: {}", customerId, restaurantId);
+
+        try {
+            Optional<Customer> customerOpt = customerRepository.findByCustomerId(customerId);
+            log.info("Customer lookup result for customerId {}: found = {}", customerId, customerOpt.isPresent());
+
+            if (customerOpt.isEmpty()) {
+                log.warn("Customer not found with customerId: {}", customerId);
+                return Optional.empty();
+            }
+
+            Customer customer = customerOpt.get();
+            log.info("Customer found: {} (ID: {})", customer.getName(), customer.getId());
+
+            // Validate that customer belongs to the specified restaurant
+            if (customer.getRestaurant() == null || !customer.getRestaurant().getId().equals(restaurantId)) {
+                log.warn("Customer {} does not belong to restaurant {}", customerId, restaurantId);
+                return Optional.empty();
+            }
+
+            // Generate new JWT token
+            log.info("Generating new token for customer ID: {}", customerId);
+            String accessToken = generateToken(customer);
+            log.info("Token generated successfully for customer ID: {}", customerId);
+
+            CustomerValidateResponse response = new CustomerValidateResponse();
+            response.setCustomer(mapToCustomerResponse(customer));
+            response.setAccessToken(accessToken);
+            response.setExpiresIn(jwtExpiration / 1000);
+
+            log.info("Customer validated and token refreshed for customerId: {}, restaurantId: {}", customerId, restaurantId);
+            return Optional.of(response);
+        } catch (Exception e) {
+            log.error("Exception in validateCustomer for customerId {}, restaurantId {}: {}", customerId, restaurantId, e.getMessage(), e);
+            throw e;
+        }
     }
 
     public CustomerLoginResponse createCustomer(CustomerCreateRequest request) {
@@ -161,14 +202,7 @@ public class CustomerService {
 
         Customer customer = customerOpt.get();
 
-        // Check email uniqueness if email is being changed
-        if (request.getEmail() != null && !request.getEmail().trim().isEmpty() &&
-            !request.getEmail().equals(customer.getEmail())) {
-            Optional<Customer> existingCustomer = customerRepository.findByEmail(request.getEmail());
-            if (existingCustomer.isPresent() && !existingCustomer.get().getId().equals(id)) {
-                throw new RuntimeException("Customer with this email already exists");
-            }
-        }
+        // Note: Email uniqueness is not enforced for customer updates to allow shared emails
 
         // Update fields
         if (request.getName() != null) customer.setName(request.getName());
@@ -195,6 +229,19 @@ public class CustomerService {
     public Optional<CustomerResponse> getCustomerById(Long id) {
         log.info("Getting customer by ID: {}", id);
         return customerRepository.findById(id).map(this::mapToCustomerResponse);
+    }
+
+    public Optional<CustomerWithTokenResponse> getCustomerWithTokenById(Long id) {
+        log.info("Getting customer with token by ID: {}", id);
+        return customerRepository.findById(id).map(customer -> {
+            CustomerResponse response = mapToCustomerResponse(customer);
+            String accessToken = generateToken(customer);
+            CustomerWithTokenResponse tokenResponse = new CustomerWithTokenResponse();
+            tokenResponse.setCustomer(response);
+            tokenResponse.setAccessToken(accessToken);
+            tokenResponse.setExpiresIn(jwtExpiration / 1000);
+            return tokenResponse;
+        });
     }
 
     public Optional<CustomerResponse> getCustomerByCustomerId(String customerId) {
@@ -285,7 +332,7 @@ public class CustomerService {
             String extension = getFileExtensionFromMimeType(mimeType);
 
             // Create upload directory
-            String uploadDir = "uploads/images/profile";
+            String uploadDir = "uploads/images/guest";
             Path uploadPath = Paths.get(uploadDir);
             Files.createDirectories(uploadPath);
 
@@ -298,7 +345,7 @@ public class CustomerService {
             Files.write(filePath, imageBytes);
 
             // Return file path
-            return "/uploads/images/profile/" + filename;
+            return "/uploads/images/guest/" + filename;
 
         } catch (IOException e) {
             log.error("Failed to save avatar file for customer {}: {}", customerId, e.getMessage());

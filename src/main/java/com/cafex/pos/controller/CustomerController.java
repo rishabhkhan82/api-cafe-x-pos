@@ -3,6 +3,7 @@ package com.cafex.pos.controller;
 import com.cafex.pos.dto.CustomerRequest;
 import com.cafex.pos.dto.CustomerResponse;
 import com.cafex.pos.dto.CustomerPageResponse;
+import com.cafex.pos.dto.CustomerWithTokenResponse;
 import com.cafex.pos.dto.OperationResponse;
 import com.cafex.pos.service.CustomerService;
 import jakarta.validation.Valid;
@@ -70,12 +71,12 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CustomerResponse> getCustomerById(@PathVariable Long id) {
+    public ResponseEntity<CustomerWithTokenResponse> getCustomerById(@PathVariable Long id) {
         log.info("Get customer by ID request received for ID: {}", id);
         try {
-            CustomerResponse response = customerService.getCustomerById(id)
+            CustomerWithTokenResponse response = customerService.getCustomerWithTokenById(id)
                     .orElseThrow(() -> new RuntimeException("Customer not found"));
-            log.info("Customer retrieved successfully with ID: {}", response.getId());
+            log.info("Customer retrieved successfully with ID: {}", response.getCustomer().getId());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Failed to get customer: {}", e.getMessage());
