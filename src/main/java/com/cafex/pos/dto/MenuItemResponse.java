@@ -50,6 +50,12 @@ public class MenuItemResponse {
     @JsonProperty("is_popular")
     private Boolean isPopular;
 
+    @JsonProperty("is_featured")
+    private Boolean isFeatured;
+
+    @JsonProperty("is_recommended")
+    private Boolean isRecommended;
+
     @JsonProperty("preparation_time")
     private Integer preparationTime;
 

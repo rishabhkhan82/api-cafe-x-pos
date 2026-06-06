@@ -51,6 +51,12 @@ public class MenuItem {
     @Column(name = "is_popular")
     private Boolean isPopular = false;
 
+    @Column(name = "is_featured")
+    private Boolean isFeatured = false;
+
+    @Column(name = "is_recommended")
+    private Boolean isRecommended = false;
+
     @Column(name = "preparation_time", nullable = false)
     private Integer preparationTime;
 
@@ -203,6 +209,22 @@ public class MenuItem {
 
     public void setIsPopular(Boolean isPopular) {
         this.isPopular = isPopular;
+    }
+
+    public Boolean getIsFeatured() {
+        return isFeatured;
+    }
+
+    public void setIsFeatured(Boolean isFeatured) {
+        this.isFeatured = isFeatured;
+    }
+
+    public Boolean getIsRecommended() {
+        return isRecommended;
+    }
+
+    public void setIsRecommended(Boolean isRecommended) {
+        this.isRecommended = isRecommended;
     }
 
     public Integer getPreparationTime() {

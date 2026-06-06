@@ -60,13 +60,16 @@ public class MenuItemController {
             @RequestParam(required = false) String isAvailable,
             @RequestParam(required = false) String isActive,
             @RequestParam(required = false) String isVegetarian,
-            @RequestParam(required = false) String isSpicy,
+            @RequestParam(name = "is_spicy", required = false) String isSpicy,
+            @RequestParam(name = "is_featured", required = false) String isFeatured,
+            @RequestParam(name = "is_popular", required = false) String isPopular,
+            @RequestParam(name = "is_recommended", required = false) String isRecommended,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        log.info("Get menu items request received with filters - name: {}, category: {}, restaurantId: {}, isAvailable: {}, isActive: {}, isVegetarian: {}, isSpicy: {}, page: {}, size: {}",
-                name, category, restaurantId, isAvailable, isActive, isVegetarian, isSpicy, page, size);
+        log.info("Get menu items request received with filters - name: {}, category: {}, restaurantId: {}, isAvailable: {}, isActive: {}, isVegetarian: {}, isSpicy: {}, isPopular: {}, isFeatured: {}, isRecommended: {}, page: {}, size: {}",
+                name, category, restaurantId, isAvailable, isActive, isVegetarian, isSpicy, isPopular, isFeatured, isRecommended, page, size);
         try {
-            MenuItemPageResponse response = menuItemService.getMenuItemsWithFilters(name, category, restaurantId, isAvailable, isActive, isVegetarian, isSpicy, page, size);
+            MenuItemPageResponse response = menuItemService.getMenuItemsWithFilters(name, category, restaurantId, isAvailable, isActive, isVegetarian, isSpicy, isPopular, isFeatured, isRecommended, page, size);
             log.info("Retrieved {} menu items (page {} of {})", response.getData().size(), response.getCurrentPage(), response.getPageCount());
             return ResponseEntity.ok(response);
         } catch (Exception e) {

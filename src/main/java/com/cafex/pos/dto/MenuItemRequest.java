@@ -63,6 +63,12 @@ public class MenuItemRequest {
     @JsonProperty("is_popular")
     private Boolean isPopular = false;
 
+    @JsonProperty("is_featured")
+    private Boolean isFeatured = false;
+
+    @JsonProperty("is_recommended")
+    private Boolean isRecommended = false;
+
     @NotNull(message = "Preparation time is required")
     @Min(value = 1, message = "Preparation time must be at least 1 minute")
     @JsonProperty("preparation_time")

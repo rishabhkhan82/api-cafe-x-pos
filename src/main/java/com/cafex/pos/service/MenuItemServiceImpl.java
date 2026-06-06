@@ -57,6 +57,8 @@ public class MenuItemServiceImpl implements MenuItemService {
         menuItem.setIsVeg(menuItemRequest.getIsVeg());
         menuItem.setIsSpicy(menuItemRequest.getIsSpicy() != null ? menuItemRequest.getIsSpicy() : false);
         menuItem.setIsPopular(menuItemRequest.getIsPopular() != null ? menuItemRequest.getIsPopular() : false);
+        menuItem.setIsFeatured(menuItemRequest.getIsFeatured() != null ? menuItemRequest.getIsFeatured() : false);
+        menuItem.setIsRecommended(menuItemRequest.getIsRecommended() != null ? menuItemRequest.getIsRecommended() : false);
         menuItem.setPreparationTime(menuItemRequest.getPreparationTime());
         menuItem.setDiscount(menuItemRequest.getDiscount());
         menuItem.setRestaurantId(menuItemRequest.getRestaurantId());
@@ -126,6 +128,8 @@ public class MenuItemServiceImpl implements MenuItemService {
         existingMenuItem.setIsVeg(menuItemRequest.getIsVeg());
         existingMenuItem.setIsSpicy(menuItemRequest.getIsSpicy());
         existingMenuItem.setIsPopular(menuItemRequest.getIsPopular());
+        existingMenuItem.setIsFeatured(menuItemRequest.getIsFeatured());
+        existingMenuItem.setIsRecommended(menuItemRequest.getIsRecommended());
         existingMenuItem.setPreparationTime(menuItemRequest.getPreparationTime());
         existingMenuItem.setDiscount(menuItemRequest.getDiscount());
         existingMenuItem.setRestaurantId(menuItemRequest.getRestaurantId());
@@ -139,9 +143,9 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
 
     @Override
-    public MenuItemPageResponse getMenuItemsWithFilters(String name, String category, String restaurantId, String isAvailable, String isActive, String isVegetarian, String isSpicy, int page, int size) {
-        log.info("Fetching menu items with filters - name: {}, category: {}, restaurantId: {}, isAvailable: {}, isActive: {}, isVegetarian: {}, isSpicy: {}, page: {}, size: {}",
-                name, category, restaurantId, isAvailable, isActive, isVegetarian, isSpicy, page, size);
+    public MenuItemPageResponse getMenuItemsWithFilters(String name, String category, String restaurantId, String isAvailable, String isActive, String isVegetarian, String isSpicy, String isPopular, String isFeatured, String isRecommended, int page, int size) {
+        log.info("Fetching menu items with filters - name: {}, category: {}, restaurantId: {}, isAvailable: {}, isActive: {}, isVegetarian: {}, isSpicy: {}, isFeatured: {}, isPopular: {}, isRecommended: {}, page: {}, size: {}",
+                name, category, restaurantId, isAvailable, isActive, isVegetarian, isSpicy, isPopular, isFeatured, isRecommended, page, size);
 
         Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
@@ -193,8 +197,26 @@ public class MenuItemServiceImpl implements MenuItemService {
 
             // Is Spicy filter
             if (isSpicy != null && !isSpicy.trim().isEmpty() && !"all".equals(isSpicy)) {
-                Boolean spicy = "true".equals(isSpicy);
+                Boolean spicy = "true".equals(isSpicy) || "1".equals(isSpicy);
                 predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("isSpicy"), spicy));
+            }
+
+            // Is Popular filter
+            if (isPopular != null && !isPopular.trim().isEmpty() && !"all".equals(isPopular)) {
+                Boolean popular = "true".equals(isPopular) || "1".equals(isPopular);
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("isPopular"), popular));
+            }
+
+            // Is Featured filter
+            if (isFeatured != null && !isFeatured.trim().isEmpty() && !"all".equals(isFeatured)) {
+                Boolean featured = "true".equals(isFeatured) || "1".equals(isFeatured);
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("isFeatured"), featured));
+            }
+
+            // Is Recommended filter
+            if (isRecommended != null && !isRecommended.trim().isEmpty() && !"all".equals(isRecommended)) {
+                Boolean recommended = "true".equals(isRecommended) || "1".equals(isRecommended);
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("isRecommended"), recommended));
             }
 
             return predicate;
@@ -325,6 +347,8 @@ public class MenuItemServiceImpl implements MenuItemService {
         response.setIsVeg(menuItem.getIsVeg());
         response.setIsSpicy(menuItem.getIsSpicy());
         response.setIsPopular(menuItem.getIsPopular());
+        response.setIsFeatured(menuItem.getIsFeatured());
+        response.setIsRecommended(menuItem.getIsRecommended());
         response.setPreparationTime(menuItem.getPreparationTime());
         response.setDiscount(menuItem.getDiscount());
         response.setRestaurantId(menuItem.getRestaurantId());
