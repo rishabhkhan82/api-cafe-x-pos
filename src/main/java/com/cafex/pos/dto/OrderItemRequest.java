@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 @Data
 public class OrderItemRequest {
 
-    @NotNull(message = "Order ID is required")
     @JsonProperty("order_id")
     private Long orderId;
 

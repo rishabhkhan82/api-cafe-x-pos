@@ -6,8 +6,14 @@ import com.cafex.pos.dto.OrderItemRequest;
 import com.cafex.pos.dto.OrderItemResponse;
 import com.cafex.pos.entity.Order;
 import com.cafex.pos.entity.OrderItem;
+import com.cafex.pos.entity.Customer;
+import com.cafex.pos.entity.Restaurant;
+import com.cafex.pos.entity.MenuItem;
 import com.cafex.pos.repository.OrderRepository;
 import com.cafex.pos.repository.OrderItemRepository;
+import com.cafex.pos.repository.CustomerRepository;
+import com.cafex.pos.repository.RestaurantRepository;
+import com.cafex.pos.repository.MenuItemRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,6 +41,9 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final CustomerRepository customerRepository;
+    private final RestaurantRepository restaurantRepository;
+    private final MenuItemRepository menuItemRepository;
 
     public List<OrderResponse> getAllOrders() {
         log.info("Fetching all orders");
@@ -122,13 +131,28 @@ public class OrderService {
     public OrderResponse saveOrder(OrderRequest orderRequest) {
         log.info("Saving new order: {}", orderRequest.getOrderId());
 
-        // Check if orderId already exists
-        if (orderRepository.existsByOrderId(orderRequest.getOrderId())) {
+        // Check if orderId already exists (only when provided)
+        if (orderRequest.getOrderId() != null && !orderRequest.getOrderId().isBlank()
+                && orderRepository.existsByOrderId(orderRequest.getOrderId())) {
             throw new RuntimeException("Order ID already exists: " + orderRequest.getOrderId());
+        }
+
+        // Load related entities
+        Customer customer = null;
+        if (orderRequest.getCustomerId() != null) {
+            Optional<Customer> customerOpt = customerRepository.findById(orderRequest.getCustomerId());
+            customer = customerOpt.orElse(null);
+        }
+
+        Restaurant restaurant = null;
+        if (orderRequest.getRestaurantId() != null) {
+            Optional<Restaurant> restaurantOpt = restaurantRepository.findById(orderRequest.getRestaurantId());
+            restaurant = restaurantOpt.orElse(null);
         }
 
         Order order = new Order();
         order.setOrderId(orderRequest.getOrderId());
+        order.setCustomer(customer);
         order.setCustomerName(orderRequest.getCustomerName());
         order.setTableNumber(orderRequest.getTableNumber());
         order.setStatus(orderRequest.getStatus());
@@ -141,16 +165,31 @@ public class OrderService {
         order.setDeliveredAt(orderRequest.getDeliveredAt());
         order.setPriority(orderRequest.getPriority());
         order.setTaxAmount(orderRequest.getTaxAmount());
+        order.setRestaurant(restaurant);
         order.setCreatedAt(orderRequest.getCreatedAt() != null ? orderRequest.getCreatedAt() : LocalDateTime.now());
         order.setUpdatedAt(orderRequest.getUpdatedAt() != null ? orderRequest.getUpdatedAt() : LocalDateTime.now());
 
         Order savedOrder = orderRepository.save(order);
+
+        // Auto-generate orderId if not provided: ORD-{id zero-padded to 4 digits}
+        if (savedOrder.getOrderId() == null || savedOrder.getOrderId().isBlank()) {
+            String generatedOrderId = String.format("ORD-%04d", savedOrder.getId());
+            savedOrder.setOrderId(generatedOrderId);
+            orderRepository.save(savedOrder);
+        }
 
         // Save order items
         if (orderRequest.getOrderItems() != null && !orderRequest.getOrderItems().isEmpty()) {
             for (OrderItemRequest itemRequest : orderRequest.getOrderItems()) {
                 OrderItem orderItem = new OrderItem();
                 orderItem.setOrder(savedOrder);
+
+                // Load menu item entity
+                if (itemRequest.getMenuItemId() != null) {
+                    Optional<MenuItem> menuItemOpt = menuItemRepository.findById(itemRequest.getMenuItemId());
+                    menuItemOpt.ifPresent(orderItem::setMenuItem);
+                }
+
                 orderItem.setMenuItemName(itemRequest.getMenuItemName());
                 orderItem.setQuantity(itemRequest.getQuantity());
                 orderItem.setUnitPrice(itemRequest.getUnitPrice());

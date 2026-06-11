@@ -14,7 +14,6 @@ import java.util.List;
 @Slf4j
 public class OrderRequest {
 
-    @NotBlank(message = "Order ID is required")
     @Size(min = 3, max = 50, message = "Order ID must be between 3 and 50 characters")
     @JsonProperty("order_id")
     private String orderId;
