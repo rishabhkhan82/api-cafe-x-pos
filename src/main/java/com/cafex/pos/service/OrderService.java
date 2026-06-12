@@ -32,6 +32,8 @@ import org.springframework.data.jpa.domain.Specification;
 
 import com.cafex.pos.dto.OrderPageResponse;
 import jakarta.persistence.criteria.Predicate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @Service
 @RequiredArgsConstructor
@@ -62,7 +64,7 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-    public OrderPageResponse getOrdersWithFilters(String orderId, String status, String customerName, String date, int page, int size) {
+    public OrderPageResponse getOrdersWithFilters(String orderId, String status, String customerName, String date, Long customerId, int page, int size) {
         log.info("Fetching orders with filters - orderId: {}, status: {}, customerName: {}, date: {}, page: {}, size: {}",
                 orderId, status, customerName, date, page, size);
 
@@ -103,6 +105,11 @@ public class OrderService {
                 } catch (Exception e) {
                     log.warn("Invalid date filter: {}", date);
                 }
+            }
+
+            // Customer ID filter
+            if (customerId != null) {
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("customer").get("id"), customerId));
             }
 
             return predicate;
@@ -234,20 +241,26 @@ public class OrderService {
         existingOrder.setTaxAmount(orderRequest.getTaxAmount());
         existingOrder.setUpdatedAt(LocalDateTime.now());
 
-        // Delete existing order items and save new ones
-        orderItemRepository.deleteByOrderId(existingOrder.getId());
+        // Update order items in-place by matching ID from payload
         if (orderRequest.getOrderItems() != null && !orderRequest.getOrderItems().isEmpty()) {
             for (OrderItemRequest itemRequest : orderRequest.getOrderItems()) {
-                OrderItem orderItem = new OrderItem();
-                orderItem.setOrder(existingOrder);
-                orderItem.setMenuItemName(itemRequest.getMenuItemName());
-                orderItem.setQuantity(itemRequest.getQuantity());
-                orderItem.setUnitPrice(itemRequest.getUnitPrice());
-                orderItem.setTotalPrice(itemRequest.getTotalPrice());
-                orderItem.setCategory(itemRequest.getCategory());
-                orderItem.setSpecialInstructions(itemRequest.getSpecialInstructions());
-                orderItem.setStatus(itemRequest.getStatus());
-                orderItemRepository.save(orderItem);
+                if (itemRequest.getId() != null) {
+                    OrderItem existingItem = orderItemRepository.findById(itemRequest.getId()).orElse(null);
+                    if (existingItem != null && existingItem.getOrder().getId().equals(id)) {
+                        existingItem.setStatus(itemRequest.getStatus());
+                        existingItem.setQuantity(itemRequest.getQuantity());
+                        existingItem.setUnitPrice(itemRequest.getUnitPrice());
+                        existingItem.setTotalPrice(itemRequest.getTotalPrice());
+                        existingItem.setMenuItemName(itemRequest.getMenuItemName());
+                        existingItem.setCategory(itemRequest.getCategory());
+                        existingItem.setSpecialInstructions(itemRequest.getSpecialInstructions());
+                        if (itemRequest.getMenuItemId() != null) {
+                            MenuItem menuItem = menuItemRepository.findById(itemRequest.getMenuItemId()).orElse(null);
+                            existingItem.setMenuItem(menuItem);
+                        }
+                        orderItemRepository.save(existingItem);
+                    }
+                }
             }
         }
 
@@ -365,5 +378,24 @@ public class OrderService {
             1, // pageCount (not used for reports)
             content.size() // totalRowCount
         );
+    }
+
+    public List<OrderResponse> getActiveOrdersForAuthenticatedCustomer() {
+        log.info("Fetching active orders for authenticated customer");
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String customerIdentifier = auth.getName();
+
+        Customer customer = customerRepository.findByCustomerId(customerIdentifier)
+                .orElseThrow(() -> new RuntimeException("Customer not found: " + customerIdentifier));
+
+        List<Order> allOrders = orderRepository.findByCustomerId(customer.getId());
+        List<Order> activeOrders = allOrders.stream()
+                .filter(order -> order.getStatus() != Order.OrderStatus.COMPLETED
+                        && order.getStatus() != Order.OrderStatus.CANCELLED)
+                .collect(Collectors.toList());
+
+        return activeOrders.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
     }
 }
