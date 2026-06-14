@@ -45,6 +45,9 @@ public class Order {
     @Column(name = "special_instructions")
     private String specialInstructions;
 
+    @Column(name = "invoice_id")
+    private String invoiceId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_status")
     private PaymentStatus paymentStatus;
@@ -91,6 +94,7 @@ public class Order {
         this.paymentStatus = PaymentStatus.PENDING;
         this.orderType = OrderType.DINE_IN;
         this.priority = Priority.MEDIUM;
+        this.invoiceId = null;
     }
 
     // Getters and Setters
@@ -180,6 +184,14 @@ public class Order {
 
     public void setSpecialInstructions(String specialInstructions) {
         this.specialInstructions = specialInstructions;
+    }
+
+    public String getInvoiceId() {
+        return invoiceId;
+    }
+
+    public void setInvoiceId(String invoiceId) {
+        this.invoiceId = invoiceId;
     }
 
     public PaymentStatus getPaymentStatus() {

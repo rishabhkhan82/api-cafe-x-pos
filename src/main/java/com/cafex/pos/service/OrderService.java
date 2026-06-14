@@ -173,6 +173,7 @@ public class OrderService {
         order.setPriority(orderRequest.getPriority());
         order.setTaxAmount(orderRequest.getTaxAmount());
         order.setRestaurant(restaurant);
+        order.setInvoiceId(orderRequest.getInvoiceId());
         order.setCreatedAt(orderRequest.getCreatedAt() != null ? orderRequest.getCreatedAt() : LocalDateTime.now());
         order.setUpdatedAt(orderRequest.getUpdatedAt() != null ? orderRequest.getUpdatedAt() : LocalDateTime.now());
 
@@ -240,6 +241,7 @@ public class OrderService {
         existingOrder.setPriority(orderRequest.getPriority());
         existingOrder.setTaxAmount(orderRequest.getTaxAmount());
         existingOrder.setUpdatedAt(LocalDateTime.now());
+        existingOrder.setInvoiceId(orderRequest.getInvoiceId());
 
         // Update order items in-place by matching ID from payload
         if (orderRequest.getOrderItems() != null && !orderRequest.getOrderItems().isEmpty()) {
@@ -308,6 +310,7 @@ public class OrderService {
         response.setPriority(order.getPriority());
         response.setTaxAmount(order.getTaxAmount());
         response.setRestaurantId(order.getRestaurant() != null ? order.getRestaurant().getId() : null);
+        response.setInvoiceId(order.getInvoiceId());
 
         // Convert order items
         if (order.getItems() != null) {

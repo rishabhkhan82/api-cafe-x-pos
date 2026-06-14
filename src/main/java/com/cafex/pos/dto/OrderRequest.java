@@ -42,6 +42,9 @@ public class OrderRequest {
     @JsonProperty("special_instructions")
     private String specialInstructions;
 
+    @JsonProperty("invoice_id")
+    private String invoiceId;
+
     @JsonProperty("payment_status")
     private Order.PaymentStatus paymentStatus = Order.PaymentStatus.PENDING;
 
