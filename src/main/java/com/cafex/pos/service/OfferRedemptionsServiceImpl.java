@@ -82,6 +82,7 @@ public class OfferRedemptionsServiceImpl implements OfferRedemptionsService {
         redemption.setRedemptionMethod(request.getRedemptionMethod());
         redemption.setAppliedBy(request.getAppliedBy());
         redemption.setAppliedAt(request.getAppliedAt() != null ? request.getAppliedAt() : LocalDateTime.now());
+        redemption.setInvoiceId(request.getInvoiceId());
         redemption.setOrderItems(request.getOrderItems());
         redemption.setConditionsMet(request.getConditionsMet());
         redemption.setUsageCount(0);

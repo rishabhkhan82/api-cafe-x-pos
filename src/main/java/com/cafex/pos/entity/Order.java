@@ -72,6 +72,9 @@ public class Order {
     @Column(name = "tax_amount")
     private BigDecimal taxAmount;
 
+    @Column(name = "discount_amount")
+    private BigDecimal discountAmount;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id", referencedColumnName = "id")
     private Restaurant restaurant;
@@ -248,6 +251,14 @@ public class Order {
 
     public void setTaxAmount(BigDecimal taxAmount) {
         this.taxAmount = taxAmount;
+    }
+
+    public BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(BigDecimal discountAmount) {
+        this.discountAmount = discountAmount;
     }
 
     public Restaurant getRestaurant() {

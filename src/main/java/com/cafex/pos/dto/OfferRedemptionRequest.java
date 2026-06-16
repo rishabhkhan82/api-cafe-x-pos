@@ -53,6 +53,9 @@ public class OfferRedemptionRequest {
     @JsonProperty("applied_at")
     private LocalDateTime appliedAt;
 
+    @JsonProperty("invoice_id")
+    private String invoiceId;
+
     @JsonProperty("order_items")
     private String orderItems;
 
