@@ -40,6 +40,9 @@ public class LoyaltyTransactionsRequest {
     @JsonProperty("order_id")
     private String orderId;
 
+    @JsonProperty("invoice_id")
+    private String invoiceId;
+
     @JsonProperty("offer_id")
     private String offerId;
 

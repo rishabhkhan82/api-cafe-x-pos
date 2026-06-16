@@ -38,6 +38,9 @@ public class LoyaltyTransactions {
     @Column(name = "order_id")
     private String orderId;
 
+    @Column(name = "invoice_id")
+    private String invoiceId;
+
     @Column(name = "offer_id")
     private String offerId;
 
@@ -170,6 +173,14 @@ public class LoyaltyTransactions {
 
     public void setOrderId(String orderId) {
         this.orderId = orderId;
+    }
+
+    public String getInvoiceId() {
+        return invoiceId;
+    }
+
+    public void setInvoiceId(String invoiceId) {
+        this.invoiceId = invoiceId;
     }
 
     public String getOfferId() {

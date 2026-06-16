@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface LoyaltyProgramsService {
     LoyaltyProgramResponse createProgram(LoyaltyProgramRequest request);
+    LoyaltyProgramResponse createLoyaltyProgram(LoyaltyProgramRequest request);
     LoyaltyProgramResponse updateProgram(Long id, LoyaltyProgramRequest request);
     LoyaltyProgramPageResponse getProgramsWithFilters(String customerId, String isActive, int page, int size);
     Optional<LoyaltyProgramResponse> getProgramById(Long id);

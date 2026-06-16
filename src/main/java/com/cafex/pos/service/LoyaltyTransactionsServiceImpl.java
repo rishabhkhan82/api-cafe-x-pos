@@ -4,9 +4,11 @@ import com.cafex.pos.dto.LoyaltyTransactionsPageResponse;
 import com.cafex.pos.dto.LoyaltyTransactionsRequest;
 import com.cafex.pos.dto.LoyaltyTransactionsResponse;
 import com.cafex.pos.entity.Customer;
+import com.cafex.pos.entity.LoyaltyPrograms;
 import com.cafex.pos.entity.LoyaltyTransactions;
 import com.cafex.pos.entity.Restaurant;
 import com.cafex.pos.repository.CustomerRepository;
+import com.cafex.pos.repository.LoyaltyProgramsRepository;
 import com.cafex.pos.repository.LoyaltyTransactionsRepository;
 import com.cafex.pos.repository.RestaurantRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,7 @@ public class LoyaltyTransactionsServiceImpl implements LoyaltyTransactionsServic
     private final LoyaltyTransactionsRepository loyaltyTransactionsRepository;
     private final CustomerRepository customerRepository;
     private final RestaurantRepository restaurantRepository;
+    private final LoyaltyProgramsRepository loyaltyProgramsRepository;
 
     @Override
     public LoyaltyTransactionsResponse createTransaction(LoyaltyTransactionsRequest request) {
@@ -72,6 +75,7 @@ public class LoyaltyTransactionsServiceImpl implements LoyaltyTransactionsServic
         transaction.setBalanceBefore(request.getBalanceBefore());
         transaction.setBalanceAfter(request.getBalanceAfter());
         transaction.setOrderId(request.getOrderId());
+        transaction.setInvoiceId(request.getInvoiceId());
         transaction.setOfferId(request.getOfferId());
         transaction.setDescription(request.getDescription());
         transaction.setReference(request.getReference());
@@ -90,6 +94,20 @@ public class LoyaltyTransactionsServiceImpl implements LoyaltyTransactionsServic
 
         LoyaltyTransactions savedTransaction = loyaltyTransactionsRepository.save(transaction);
         log.info("Loyalty transaction created successfully with ID: {}", savedTransaction.getId());
+
+        LoyaltyPrograms program = loyaltyProgramsRepository.findByCustomerId(request.getCustomerId())
+                .orElse(null);
+        if (program != null) {
+            int points = request.getPoints() != null ? request.getPoints() : 0;
+            program.setPointsBalance(program.getPointsBalance() + points);
+            if ("EARNED".equalsIgnoreCase(request.getTransactionType())) {
+                program.setTotalPointsEarned(program.getTotalPointsEarned() + points);
+            } else if ("REDEEMED".equalsIgnoreCase(request.getTransactionType())) {
+                program.setTotalPointsRedeemed(program.getTotalPointsRedeemed() + points);
+            }
+            program.setLastActivityDate(LocalDateTime.now());
+            loyaltyProgramsRepository.save(program);
+        }
 
         return convertToResponse(savedTransaction);
     }
@@ -124,6 +142,7 @@ public class LoyaltyTransactionsServiceImpl implements LoyaltyTransactionsServic
         existingTransaction.setBalanceBefore(request.getBalanceBefore());
         existingTransaction.setBalanceAfter(request.getBalanceAfter());
         existingTransaction.setOrderId(request.getOrderId());
+        existingTransaction.setInvoiceId(request.getInvoiceId());
         existingTransaction.setOfferId(request.getOfferId());
         existingTransaction.setDescription(request.getDescription());
         existingTransaction.setReference(request.getReference());
@@ -223,6 +242,7 @@ public class LoyaltyTransactionsServiceImpl implements LoyaltyTransactionsServic
         response.setBalanceBefore(transaction.getBalanceBefore());
         response.setBalanceAfter(transaction.getBalanceAfter());
         response.setOrderId(transaction.getOrderId());
+        response.setInvoiceId(transaction.getInvoiceId());
         response.setOfferId(transaction.getOfferId());
         response.setDescription(transaction.getDescription());
         response.setReference(transaction.getReference());

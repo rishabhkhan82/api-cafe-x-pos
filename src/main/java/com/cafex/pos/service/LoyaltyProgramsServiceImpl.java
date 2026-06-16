@@ -70,9 +70,7 @@ public class LoyaltyProgramsServiceImpl implements LoyaltyProgramsService {
         program.setLastActivityDate(request.getLastActivityDate());
         program.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
         program.setCreatedAt(request.getCreatedAt() != null ? request.getCreatedAt() : LocalDateTime.now());
-        program.setCreatedBy(request.getCreatedBy());
         program.setUpdatedAt(LocalDateTime.now());
-        program.setUpdatedBy(request.getUpdatedBy());
 
         LoyaltyPrograms savedProgram = loyaltyProgramsRepository.save(program);
         log.info("Loyalty program saved successfully with ID: {}", savedProgram.getId());
@@ -107,13 +105,35 @@ public class LoyaltyProgramsServiceImpl implements LoyaltyProgramsService {
         existingProgram.setLastActivityDate(request.getLastActivityDate());
         existingProgram.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
         existingProgram.setUpdatedAt(LocalDateTime.now());
-        existingProgram.setCreatedBy(request.getCreatedBy());
-        existingProgram.setUpdatedBy(request.getUpdatedBy());
 
         LoyaltyPrograms updatedProgram = loyaltyProgramsRepository.save(existingProgram);
         log.info("Loyalty program updated successfully with ID: {}", updatedProgram.getId());
 
         return convertToResponse(updatedProgram);
+    }
+
+    @Override
+    public LoyaltyProgramResponse createLoyaltyProgram(LoyaltyProgramRequest request) {
+        log.info("Auto-creating loyalty program for customerId: {}", request.getCustomerId());
+
+        Customer customer = customerRepository.findById(request.getCustomerId())
+                .orElseThrow(() -> new RuntimeException("Customer not found with ID: " + request.getCustomerId()));
+
+        LoyaltyPrograms program = new LoyaltyPrograms();
+        program.setCustomer(customer);
+        program.setProgramName(request.getProgramName() != null ? request.getProgramName() : "Default Program");
+        program.setPointsBalance(request.getPointsBalance() != null ? request.getPointsBalance() : 0);
+        program.setTotalPointsEarned(request.getTotalPointsEarned() != null ? request.getTotalPointsEarned() : 0);
+        program.setTotalPointsRedeemed(request.getTotalPointsRedeemed() != null ? request.getTotalPointsRedeemed() : 0);
+        program.setTier(request.getTier() != null ? request.getTier() : "BRONZE");
+        program.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+        program.setCreatedAt(LocalDateTime.now());
+        program.setUpdatedAt(LocalDateTime.now());
+
+        LoyaltyPrograms savedProgram = loyaltyProgramsRepository.save(program);
+        log.info("Loyalty program auto-created with ID: {}", savedProgram.getId());
+
+        return convertToResponse(savedProgram);
     }
 
     @Override
@@ -191,8 +211,6 @@ public class LoyaltyProgramsServiceImpl implements LoyaltyProgramsService {
         response.setIsActive(program.getIsActive());
         response.setCreatedAt(program.getCreatedAt());
         response.setUpdatedAt(program.getUpdatedAt());
-        response.setCreatedBy(program.getCreatedBy());
-        response.setUpdatedBy(program.getUpdatedBy());
         return response;
     }
 }

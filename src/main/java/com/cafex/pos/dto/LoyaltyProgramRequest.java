@@ -46,12 +46,6 @@ public class LoyaltyProgramRequest {
     @JsonProperty("is_active")
     private Boolean isActive = true;
 
-    @JsonProperty("created_by")
-    private Long createdBy;
-
-    @JsonProperty("updated_by")
-    private Long updatedBy;
-
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
 
