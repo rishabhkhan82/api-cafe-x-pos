@@ -99,10 +99,11 @@ public class LoyaltyTransactionsServiceImpl implements LoyaltyTransactionsServic
                 .orElse(null);
         if (program != null) {
             int points = request.getPoints() != null ? request.getPoints() : 0;
-            program.setPointsBalance(program.getPointsBalance() + points);
             if ("EARNED".equalsIgnoreCase(request.getTransactionType())) {
+                program.setPointsBalance(program.getPointsBalance() + points);
                 program.setTotalPointsEarned(program.getTotalPointsEarned() + points);
             } else if ("REDEEMED".equalsIgnoreCase(request.getTransactionType())) {
+                program.setPointsBalance(program.getPointsBalance() - points);
                 program.setTotalPointsRedeemed(program.getTotalPointsRedeemed() + points);
             }
             program.setLastActivityDate(LocalDateTime.now());

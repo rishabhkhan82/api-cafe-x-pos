@@ -75,6 +75,9 @@ public class Order {
     @Column(name = "discount_amount")
     private BigDecimal discountAmount;
 
+    @Column(name = "loyalty_discount_amount")
+    private BigDecimal loyaltyDiscountAmount;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id", referencedColumnName = "id")
     private Restaurant restaurant;
@@ -259,6 +262,14 @@ public class Order {
 
     public void setDiscountAmount(BigDecimal discountAmount) {
         this.discountAmount = discountAmount;
+    }
+
+    public BigDecimal getLoyaltyDiscountAmount() {
+        return loyaltyDiscountAmount;
+    }
+
+    public void setLoyaltyDiscountAmount(BigDecimal loyaltyDiscountAmount) {
+        this.loyaltyDiscountAmount = loyaltyDiscountAmount;
     }
 
     public Restaurant getRestaurant() {

@@ -56,7 +56,7 @@ public class MenuItemController {
     public ResponseEntity<MenuItemPageResponse> getMenuItems(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) String restaurantId,
+            @RequestParam("restaurant_id") String restaurantId,
             @RequestParam(required = false) String isAvailable,
             @RequestParam(required = false) String isActive,
             @RequestParam(required = false) String isVegetarian,

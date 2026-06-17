@@ -67,6 +67,9 @@ public class OrderResponse {
     @JsonProperty("discount_amount")
     private BigDecimal discountAmount;
 
+    @JsonProperty("loyalty_discount_amount")
+    private BigDecimal loyaltyDiscountAmount;
+
     @JsonProperty("restaurant_id")
     private Long restaurantId;
 

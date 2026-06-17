@@ -71,6 +71,10 @@ public class OrderRequest {
     @JsonProperty("discount_amount")
     private BigDecimal discountAmount;
 
+    @DecimalMin(value = "0.0", inclusive = true, message = "Loyalty discount amount must be non-negative")
+    @JsonProperty("loyalty_discount_amount")
+    private BigDecimal loyaltyDiscountAmount;
+
     @JsonProperty("restaurant_id")
     private Long restaurantId;
 
