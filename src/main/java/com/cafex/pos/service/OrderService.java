@@ -353,8 +353,8 @@ public class OrderService {
         return response;
     }
 
-    public OrderPageResponse getOrdersForReports(String startDate, String endDate, String status) {
-        log.info("Fetching orders for reports - startDate: {}, endDate: {}, status: {}", startDate, endDate, status);
+    public OrderPageResponse getOrdersForReports(String startDate, String endDate, String status, Long restaurantId) {
+        log.info("Fetching orders for reports - startDate: {}, endDate: {}, status: {}, restaurantId: {}", startDate, endDate, status, restaurantId);
 
         Specification<Order> spec = (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
@@ -379,6 +379,12 @@ public class OrderService {
                 } catch (IllegalArgumentException e) {
                     log.warn("Invalid status filter for reports: {}", status);
                 }
+            }
+
+            // Restaurant filter
+            if (restaurantId != null) {
+                predicate = criteriaBuilder.and(predicate,
+                    criteriaBuilder.equal(root.get("restaurant").get("id"), restaurantId));
             }
 
             return predicate;

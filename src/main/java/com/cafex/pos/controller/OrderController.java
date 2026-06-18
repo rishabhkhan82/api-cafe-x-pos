@@ -90,10 +90,11 @@ public class OrderController {
     public ResponseEntity<OrderPageResponse> getOrdersForReports(
             @RequestParam String startDate,
             @RequestParam String endDate,
-            @RequestParam(defaultValue = "COMPLETED") String status) {
-        log.info("Get orders for reports request received - startDate: {}, endDate: {}, status: {}", startDate, endDate, status);
+            @RequestParam(defaultValue = "COMPLETED") String status,
+            @RequestParam(name = "restaurant_id", required = false) Long restaurantId) {
+        log.info("Get orders for reports request received - startDate: {}, endDate: {}, status: {}, restaurantId: {}", startDate, endDate, status, restaurantId);
         try {
-            OrderPageResponse response = orderService.getOrdersForReports(startDate, endDate, status);
+            OrderPageResponse response = orderService.getOrdersForReports(startDate, endDate, status, restaurantId);
             log.info("Retrieved {} orders for reports", response.getData().size());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
