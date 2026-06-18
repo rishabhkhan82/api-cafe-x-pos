@@ -55,11 +55,20 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-    public List<OrderResponse> getCurrentOrders() {
-        log.info("Fetching current orders (not completed)");
-        List<Order> orders = orderRepository.findAll();
+    public List<OrderResponse> getCurrentOrders(Long restaurantId) {
+        log.info("Fetching current orders (not completed) - restaurant_id: {}", restaurantId);
+        Specification<Order> spec = (root, query, criteriaBuilder) -> {
+            Predicate predicate = criteriaBuilder.conjunction();
+            predicate = criteriaBuilder.and(predicate,
+                criteriaBuilder.notEqual(root.get("status"), Order.OrderStatus.COMPLETED));
+            if (restaurantId != null) {
+                predicate = criteriaBuilder.and(predicate,
+                    criteriaBuilder.equal(root.get("restaurant").get("id"), restaurantId));
+            }
+            return predicate;
+        };
+        List<Order> orders = orderRepository.findAll(spec);
         return orders.stream()
-                .filter(order -> order.getStatus() != Order.OrderStatus.COMPLETED)
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
