@@ -32,6 +32,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import com.cafex.pos.dto.OrderPageResponse;
 import jakarta.persistence.criteria.Predicate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -46,6 +47,7 @@ public class OrderService {
     private final CustomerRepository customerRepository;
     private final RestaurantRepository restaurantRepository;
     private final MenuItemRepository menuItemRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public List<OrderResponse> getAllOrders() {
         log.info("Fetching all orders");
@@ -222,7 +224,12 @@ public class OrderService {
 
         log.info("Order saved successfully with ID: {}", savedOrder.getId());
 
-        return convertToResponse(savedOrder);
+        savedOrder.setItems(orderItemRepository.findByOrderId(savedOrder.getId()));
+
+        OrderResponse response = convertToResponse(savedOrder);
+        emitOrderUpdate(response, "NEW");
+
+        return response;
     }
 
     public OrderResponse updateOrder(Long id, OrderRequest orderRequest) {
@@ -282,7 +289,12 @@ public class OrderService {
         Order updatedOrder = orderRepository.save(existingOrder);
         log.info("Order updated successfully with ID: {}", updatedOrder.getId());
 
-        return convertToResponse(updatedOrder);
+        updatedOrder.setItems(orderItemRepository.findByOrderId(updatedOrder.getId()));
+
+        OrderResponse response = convertToResponse(updatedOrder);
+        emitOrderUpdate(response, "UPDATE");
+
+        return response;
     }
 
     public void deleteOrder(Long id) {
@@ -421,5 +433,18 @@ public class OrderService {
         return activeOrders.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
+    }
+
+    private void emitOrderUpdate(OrderResponse response, String type) {
+        if (response.getRestaurantId() != null) {
+            if ("NEW".equals(type)) {
+                messagingTemplate.convertAndSend("/topic/orders/" + response.getRestaurantId() + "/new", response);
+            } else {
+                messagingTemplate.convertAndSend("/topic/orders/" + response.getRestaurantId() + "/updates", response);
+            }
+        }
+        if (response.getCustomerId() != null) {
+            messagingTemplate.convertAndSend("/topic/users/" + response.getCustomerId() + "/orders", response);
+        }
     }
 }
