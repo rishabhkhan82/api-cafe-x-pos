@@ -56,15 +56,15 @@ public class OffersController {
     public ResponseEntity<OfferPageResponse> getOffers(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String type,
-            @RequestParam(required = false) String restaurantId,
+            @RequestParam(value = "restaurant_id", required = false) String restaurant_id,
             @RequestParam(required = false) String isActive,
             @RequestParam(required = false) String autoApply,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        log.info("Get offers request received with filters - name: {}, type: {}, restaurantId: {}, isActive: {}, autoApply: {}, page: {}, size: {}",
-                name, type, restaurantId, isActive, autoApply, page, size);
+        log.info("Get offers request received with filters - name: {}, type: {}, restaurant_id: {}, isActive: {}, autoApply: {}, page: {}, size: {}",
+                name, type, restaurant_id, isActive, autoApply, page, size);
         try {
-            OfferPageResponse response = offersService.getOffersWithFilters(name, type, restaurantId, isActive, autoApply, page, size);
+            OfferPageResponse response = offersService.getOffersWithFilters(name, type, restaurant_id, isActive, autoApply, page, size);
             log.info("Retrieved {} offers (page {} of {})", response.getData().size(), response.getCurrentPage(), response.getPageCount());
             return ResponseEntity.ok(response);
         } catch (Exception e) {

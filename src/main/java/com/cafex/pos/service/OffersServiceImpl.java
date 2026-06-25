@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -126,9 +127,14 @@ public class OffersServiceImpl implements OffersService {
     }
 
     @Override
-    public OfferPageResponse getOffersWithFilters(String name, String type, String restaurantId, String isActive, String autoApply, int page, int size) {
-        log.info("Fetching offers with filters - name: {}, type: {}, restaurantId: {}, isActive: {}, autoApply: {}, page: {}, size: {}",
-                name, type, restaurantId, isActive, autoApply, page, size);
+    public OfferPageResponse getOffersWithFilters(String name, String type, String restaurant_id, String isActive, String autoApply, int page, int size) {
+        log.info("Fetching offers with filters - name: {}, type: {}, restaurant_id: {}, isActive: {}, autoApply: {}, page: {}, size: {}",
+                name, type, restaurant_id, isActive, autoApply, page, size);
+
+        if (restaurant_id == null || restaurant_id.trim().isEmpty()) {
+            log.warn("Offers fetch rejected: restaurant_id is required but was not provided");
+            return new OfferPageResponse(Collections.emptyList(), 1, 1, 0);
+        }
 
         Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
@@ -152,13 +158,11 @@ public class OffersServiceImpl implements OffersService {
             }
 
             // Restaurant filter
-            if (restaurantId != null && !restaurantId.trim().isEmpty()) {
-                try {
-                    Long id = Long.parseLong(restaurantId);
-                    predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("restaurantId"), id));
-                } catch (NumberFormatException e) {
-                    // invalid, ignore
-                }
+            try {
+                Long id = Long.parseLong(restaurant_id);
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("restaurantId"), id));
+            } catch (NumberFormatException e) {
+                log.warn("Invalid restaurant_id format: {}", restaurant_id);
             }
 
             // Is Active filter
@@ -184,7 +188,7 @@ public class OffersServiceImpl implements OffersService {
 
         return new OfferPageResponse(
             content,
-            offerPage.getNumber() + 1, // currentPage (1-based)
+            offerPage.getNumber() + 1,
             offerPage.getTotalPages(),
             offerPage.getTotalElements()
         );
