@@ -40,7 +40,9 @@ public class NotificationUserService {
 
         Specification<User> restaurantUserSpec = (root, query, cb) -> {
             Predicate predicate = cb.conjunction();
-            predicate = cb.and(predicate, cb.equal(root.get("restaurantId"), restaurantId));
+            if (restaurantId != null && !restaurantId.trim().isEmpty()) {
+                predicate = cb.and(predicate, cb.equal(root.get("restaurantId"), restaurantId));
+            }
             predicate = cb.and(predicate, cb.notEqual(root.get("role"), User.UserRole.platform_owner));
             predicate = cb.and(predicate, cb.equal(root.get("isActive"), User.ActiveStatus.Y));
 
