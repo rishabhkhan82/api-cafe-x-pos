@@ -36,6 +36,7 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
     private final RestaurantRepository restaurantRepository;
     private final SubscriptionPlansRepository subscriptionPlansRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     @Override
     public RestaurantSubscriptionResponse saveRestaurantSubscription(RestaurantSubscriptionRequest request) {
@@ -53,7 +54,34 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         RestaurantSubscriptions saved = restaurantSubscriptionRepository.save(entity);
         log.info("Restaurant subscription saved successfully with ID: {}", saved.getId());
 
-        return convertToResponse(saved);
+        RestaurantSubscriptionResponse response = convertToResponse(saved);
+
+        try {
+            Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId()).orElse(null);
+            SubscriptionPlans plan = subscriptionPlansRepository.findById(request.getPlanId()).orElse(null);
+            if (restaurant != null && plan != null && restaurant.getOwnerEmail() != null) {
+                java.util.Map<String, Object> emailVariables = new java.util.HashMap<>();
+                emailVariables.put("plan", plan.getDisplayName());
+                emailVariables.put("restaurant_name", restaurant.getName());
+                emailVariables.put("price", saved.getFinalAmount());
+                emailVariables.put("subscription_id", saved.getSubscriptionId());
+
+                emailService.sendHtmlEmail(
+                    restaurant.getOwnerEmail(),
+                    "Subscription Activated",
+                    "subscription_activated",
+                    emailVariables
+                );
+                log.info("Subscription activated email sent to: {}", restaurant.getOwnerEmail());
+            } else {
+                log.warn("Skipping subscription email: restaurant={}, plan={}, ownerEmail={}",
+                    restaurant != null, plan != null, restaurant != null ? restaurant.getOwnerEmail() : null);
+            }
+        } catch (Exception e) {
+            log.error("Failed to send subscription activated email for subscription ID: {}. Error: {}", saved.getSubscriptionId(), e.getMessage());
+        }
+
+        return response;
     }
 
     @Override
