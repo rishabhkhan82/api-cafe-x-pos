@@ -3,7 +3,9 @@ package com.cafex.pos.service;
 import com.cafex.pos.dto.UserRequest;
 import com.cafex.pos.dto.UserResponse;
 import com.cafex.pos.entity.User;
+import com.cafex.pos.entity.Restaurant;
 import com.cafex.pos.repository.UserRepository;
+import com.cafex.pos.repository.RestaurantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,7 +38,9 @@ import jakarta.persistence.criteria.Predicate;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final RestaurantRepository restaurantRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public List<UserResponse> getAllUsers() {
         log.info("Fetching all users");
@@ -194,9 +198,11 @@ public class UserService {
             throw new RuntimeException("Email already exists: " + userRequest.getEmail());
         }
 
+        String plaintextPassword = userRequest.getPassword();
+
         User user = new User();
         user.setUsername(userRequest.getUsername());
-        user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+        user.setPassword(passwordEncoder.encode(plaintextPassword));
         user.setName(userRequest.getName());
         user.setEmail(userRequest.getEmail());
         user.setPhone(userRequest.getPhone());
@@ -214,7 +220,40 @@ public class UserService {
         User savedUser = userRepository.save(user);
         log.info("User saved successfully with ID: {}", savedUser.getId());
 
-        return convertToResponse(savedUser);
+        UserResponse response = convertToResponse(savedUser);
+
+        try {
+            String restaurantName = "CafeX POS";
+            if (savedUser.getRestaurantId() != null && !savedUser.getRestaurantId().isEmpty()) {
+                try {
+                    Long restaurantIdLong = Long.parseLong(savedUser.getRestaurantId());
+                    Restaurant restaurant = restaurantRepository.findById(restaurantIdLong).orElse(null);
+                    if (restaurant != null) {
+                        restaurantName = restaurant.getName();
+                    }
+                } catch (NumberFormatException e) {
+                    log.warn("Invalid restaurant ID format for user {}: {}", savedUser.getId(), savedUser.getRestaurantId());
+                }
+            }
+
+            java.util.Map<String, Object> emailVariables = new java.util.HashMap<>();
+            emailVariables.put("username", savedUser.getUsername());
+            emailVariables.put("email", savedUser.getEmail());
+            emailVariables.put("password", plaintextPassword);
+            emailVariables.put("restaurant_name", restaurantName);
+
+            emailService.sendHtmlEmail(
+                savedUser.getEmail(),
+                "Welcome to CafeX POS - Your Account is Ready",
+                "user_created",
+                emailVariables
+            );
+            log.info("User created email sent to: {}", savedUser.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send user created email to: {} for user ID: {}. Error: {}", savedUser.getEmail(), savedUser.getId(), e.getMessage());
+        }
+
+        return response;
     }
 
     public UserResponse updateUser(Long id, UserRequest userRequest) {

@@ -12,23 +12,23 @@
                 <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
                     <!-- Header -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 30px 40px; text-align:center;">
+                        <td style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 30px 40px; text-align:center;">
                             <h1 style="color:#ffffff; margin:0; font-size:28px; font-weight:bold;">CafeX POS</h1>
-                            <p style="color:#e0e0e0; margin:8px 0 0 0; font-size:14px;">Welcome to the team!</p>
+                            <p style="color:#fee2e2; margin:8px 0 0 0; font-size:14px;">Your account is ready!</p>
                         </td>
                     </tr>
                     <!-- Body -->
                     <tr>
                         <td style="padding: 40px;">
-                            <h2 style="color:#333333; margin-top:0; font-size:22px;">Welcome aboard, <span th:text="${username}">User</span>!</h2>
+                            <h2 style="color:#333333; margin-top:0; font-size:22px;">Welcome to the team, <span th:text="${username}">User</span>!</h2>
                             <p style="color:#555555; font-size:16px; line-height:1.6;">
-                                Your account has been created for restaurant <strong th:text="${restaurant_name}">--</strong>.
+                                Your account has been created for <strong th:text="${restaurant_name}">--</strong>.
                             </p>
                             <p style="color:#555555; font-size:16px; line-height:1.6;">
-                                Please use the following credentials to log in:
+                                Use the following credentials to log in:
                             </p>
                             <!-- Credentials Box -->
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f9f9f9; border-left:4px solid #4facfe; margin:20px 0;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f9f9f9; border-left:4px solid #ef4444; margin:20px 0;">
                                 <tr>
                                     <td style="padding:20px;">
                                         <p style="margin:0 0 10px 0; color:#333333; font-size:15px;">
@@ -46,8 +46,8 @@
                             <!-- CTA Button -->
                             <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:30px 0;">
                                 <tr>
-                                    <td style="background-color:#4facfe; border-radius:4px; text-align:center;">
-                                        <a th:href="@{${login_url}}" style="display:inline-block; padding:14px 30px; color:#ffffff; text-decoration:none; font-size:16px; font-weight:bold;">
+                                    <td style="background-color:#ef4444; border-radius:4px; text-align:center;">
+                                        <a th:href="${'http://localhost:4200/login'}" style="display:inline-block; padding:14px 30px; color:#ffffff; text-decoration:none; font-size:16px; font-weight:bold;">
                                             Login to Dashboard
                                         </a>
                                     </td>
