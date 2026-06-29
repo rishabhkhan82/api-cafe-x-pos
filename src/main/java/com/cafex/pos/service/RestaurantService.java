@@ -29,6 +29,7 @@ import jakarta.persistence.criteria.Predicate;
 public class RestaurantService {
 
     private final RestaurantRepository restaurantRepository;
+    private final EmailService emailService;
 
     public List<RestaurantResponse> getAllRestaurants() {
         log.info("Fetching all restaurants");
@@ -135,7 +136,28 @@ public class RestaurantService {
         Restaurant savedRestaurant = restaurantRepository.save(restaurant);
         log.info("Restaurant saved successfully with ID: {}", savedRestaurant.getId());
 
-        return convertToResponse(savedRestaurant);
+        RestaurantResponse response = convertToResponse(savedRestaurant);
+
+        try {
+            java.util.Map<String, Object> emailVariables = new java.util.HashMap<>();
+            emailVariables.put("restaurant_name", response.getName());
+            emailVariables.put("restaurant_id", response.getId());
+            emailVariables.put("address", response.getAddress());
+            emailVariables.put("owner_name", response.getOwnerName());
+            emailVariables.put("owner_email", response.getOwnerEmail());
+
+            emailService.sendHtmlEmail(
+                response.getOwnerEmail(),
+                "Restaurant Created Successfully",
+                "restaurant_created",
+                emailVariables
+            );
+            log.info("Restaurant created email sent to: {}", response.getOwnerEmail());
+        } catch (Exception e) {
+            log.error("Failed to send restaurant created email to: {} for restaurant ID: {}. Error: {}", response.getOwnerEmail(), response.getId(), e.getMessage());
+        }
+
+        return response;
     }
 
     public RestaurantResponse updateRestaurant(Long id, RestaurantRequest restaurantRequest) {
