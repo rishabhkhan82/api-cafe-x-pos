@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -36,6 +37,7 @@ public class SecurityConfig implements WebMvcConfigurer {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
+                .requestMatchers(HttpMethod.GET, "/restaurants/**", "/menu-items/**").permitAll()
                 .requestMatchers("/auth/**", "/ws/**", "/system-settings/get-system-settings", "/users/**", "/orders/**", "/order-items/**", "/uploads/**", "/user-roles/**", "/menu-access-permissions/**", "/navigation-menus/**", "/subscription-plans/**", "/plan-features-mapping/**", "/role-features-mapping/**", "/current-orders").permitAll()
                 .anyRequest().authenticated()
             )
