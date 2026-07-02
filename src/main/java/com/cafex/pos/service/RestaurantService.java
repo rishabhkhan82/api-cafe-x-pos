@@ -2,6 +2,8 @@ package com.cafex.pos.service;
 
 import com.cafex.pos.dto.RestaurantRequest;
 import com.cafex.pos.dto.RestaurantResponse;
+import com.cafex.pos.dto.OperationResponse;
+import com.cafex.pos.dto.RestaurantPageResponse;
 import com.cafex.pos.entity.Restaurant;
 import com.cafex.pos.repository.RestaurantRepository;
 import lombok.RequiredArgsConstructor;
@@ -52,7 +54,6 @@ public class RestaurantService {
         Specification<Restaurant> spec = (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
 
-            // Name filter (search in name, restaurantId)
             if (name != null && !name.trim().isEmpty()) {
                 String searchTerm = "%" + name.toLowerCase() + "%";
                 Predicate namePredicate = criteriaBuilder.or(
@@ -62,7 +63,6 @@ public class RestaurantService {
                 predicate = criteriaBuilder.and(predicate, namePredicate);
             }
 
-            // Status filter
             if (status != null && !status.trim().isEmpty() && !"all".equals(status)) {
                 try {
                     Restaurant.RestaurantStatus restaurantStatus = Restaurant.RestaurantStatus.valueOf(status.toUpperCase());
@@ -72,7 +72,6 @@ public class RestaurantService {
                 }
             }
 
-            // Owner name filter
             if (ownerName != null && !ownerName.trim().isEmpty()) {
                 String searchTerm = "%" + ownerName.toLowerCase() + "%";
                 predicate = criteriaBuilder.and(predicate,
@@ -89,10 +88,10 @@ public class RestaurantService {
                 .collect(Collectors.toList());
 
         return new RestaurantPageResponse(
-            content,
-            restaurantPage.getNumber() + 1, // currentPage (1-based)
-            restaurantPage.getTotalPages(),
-            restaurantPage.getTotalElements()
+                content,
+                restaurantPage.getNumber() + 1,
+                restaurantPage.getTotalPages(),
+                restaurantPage.getTotalElements()
         );
     }
 
@@ -105,7 +104,6 @@ public class RestaurantService {
     public RestaurantResponse saveRestaurant(RestaurantRequest restaurantRequest) {
         log.info("Saving new restaurant: {}", restaurantRequest.getName());
 
-        // Check if email already exists
         if (restaurantRepository.existsByEmail(restaurantRequest.getEmail())) {
             throw new RuntimeException("Email already exists: " + restaurantRequest.getEmail());
         }
@@ -161,8 +159,7 @@ public class RestaurantService {
             log.error("Failed to send restaurant created email to: {} for restaurant ID: {}. Error: {}", response.getOwnerEmail(), response.getId(), e.getMessage());
         }
 
-        // Publish to platform-wide topic
-        emitRestaurantUpdate(getAllRestaurants());
+        emitRestaurantUpdate(response);
         eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
 
         return response;
@@ -174,13 +171,11 @@ public class RestaurantService {
         Restaurant existingRestaurant = restaurantRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Restaurant not found with ID: " + id));
 
-        // Check email uniqueness if changed
         if (!existingRestaurant.getEmail().equals(restaurantRequest.getEmail()) &&
-            restaurantRepository.existsByEmail(restaurantRequest.getEmail())) {
+                restaurantRepository.existsByEmail(restaurantRequest.getEmail())) {
             throw new RuntimeException("Email already exists: " + restaurantRequest.getEmail());
         }
 
-        // Update fields
         existingRestaurant.setName(restaurantRequest.getName());
         existingRestaurant.setDescription(restaurantRequest.getDescription());
         existingRestaurant.setAddress(restaurantRequest.getAddress());
@@ -208,11 +203,12 @@ public class RestaurantService {
         Restaurant updatedRestaurant = restaurantRepository.save(existingRestaurant);
         log.info("Restaurant updated successfully with ID: {}", updatedRestaurant.getId());
 
-        // Publish to platform-wide topic
-        emitRestaurantUpdate(getAllRestaurants());
+        RestaurantResponse response = convertToResponse(updatedRestaurant);
+
+        emitRestaurantUpdate(response);
         eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
 
-        return convertToResponse(updatedRestaurant);
+        return response;
     }
 
     public void deleteRestaurant(Long id) {
@@ -225,8 +221,7 @@ public class RestaurantService {
         restaurantRepository.deleteById(id);
         log.info("Restaurant deleted successfully with ID: {}", id);
 
-        // Publish to platform-wide topic
-        emitRestaurantUpdate(getAllRestaurants());
+        emitRestaurantUpdate(null);
         eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
     }
 
@@ -265,7 +260,14 @@ public class RestaurantService {
         return response;
     }
 
-    private void emitRestaurantUpdate(List<RestaurantResponse> restaurants) {
-        messagingTemplate.convertAndSend("/topic/restaurants", restaurants);
+    private void emitRestaurantUpdate(RestaurantResponse restaurant) {
+        try {
+            messagingTemplate.convertAndSend("/topic/restaurants", getAllRestaurants());
+            if (restaurant != null && restaurant.getId() != null) {
+                messagingTemplate.convertAndSend("/topic/restaurant/" + restaurant.getId(), restaurant);
+            }
+        } catch (Exception e) {
+            log.error("Failed to broadcast restaurant update: {}", e.getMessage());
+        }
     }
 }
