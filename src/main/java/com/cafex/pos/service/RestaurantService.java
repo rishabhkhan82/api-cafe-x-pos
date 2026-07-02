@@ -6,6 +6,7 @@ import com.cafex.pos.entity.Restaurant;
 import com.cafex.pos.repository.RestaurantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +32,8 @@ public class RestaurantService {
 
     private final RestaurantRepository restaurantRepository;
     private final EmailService emailService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     public List<RestaurantResponse> getAllRestaurants() {
         log.info("Fetching all restaurants");
@@ -157,6 +161,10 @@ public class RestaurantService {
             log.error("Failed to send restaurant created email to: {} for restaurant ID: {}. Error: {}", response.getOwnerEmail(), response.getId(), e.getMessage());
         }
 
+        // Publish to platform-wide topic
+        emitRestaurantUpdate(getAllRestaurants());
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
+
         return response;
     }
 
@@ -200,6 +208,10 @@ public class RestaurantService {
         Restaurant updatedRestaurant = restaurantRepository.save(existingRestaurant);
         log.info("Restaurant updated successfully with ID: {}", updatedRestaurant.getId());
 
+        // Publish to platform-wide topic
+        emitRestaurantUpdate(getAllRestaurants());
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
+
         return convertToResponse(updatedRestaurant);
     }
 
@@ -212,6 +224,10 @@ public class RestaurantService {
 
         restaurantRepository.deleteById(id);
         log.info("Restaurant deleted successfully with ID: {}", id);
+
+        // Publish to platform-wide topic
+        emitRestaurantUpdate(getAllRestaurants());
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
     }
 
     public boolean existsByEmail(String email) {
@@ -247,5 +263,9 @@ public class RestaurantService {
         response.setCreatedAt(restaurant.getCreatedAt());
         response.setUpdatedAt(restaurant.getUpdatedAt());
         return response;
+    }
+
+    private void emitRestaurantUpdate(List<RestaurantResponse> restaurants) {
+        messagingTemplate.convertAndSend("/topic/restaurants", restaurants);
     }
 }

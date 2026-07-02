@@ -18,4 +18,5 @@ public interface RestaurantSubscriptionService {
     RestaurantSubscriptionResponse createTrialSubscription(Long restaurantId, Long planId, Long userId);
     boolean hasRestaurantUsedTrial(Long restaurantId);
     List<RestaurantSubscriptionResponse> getActiveSubscriptions(Long restaurantId);
+    List<RestaurantSubscriptionResponse> getAllSubscriptions();
 }

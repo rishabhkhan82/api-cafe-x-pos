@@ -7,10 +7,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.query.QueryUtils;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -19,4 +24,16 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     boolean existsByOrderId(String orderId);
     List<Order> findByCustomerId(Long customerId);
     Page<Order> findAll(Specification<Order> spec, Pageable pageable);
+
+    long countByStatus(Order.OrderStatus status);
+
+    long countByStatusAndCreatedAtAfter(Order.OrderStatus status, LocalDateTime createdAt);
+
+    long countByCreatedAtAfter(LocalDateTime createdAt);
+
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.status = :status AND o.createdAt > :createdAt")
+    BigDecimal sumTotalAmountByStatusAndCreatedAtAfter(@Param("status") Order.OrderStatus status, @Param("createdAt") LocalDateTime createdAt);
+
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.status = :status")
+    BigDecimal sumTotalAmountByStatus(@Param("status") Order.OrderStatus status);
 }

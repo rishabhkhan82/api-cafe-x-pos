@@ -26,9 +26,11 @@ import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -38,6 +40,8 @@ public class CustomerService {
 
     private final CustomerRepository customerRepository;
     private final RestaurantRepository restaurantRepository;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${app.jwt.secret}")
     private String jwtSecret;
@@ -189,6 +193,10 @@ public class CustomerService {
         Customer savedCustomer = customerRepository.save(customer);
         log.info("Customer saved successfully with ID: {}", savedCustomer.getId());
 
+        // Publish to platform-wide topic
+        emitCustomerUpdate(getAllCustomers());
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
+
         return mapToCustomerResponse(savedCustomer);
     }
 
@@ -222,6 +230,10 @@ public class CustomerService {
 
         Customer updatedCustomer = customerRepository.save(customer);
         log.info("Customer updated successfully with ID: {}", updatedCustomer.getId());
+
+        // Publish to platform-wide topic
+        emitCustomerUpdate(getAllCustomers());
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
 
         return mapToCustomerResponse(updatedCustomer);
     }
@@ -288,6 +300,10 @@ public class CustomerService {
         }
         customerRepository.deleteById(id);
         log.info("Customer deleted successfully with ID: {}", id);
+
+        // Publish to platform-wide topic
+        emitCustomerUpdate(getAllCustomers());
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
     }
 
     private CustomerResponse mapToCustomerResponse(Customer customer) {
@@ -377,5 +393,15 @@ public class CustomerService {
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public List<CustomerResponse> getAllCustomers() {
+        return customerRepository.findAll().stream()
+                .map(this::mapToCustomerResponse)
+                .collect(Collectors.toList());
+    }
+
+    private void emitCustomerUpdate(List<CustomerResponse> customers) {
+        messagingTemplate.convertAndSend("/topic/customers", customers);
     }
 }

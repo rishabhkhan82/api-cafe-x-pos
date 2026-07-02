@@ -28,8 +28,8 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.jpa.domain.Specification;
-
 import com.cafex.pos.dto.OrderPageResponse;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -48,6 +48,7 @@ public class OrderService {
     private final RestaurantRepository restaurantRepository;
     private final MenuItemRepository menuItemRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     public List<OrderResponse> getAllOrders() {
         log.info("Fetching all orders");
@@ -228,7 +229,7 @@ public class OrderService {
 
         OrderResponse response = convertToResponse(savedOrder);
         emitOrderUpdate(response, "NEW");
-
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
         return response;
     }
 
@@ -293,7 +294,7 @@ public class OrderService {
 
         OrderResponse response = convertToResponse(updatedOrder);
         emitOrderUpdate(response, "UPDATE");
-
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
         return response;
     }
 
@@ -309,6 +310,7 @@ public class OrderService {
 
         orderRepository.deleteById(id);
         log.info("Order deleted successfully with ID: {}", id);
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
     }
 
     public boolean existsByOrderId(String orderId) {

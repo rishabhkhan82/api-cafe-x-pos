@@ -3,6 +3,9 @@ package com.cafex.pos.repository;
 import com.cafex.pos.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.query.QueryUtils;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
@@ -16,4 +19,8 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     boolean existsByUsername(String username);
 
     boolean existsByEmail(String email);
+
+    long countByRole(User.UserRole role);
+
+    long countByCreatedAtAfter(java.time.LocalDateTime createdAt);
 }

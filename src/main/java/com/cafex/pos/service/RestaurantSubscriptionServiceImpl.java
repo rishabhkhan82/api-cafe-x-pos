@@ -1,8 +1,8 @@
 package com.cafex.pos.service;
 
+import com.cafex.pos.dto.RestaurantSubscriptionPageResponse;
 import com.cafex.pos.dto.RestaurantSubscriptionRequest;
 import com.cafex.pos.dto.RestaurantSubscriptionResponse;
-import com.cafex.pos.dto.RestaurantSubscriptionPageResponse;
 import com.cafex.pos.entity.Restaurant;
 import com.cafex.pos.entity.RestaurantSubscriptions;
 import com.cafex.pos.entity.SubscriptionPlans;
@@ -13,10 +13,12 @@ import com.cafex.pos.repository.SubscriptionPlansRepository;
 import com.cafex.pos.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +39,8 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
     private final SubscriptionPlansRepository subscriptionPlansRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public RestaurantSubscriptionResponse saveRestaurantSubscription(RestaurantSubscriptionRequest request) {
@@ -55,6 +59,10 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         log.info("Restaurant subscription saved successfully with ID: {}", saved.getId());
 
         RestaurantSubscriptionResponse response = convertToResponse(saved);
+
+        // Publish to platform-wide topic
+        emitSubscriptionUpdate(getAllSubscriptions());
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
 
         try {
             Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId()).orElse(null);
@@ -195,6 +203,10 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         RestaurantSubscriptions updated = restaurantSubscriptionRepository.save(existing);
         log.info("Restaurant subscription updated successfully with ID: {}", updated.getId());
 
+        // Publish to platform-wide topic
+        emitSubscriptionUpdate(getAllSubscriptions());
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
+
         return convertToResponse(updated);
     }
 
@@ -257,6 +269,10 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         log.info("Deleting restaurant subscription with ID: {}", id);
         restaurantSubscriptionRepository.deleteById(id);
         log.info("Restaurant subscription deleted successfully with ID: {}", id);
+
+        // Publish to platform-wide topic
+        emitSubscriptionUpdate(getAllSubscriptions());
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
     }
 
     private RestaurantSubscriptions convertToEntity(RestaurantSubscriptionRequest request) {
@@ -325,5 +341,15 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         response.setUpdatedAt(entity.getUpdatedAt());
         response.setCreatedBy(entity.getCreatedBy() != null ? entity.getCreatedBy().getId() : null);
         return response;
+    }
+
+    public List<RestaurantSubscriptionResponse> getAllSubscriptions() {
+        return restaurantSubscriptionRepository.findAll().stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    private void emitSubscriptionUpdate(List<RestaurantSubscriptionResponse> subscriptions) {
+        messagingTemplate.convertAndSend("/topic/restaurant_subscriptions", subscriptions);
     }
 }

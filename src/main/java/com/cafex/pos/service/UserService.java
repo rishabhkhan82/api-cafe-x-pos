@@ -8,6 +8,7 @@ import com.cafex.pos.repository.UserRepository;
 import com.cafex.pos.repository.RestaurantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -41,6 +43,8 @@ public class UserService {
     private final RestaurantRepository restaurantRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     public List<UserResponse> getAllUsers() {
         log.info("Fetching all users");
@@ -253,6 +257,10 @@ public class UserService {
             log.error("Failed to send user created email to: {} for user ID: {}. Error: {}", savedUser.getEmail(), savedUser.getId(), e.getMessage());
         }
 
+        // Publish to platform-wide topic
+        emitUserUpdate(getAllUsers());
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
+
         return response;
     }
 
@@ -312,6 +320,10 @@ public class UserService {
         User updatedUser = userRepository.save(existingUser);
         log.info("User updated successfully with ID: {}", updatedUser.getId());
 
+        // Publish to platform-wide topic
+        emitUserUpdate(getAllUsers());
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
+
         return convertToResponse(updatedUser);
     }
 
@@ -333,6 +345,10 @@ public class UserService {
 
         userRepository.deleteById(id);
         log.info("User deleted successfully with ID: {}", id);
+
+        // Publish to platform-wide topic
+        emitUserUpdate(getAllUsers());
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
     }
 
     public boolean existsByUsername(String username) {
@@ -361,5 +377,9 @@ public class UserService {
         response.setIsActive(user.getIsActive());
         response.setLastLogin(user.getLastLogin());
         return response;
+    }
+
+    private void emitUserUpdate(List<UserResponse> users) {
+        messagingTemplate.convertAndSend("/topic/users", users);
     }
 }
