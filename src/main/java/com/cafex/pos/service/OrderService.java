@@ -49,6 +49,7 @@ public class OrderService {
     private final MenuItemRepository menuItemRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final ApplicationEventPublisher eventPublisher;
+    private final OwnerDashboardService ownerDashboardService;
 
     public List<OrderResponse> getAllOrders() {
         log.info("Fetching all orders");
@@ -230,6 +231,9 @@ public class OrderService {
         OrderResponse response = convertToResponse(savedOrder);
         emitOrderUpdate(response, "NEW");
         eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
+        if (savedOrder.getRestaurant() != null && savedOrder.getRestaurant().getId() != null) {
+            ownerDashboardService.emitUpdate(savedOrder.getRestaurant().getId());
+        }
         return response;
     }
 
@@ -295,6 +299,9 @@ public class OrderService {
         OrderResponse response = convertToResponse(updatedOrder);
         emitOrderUpdate(response, "UPDATE");
         eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
+        if (updatedOrder.getRestaurant() != null && updatedOrder.getRestaurant().getId() != null) {
+            ownerDashboardService.emitUpdate(updatedOrder.getRestaurant().getId());
+        }
         return response;
     }
 

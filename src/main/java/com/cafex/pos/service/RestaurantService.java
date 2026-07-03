@@ -42,6 +42,7 @@ public class RestaurantService {
     private final EmailService emailService;
     private final SimpMessagingTemplate messagingTemplate;
     private final ApplicationEventPublisher eventPublisher;
+    private final OwnerDashboardService ownerDashboardService;
 
     public List<RestaurantResponse> getAllRestaurants() {
         log.info("Fetching all restaurants");
@@ -185,6 +186,7 @@ public class RestaurantService {
 
         emitRestaurantUpdate(response);
         eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
+        ownerDashboardService.emitUpdate(savedRestaurant.getId());
 
         return response;
     }
@@ -287,6 +289,7 @@ public class RestaurantService {
 
         emitRestaurantUpdate(response);
         eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
+        ownerDashboardService.emitUpdate(updatedRestaurant.getId());
 
         return response;
     }
