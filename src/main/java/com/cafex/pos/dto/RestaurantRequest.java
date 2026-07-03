@@ -78,6 +78,9 @@ public class RestaurantRequest {
     @JsonProperty("logo_image")
     private String logoImage;
 
+    @JsonProperty("banner_image")
+    private String bannerImage;
+
     @JsonProperty("created_by")
     private Long createdBy;
 

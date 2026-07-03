@@ -61,6 +61,9 @@ public class Restaurant {
     @Column(name = "logo_image")
     private String logoImage;
 
+    @Column(name = "banner_image")
+    private String bannerImage;
+
     @Column(name = "created_by")
     private Long createdBy;
 
@@ -251,6 +254,14 @@ public class Restaurant {
 
     public void setLogoImage(String logoImage) {
         this.logoImage = logoImage;
+    }
+
+    public String getBannerImage() {
+        return bannerImage;
+    }
+
+    public void setBannerImage(String bannerImage) {
+        this.bannerImage = bannerImage;
     }
 
     public Long getCreatedBy() {
