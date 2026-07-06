@@ -58,9 +58,10 @@ public class SubscriptionPlansController {
             @RequestParam(required = false) String billingCycle,
             @RequestParam(required = false) Boolean isActive,
             @RequestParam(required = false) Boolean isPopular,
+            @RequestParam(required = false) Boolean isComingSoon,
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size) {
-        log.info("Get subscription plans request received with filters - name: {}, billingCycle: {}, isActive: {}, isPopular: {}, page: {}, size: {}",
+        log.info("Get subscription plans request received with filters - name: {}, billingCycle: {}, isActive: {}, isPopular: {}, isComingSoon: {}, page: {}, size: {}",
                 name, billingCycle, isActive, isPopular, page, size);
         try {
             // If no filters and no pagination parameters, return all records
@@ -68,6 +69,7 @@ public class SubscriptionPlansController {
                 (billingCycle == null || billingCycle.isEmpty()) &&
                 isActive == null &&
                 isPopular == null &&
+                isComingSoon == null &&
                 page == null &&
                 size == null) {
                 List<SubscriptionPlansResponse> allPlans = subscriptionPlansService.getAllSubscriptionPlans();
@@ -83,7 +85,7 @@ public class SubscriptionPlansController {
             // Otherwise, use pagination
             int pageValue = (page != null) ? Math.max(0, page - 1) : 0;
             int sizeValue = (size != null) ? size : 10;
-            SubscriptionPlansPageResponse response = subscriptionPlansService.getSubscriptionPlansWithFilters(name, billingCycle, isActive, isPopular, pageValue, sizeValue);
+            SubscriptionPlansPageResponse response = subscriptionPlansService.getSubscriptionPlansWithFilters(name, billingCycle, isActive, isPopular, isComingSoon, pageValue, sizeValue);
             log.info("Retrieved {} subscription plans (page {} of {})", response.getData().size(), response.getCurrentPage(), response.getPageCount());
             return ResponseEntity.ok(response);
         } catch (Exception e) {

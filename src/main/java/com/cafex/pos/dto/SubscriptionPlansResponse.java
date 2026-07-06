@@ -29,6 +29,8 @@ public class SubscriptionPlansResponse {
 
     private Boolean is_popular;
 
+    private Boolean is_coming_soon;
+
     private Integer subscriber_count;
 
     private BigDecimal revenue;
@@ -144,6 +146,14 @@ public class SubscriptionPlansResponse {
 
     public void setIs_popular(Boolean is_popular) {
         this.is_popular = is_popular;
+    }
+
+    public Boolean getIs_coming_soon() {
+        return is_coming_soon;
+    }
+
+    public void setIs_coming_soon(Boolean is_coming_soon) {
+        this.is_coming_soon = is_coming_soon;
     }
 
     public Integer getSubscriber_count() {

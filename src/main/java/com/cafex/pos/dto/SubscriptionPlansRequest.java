@@ -40,6 +40,8 @@ public class SubscriptionPlansRequest {
 
     private Boolean is_popular = false;
 
+    private Boolean is_coming_soon = false;
+
     private Integer trial_days = 0;
 
     @NotNull(message = "Setup fee is required")
@@ -157,6 +159,14 @@ public class SubscriptionPlansRequest {
 
     public void setIs_popular(Boolean is_popular) {
         this.is_popular = is_popular;
+    }
+
+    public Boolean getIs_coming_soon() {
+        return is_coming_soon;
+    }
+
+    public void setIs_coming_soon(Boolean is_coming_soon) {
+        this.is_coming_soon = is_coming_soon;
     }
 
     public Integer getTrial_days() {

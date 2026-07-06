@@ -59,11 +59,12 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
             String billingCycle,
             Boolean isActive,
             Boolean isPopular,
+            Boolean isComingSoon,
             int page,
             int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        Specification<SubscriptionPlans> spec = buildSpecification(name, billingCycle, isActive, isPopular);
+        Specification<SubscriptionPlans> spec = buildSpecification(name, billingCycle, isActive, isPopular, isComingSoon);
         Page<SubscriptionPlans> subscriptionPlansPage = subscriptionPlansRepository.findAll(spec, pageable);
         List<SubscriptionPlansResponse> responses = subscriptionPlansPage.getContent().stream()
                 .map(this::mapToResponse)
@@ -91,7 +92,8 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
             String name,
             String billingCycle,
             Boolean isActive,
-            Boolean isPopular
+            Boolean isPopular,
+            Boolean isComingSoon
     ) {
         return (root, query, criteriaBuilder) -> {
             Specification<SubscriptionPlans> spec = Specification.where(null);
@@ -106,6 +108,9 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
             }
             if (isPopular != null) {
                 spec = spec.and((r, q, cb) -> cb.equal(r.get("isPopular"), isPopular));
+            }
+            if (isComingSoon != null) {
+                spec = spec.and((r, q, cb) -> cb.equal(r.get("isComingSoon"), isComingSoon));
             }
             return spec.toPredicate(root, query, criteriaBuilder);
         };
@@ -124,6 +129,7 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
         subscriptionPlan.setMaxUsers(request.getMax_users());
         subscriptionPlan.setIsActive(request.getIs_active());
         subscriptionPlan.setIsPopular(request.getIs_popular());
+        subscriptionPlan.setIsComingSoon(request.getIs_coming_soon());
         subscriptionPlan.setTrialDays(request.getTrial_days());
         subscriptionPlan.setSetupFee(request.getSetup_fee());
         if (request.getSubscriber_count() != null) {
@@ -154,6 +160,7 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
         subscriptionPlan.setMaxUsers(request.getMax_users());
         subscriptionPlan.setIsActive(request.getIs_active());
         subscriptionPlan.setIsPopular(request.getIs_popular());
+        subscriptionPlan.setIsComingSoon(request.getIs_coming_soon());
         subscriptionPlan.setTrialDays(request.getTrial_days());
         subscriptionPlan.setSetupFee(request.getSetup_fee());
         if (request.getSubscriber_count() != null) {
@@ -185,6 +192,7 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
         response.setMax_users(subscriptionPlan.getMaxUsers());
         response.setIs_active(subscriptionPlan.getIsActive());
         response.setIs_popular(subscriptionPlan.getIsPopular());
+        response.setIs_coming_soon(subscriptionPlan.getIsComingSoon());
         response.setSubscriber_count(subscriptionPlan.getSubscriberCount());
         response.setRevenue(subscriptionPlan.getRevenue());
         response.setTrial_days(subscriptionPlan.getTrialDays());

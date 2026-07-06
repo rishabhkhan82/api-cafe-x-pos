@@ -63,6 +63,9 @@ public class SubscriptionPlans {
     @Column(name = "offer_discount_percentage")
     private Integer offerDiscountPercentage = 0;
 
+    @Column(name = "is_coming_soon", nullable = false)
+    private Boolean isComingSoon = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private User createdBy;
@@ -91,6 +94,7 @@ public class SubscriptionPlans {
         this.maxUsers = maxUsers;
         this.isActive = true;
         this.isPopular = false;
+        this.isComingSoon = false;
         this.subscriberCount = 0;
         this.revenue = BigDecimal.ZERO;
         this.trialDays = 0;
@@ -195,6 +199,14 @@ public class SubscriptionPlans {
 
     public void setIsPopular(Boolean isPopular) {
         this.isPopular = isPopular;
+    }
+
+    public Boolean getIsComingSoon() {
+        return isComingSoon;
+    }
+
+    public void setIsComingSoon(Boolean isComingSoon) {
+        this.isComingSoon = isComingSoon;
     }
 
     public Integer getSubscriberCount() {

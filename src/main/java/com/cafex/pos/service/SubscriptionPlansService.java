@@ -20,6 +20,7 @@ public interface SubscriptionPlansService {
             String billingCycle,
             Boolean isActive,
             Boolean isPopular,
+            Boolean isComingSoon,
             int page,
             int size
     );
