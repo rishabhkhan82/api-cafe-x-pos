@@ -45,6 +45,10 @@ public class SubscriptionPlansResponse {
 
     private LocalDateTime updated_at;
 
+    private String offer_name;
+
+    private Integer offer_discount_percentage;
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -204,5 +208,21 @@ public class SubscriptionPlansResponse {
 
     public void setUpdated_at(LocalDateTime updated_at) {
         this.updated_at = updated_at;
+    }
+
+    public String getOffer_name() {
+        return offer_name;
+    }
+
+    public void setOffer_name(String offer_name) {
+        this.offer_name = offer_name;
+    }
+
+    public Integer getOffer_discount_percentage() {
+        return offer_discount_percentage;
+    }
+
+    public void setOffer_discount_percentage(Integer offer_discount_percentage) {
+        this.offer_discount_percentage = offer_discount_percentage;
     }
 }

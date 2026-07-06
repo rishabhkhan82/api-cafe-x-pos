@@ -57,6 +57,12 @@ public class SubscriptionPlans {
     @Column(name = "setup_fee", nullable = false)
     private BigDecimal setupFee = BigDecimal.ZERO;
 
+    @Column(name = "offer_name")
+    private String offerName;
+
+    @Column(name = "offer_discount_percentage")
+    private Integer offerDiscountPercentage = 0;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private User createdBy;
@@ -89,6 +95,7 @@ public class SubscriptionPlans {
         this.revenue = BigDecimal.ZERO;
         this.trialDays = 0;
         this.setupFee = BigDecimal.ZERO;
+        this.offerDiscountPercentage = 0;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -252,5 +259,21 @@ public class SubscriptionPlans {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getOfferName() {
+        return offerName;
+    }
+
+    public void setOfferName(String offerName) {
+        this.offerName = offerName;
+    }
+
+    public Integer getOfferDiscountPercentage() {
+        return offerDiscountPercentage;
+    }
+
+    public void setOfferDiscountPercentage(Integer offerDiscountPercentage) {
+        this.offerDiscountPercentage = offerDiscountPercentage;
     }
 }

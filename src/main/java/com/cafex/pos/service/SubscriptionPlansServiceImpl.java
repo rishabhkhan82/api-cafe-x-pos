@@ -137,6 +137,8 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
                     .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getCreated_by()));
             subscriptionPlan.setCreatedBy(user);
         }
+        subscriptionPlan.setOfferName(request.getOffer_name());
+        subscriptionPlan.setOfferDiscountPercentage(request.getOffer_discount_percentage());
         return subscriptionPlan;
     }
 
@@ -165,6 +167,8 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
                     .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUpdated_by()));
             subscriptionPlan.setUpdatedBy(user);
         }
+        subscriptionPlan.setOfferName(request.getOffer_name());
+        subscriptionPlan.setOfferDiscountPercentage(request.getOffer_discount_percentage());
     }
 
     private SubscriptionPlansResponse mapToResponse(SubscriptionPlans subscriptionPlan) {
@@ -189,6 +193,8 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
         response.setUpdated_by(subscriptionPlan.getUpdatedBy() != null ? subscriptionPlan.getUpdatedBy().getId() : null);
         response.setCreated_at(subscriptionPlan.getCreatedAt());
         response.setUpdated_at(subscriptionPlan.getUpdatedAt());
+        response.setOffer_name(subscriptionPlan.getOfferName());
+        response.setOffer_discount_percentage(subscriptionPlan.getOfferDiscountPercentage());
         return response;
     }
 }
