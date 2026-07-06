@@ -2,12 +2,19 @@ package com.cafex.pos;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
 @SpringBootApplication
-public class CafeXPosBackendApplication {
+public class CafeXPosBackendApplication extends SpringBootServletInitializer {
 
- 	public static void main(String[] args) {
- 		SpringApplication.run(CafeXPosBackendApplication.class, args);
- 	}
+    public static void main(String[] args) {
+        SpringApplication.run(CafeXPosBackendApplication.class, args);
+    }
+
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+        return builder.sources(CafeXPosBackendApplication.class);
+    }
 
 }

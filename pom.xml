@@ -13,7 +13,7 @@
     <groupId>com.cafex.pos</groupId>
     <artifactId>cafe-x-pos-backend</artifactId>
     <version>1.0.0</version>
-    <packaging>jar</packaging>
+    <packaging>war</packaging>
 
     <name>Cafe-X POS Backend</name>
     <description>Multi-tenant Point of Sale Backend System</description>
@@ -129,6 +129,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
