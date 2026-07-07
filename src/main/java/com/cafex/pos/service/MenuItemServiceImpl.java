@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.nio.file.Files;
@@ -33,6 +35,9 @@ import java.io.IOException;
 public class MenuItemServiceImpl implements MenuItemService {
 
     private final MenuItemRepository menuItemRepository;
+    private final SimpMessagingTemplate messagingTemplate;
+
+    private static final String TOPIC_PREFIX = "/topic/restaurant/";
 
     @Override
     public MenuItemResponse saveMenuItem(MenuItemRequest menuItemRequest) {
@@ -82,6 +87,8 @@ public class MenuItemServiceImpl implements MenuItemService {
         }
 
         log.info("Menu item saved successfully with ID: {}", savedMenuItem.getId());
+
+        messagingTemplate.convertAndSend(TOPIC_PREFIX + savedMenuItem.getRestaurantId() + "/menu-items", convertToResponse(savedMenuItem));
 
         return convertToResponse(savedMenuItem);
     }
@@ -138,6 +145,8 @@ public class MenuItemServiceImpl implements MenuItemService {
 
         MenuItem updatedMenuItem = menuItemRepository.save(existingMenuItem);
         log.info("Menu item updated successfully with ID: {}", updatedMenuItem.getId());
+
+        messagingTemplate.convertAndSend(TOPIC_PREFIX + updatedMenuItem.getRestaurantId() + "/menu-items", convertToResponse(updatedMenuItem));
 
         return convertToResponse(updatedMenuItem);
     }
@@ -262,47 +271,10 @@ public class MenuItemServiceImpl implements MenuItemService {
 
         menuItemRepository.deleteById(id);
         log.info("Menu item deleted successfully with ID: {}", id);
-    }
 
-    private String saveImageFromBase64(String base64Data, Long menuItemId) throws IOException {
-        // Remove data URL prefix if present (e.g., "data:image/jpeg;base64,")
-        String base64Image = base64Data;
-        String mimeType = "image/jpeg"; // default
-        if (base64Data.contains(",")) {
-            String[] parts = base64Data.split(",");
-            if (parts.length == 2) {
-                String header = parts[0];
-                if (header.startsWith("data:") && header.contains(";base64")) {
-                    mimeType = header.substring(5, header.indexOf(";base64"));
-                }
-                base64Image = parts[1];
-            }
-        }
+        messagingTemplate.convertAndSend(TOPIC_PREFIX + menuItem.getRestaurantId() + "/menu-items", Map.of("id", id, "deleted", true));
 
-        // Decode base64
-        byte[] imageBytes = Base64.getDecoder().decode(base64Image);
-
-        // Determine file extension
-        String extension = getExtensionFromMimeType(mimeType);
-
-        // Create filename with menu item ID
-        String filename = menuItemId + "_image." + extension;
-
-        // Create upload directory
-        Path uploadDir = Paths.get("uploads", "images", "menu");
-        Files.createDirectories(uploadDir);
-
-        // Save file
-        Path filePath = uploadDir.resolve(filename);
-        Files.write(filePath, imageBytes);
-
-        // Return URL
-        return "/uploads/images/menu/" + filename;
-    }
-
-    private void deleteImageFile(String imageUrl) throws IOException {
-        if (imageUrl == null || imageUrl.isEmpty()) {
-            return;
+        return;
         }
 
         // Extract file path from URL
