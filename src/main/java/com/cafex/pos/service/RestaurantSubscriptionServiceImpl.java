@@ -133,6 +133,10 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         trialSubscription.setAutoRenew(false); // Trial subscriptions don't auto-renew
         trialSubscription.setDiscountAmount(java.math.BigDecimal.ZERO);
         trialSubscription.setFinalAmount(java.math.BigDecimal.ZERO);
+        trialSubscription.setPlanPriceAtSubscription(plan.getPrice());
+        trialSubscription.setOfferNameAtSubscription(plan.getOfferName());
+        trialSubscription.setOfferDiscountPercentageAtSubscription(plan.getOfferDiscountPercentage() != null ? plan.getOfferDiscountPercentage() : 0);
+        trialSubscription.setPlanNameAtSubscription(plan.getDisplayName());
         trialSubscription.setCreatedBy(userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId)));
         trialSubscription.setCreatedAt(now);
@@ -181,6 +185,10 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         existing.setDiscountCode(request.getDiscountCode());
         existing.setDiscountAmount(request.getDiscountAmount());
         existing.setFinalAmount(request.getFinalAmount());
+        existing.setPlanPriceAtSubscription(request.getPlanPriceAtSubscription());
+        existing.setOfferNameAtSubscription(request.getOfferNameAtSubscription());
+        existing.setOfferDiscountPercentageAtSubscription(request.getOfferDiscountPercentageAtSubscription());
+        existing.setPlanNameAtSubscription(request.getPlanNameAtSubscription());
         existing.setUpdatedAt(request.getUpdatedAt() != null ? request.getUpdatedAt() : LocalDateTime.now());
 
         // Update relations if provided
@@ -295,6 +303,10 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         entity.setDiscountCode(request.getDiscountCode());
         entity.setDiscountAmount(request.getDiscountAmount());
         entity.setFinalAmount(request.getFinalAmount());
+        entity.setPlanPriceAtSubscription(request.getPlanPriceAtSubscription());
+        entity.setOfferNameAtSubscription(request.getOfferNameAtSubscription());
+        entity.setOfferDiscountPercentageAtSubscription(request.getOfferDiscountPercentageAtSubscription());
+        entity.setPlanNameAtSubscription(request.getPlanNameAtSubscription());
 
         if (request.getRestaurantId() != null) {
             Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
@@ -337,6 +349,10 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         response.setDiscountCode(entity.getDiscountCode());
         response.setDiscountAmount(entity.getDiscountAmount());
         response.setFinalAmount(entity.getFinalAmount());
+        response.setPlanPriceAtSubscription(entity.getPlanPriceAtSubscription());
+        response.setOfferNameAtSubscription(entity.getOfferNameAtSubscription());
+        response.setOfferDiscountPercentageAtSubscription(entity.getOfferDiscountPercentageAtSubscription());
+        response.setPlanNameAtSubscription(entity.getPlanNameAtSubscription());
         response.setCreatedAt(entity.getCreatedAt());
         response.setUpdatedAt(entity.getUpdatedAt());
         response.setCreatedBy(entity.getCreatedBy() != null ? entity.getCreatedBy().getId() : null);

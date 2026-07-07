@@ -85,4 +85,16 @@ public class RestaurantSubscriptionResponse {
 
     @JsonProperty("updated_by")
     private Long updatedBy;
+
+    @JsonProperty("plan_price_at_subscription")
+    private BigDecimal planPriceAtSubscription;
+
+    @JsonProperty("offer_name_at_subscription")
+    private String offerNameAtSubscription;
+
+    @JsonProperty("offer_discount_percentage_at_subscription")
+    private Integer offerDiscountPercentageAtSubscription;
+
+    @JsonProperty("plan_name_at_subscription")
+    private String planNameAtSubscription;
 }

@@ -102,4 +102,16 @@ public class RestaurantSubscriptionRequest {
 
     @JsonProperty("updated_at")
     private LocalDateTime updatedAt;
+
+    @JsonProperty("plan_price_at_subscription")
+    private BigDecimal planPriceAtSubscription;
+
+    @JsonProperty("offer_name_at_subscription")
+    private String offerNameAtSubscription;
+
+    @JsonProperty("offer_discount_percentage_at_subscription")
+    private Integer offerDiscountPercentageAtSubscription;
+
+    @JsonProperty("plan_name_at_subscription")
+    private String planNameAtSubscription;
 }

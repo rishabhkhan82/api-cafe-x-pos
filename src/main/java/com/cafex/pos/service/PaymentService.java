@@ -34,9 +34,9 @@ public class PaymentService {
                 .orElseThrow(() -> new RuntimeException("Plan not found"));
 
         // Calculate expected amount
-        int discountMonths = getDiscountMonths(request.getMonths());
         BigDecimal baseAmount = plan.getPrice().multiply(BigDecimal.valueOf(request.getMonths()));
-        BigDecimal discountAmount = plan.getPrice().multiply(BigDecimal.valueOf(discountMonths));
+        BigDecimal discountPercentage = BigDecimal.valueOf(plan.getOffer_discount_percentage() != null ? plan.getOffer_discount_percentage() : 0);
+        BigDecimal discountAmount = baseAmount.multiply(discountPercentage).divide(BigDecimal.valueOf(100));
         BigDecimal expectedAmount = baseAmount.subtract(discountAmount);
 
         // Validate calculated amount matches expected (with small tolerance for floating point precision)
@@ -69,15 +69,5 @@ public class PaymentService {
         response.setAmount(request.getCalculatedAmount());
 
         return response;
-    }
-
-    private int getDiscountMonths(int months) {
-        switch (months) {
-            case 1: return 0;
-            case 3: return 1;
-            case 6: return 2;
-            case 12: return 3;
-            default: return 0;
-        }
     }
 }

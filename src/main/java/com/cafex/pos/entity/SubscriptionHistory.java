@@ -73,6 +73,18 @@ public class SubscriptionHistory {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "plan_price_at_subscription", nullable = false)
+    private BigDecimal planPriceAtSubscription = BigDecimal.ZERO;
+
+    @Column(name = "offer_name_at_subscription")
+    private String offerNameAtSubscription;
+
+    @Column(name = "offer_discount_percentage_at_subscription", nullable = false)
+    private Integer offerDiscountPercentageAtSubscription = 0;
+
+    @Column(name = "plan_name_at_subscription", nullable = false)
+    private String planNameAtSubscription = "";
+
     // Constructors
     public SubscriptionHistory() {}
 
@@ -253,5 +265,37 @@ public class SubscriptionHistory {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public BigDecimal getPlanPriceAtSubscription() {
+        return planPriceAtSubscription;
+    }
+
+    public void setPlanPriceAtSubscription(BigDecimal planPriceAtSubscription) {
+        this.planPriceAtSubscription = planPriceAtSubscription;
+    }
+
+    public String getOfferNameAtSubscription() {
+        return offerNameAtSubscription;
+    }
+
+    public void setOfferNameAtSubscription(String offerNameAtSubscription) {
+        this.offerNameAtSubscription = offerNameAtSubscription;
+    }
+
+    public Integer getOfferDiscountPercentageAtSubscription() {
+        return offerDiscountPercentageAtSubscription;
+    }
+
+    public void setOfferDiscountPercentageAtSubscription(Integer offerDiscountPercentageAtSubscription) {
+        this.offerDiscountPercentageAtSubscription = offerDiscountPercentageAtSubscription;
+    }
+
+    public String getPlanNameAtSubscription() {
+        return planNameAtSubscription;
+    }
+
+    public void setPlanNameAtSubscription(String planNameAtSubscription) {
+        this.planNameAtSubscription = planNameAtSubscription;
     }
 }

@@ -77,6 +77,18 @@ public class RestaurantSubscriptions {
     @Column(name = "final_amount", nullable = false)
     private BigDecimal finalAmount = BigDecimal.ZERO;
 
+    @Column(name = "plan_price_at_subscription", nullable = false)
+    private BigDecimal planPriceAtSubscription = BigDecimal.ZERO;
+
+    @Column(name = "offer_name_at_subscription")
+    private String offerNameAtSubscription;
+
+    @Column(name = "offer_discount_percentage_at_subscription", nullable = false)
+    private Integer offerDiscountPercentageAtSubscription = 0;
+
+    @Column(name = "plan_name_at_subscription", nullable = false)
+    private String planNameAtSubscription;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private User createdBy;
@@ -102,6 +114,9 @@ public class RestaurantSubscriptions {
         this.isTrialUsed = false;
         this.discountAmount = BigDecimal.ZERO;
         this.finalAmount = BigDecimal.ZERO;
+        this.planPriceAtSubscription = BigDecimal.ZERO;
+        this.offerDiscountPercentageAtSubscription = 0;
+        this.planNameAtSubscription = "";
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -281,6 +296,38 @@ public class RestaurantSubscriptions {
 
     public void setFinalAmount(BigDecimal finalAmount) {
         this.finalAmount = finalAmount;
+    }
+
+    public BigDecimal getPlanPriceAtSubscription() {
+        return planPriceAtSubscription;
+    }
+
+    public void setPlanPriceAtSubscription(BigDecimal planPriceAtSubscription) {
+        this.planPriceAtSubscription = planPriceAtSubscription;
+    }
+
+    public String getOfferNameAtSubscription() {
+        return offerNameAtSubscription;
+    }
+
+    public void setOfferNameAtSubscription(String offerNameAtSubscription) {
+        this.offerNameAtSubscription = offerNameAtSubscription;
+    }
+
+    public Integer getOfferDiscountPercentageAtSubscription() {
+        return offerDiscountPercentageAtSubscription;
+    }
+
+    public void setOfferDiscountPercentageAtSubscription(Integer offerDiscountPercentageAtSubscription) {
+        this.offerDiscountPercentageAtSubscription = offerDiscountPercentageAtSubscription;
+    }
+
+    public String getPlanNameAtSubscription() {
+        return planNameAtSubscription;
+    }
+
+    public void setPlanNameAtSubscription(String planNameAtSubscription) {
+        this.planNameAtSubscription = planNameAtSubscription;
     }
 
     public User getCreatedBy() {

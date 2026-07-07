@@ -69,6 +69,10 @@ public class SubscriptionHistoryServiceImpl implements SubscriptionHistoryServic
         existing.setCancellationReason(request.getCancellationReason());
         existing.setChurnRiskScore(request.getChurnRiskScore());
         existing.setRetentionActions(request.getRetentionActions());
+        existing.setPlanPriceAtSubscription(request.getPlanPriceAtSubscription());
+        existing.setOfferNameAtSubscription(request.getOfferNameAtSubscription());
+        existing.setOfferDiscountPercentageAtSubscription(request.getOfferDiscountPercentageAtSubscription());
+        existing.setPlanNameAtSubscription(request.getPlanNameAtSubscription());
 
         if (request.getRestaurantId() != null) {
             Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
@@ -158,6 +162,10 @@ public class SubscriptionHistoryServiceImpl implements SubscriptionHistoryServic
         entity.setCancellationReason(request.getCancellationReason());
         entity.setChurnRiskScore(request.getChurnRiskScore());
         entity.setRetentionActions(request.getRetentionActions());
+        entity.setPlanPriceAtSubscription(request.getPlanPriceAtSubscription());
+        entity.setOfferNameAtSubscription(request.getOfferNameAtSubscription());
+        entity.setOfferDiscountPercentageAtSubscription(request.getOfferDiscountPercentageAtSubscription());
+        entity.setPlanNameAtSubscription(request.getPlanNameAtSubscription());
 
         if (request.getRestaurantId() != null) {
             Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
@@ -191,6 +199,10 @@ public class SubscriptionHistoryServiceImpl implements SubscriptionHistoryServic
         response.setCancellationReason(entity.getCancellationReason());
         response.setChurnRiskScore(entity.getChurnRiskScore());
         response.setRetentionActions(entity.getRetentionActions());
+        response.setPlanPriceAtSubscription(entity.getPlanPriceAtSubscription());
+        response.setOfferNameAtSubscription(entity.getOfferNameAtSubscription());
+        response.setOfferDiscountPercentageAtSubscription(entity.getOfferDiscountPercentageAtSubscription());
+        response.setPlanNameAtSubscription(entity.getPlanNameAtSubscription());
         response.setCreatedAt(entity.getCreatedAt());
         return response;
     }
