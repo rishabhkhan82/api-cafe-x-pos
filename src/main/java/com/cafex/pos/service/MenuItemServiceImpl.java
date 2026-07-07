@@ -273,11 +273,13 @@ public class MenuItemServiceImpl implements MenuItemService {
         log.info("Menu item deleted successfully with ID: {}", id);
 
         messagingTemplate.convertAndSend(TOPIC_PREFIX + menuItem.getRestaurantId() + "/menu-items", Map.of("id", id, "deleted", true));
+    }
 
-        return;
+    private void deleteImageFile(String imageUrl) throws IOException {
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            return;
         }
 
-        // Extract file path from URL
         String filePath = imageUrl.replace("/uploads/", "uploads/");
         Path path = Paths.get(filePath);
 
@@ -285,6 +287,30 @@ public class MenuItemServiceImpl implements MenuItemService {
             Files.delete(path);
             log.info("Deleted image file: {}", filePath);
         }
+    }
+
+    private String saveImageFromBase64(String base64Data, Long menuItemId) throws IOException {
+        String base64Image = base64Data;
+        String mimeType = "image/jpeg";
+        if (base64Data.contains(",")) {
+            String[] parts = base64Data.split(",");
+            if (parts.length == 2) {
+                String header = parts[0];
+                if (header.startsWith("data:") && header.contains(";base64")) {
+                    mimeType = header.substring(5, header.indexOf(";base64"));
+                }
+                base64Image = parts[1];
+            }
+        }
+
+        byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+        String extension = getExtensionFromMimeType(mimeType);
+        String filename = menuItemId + "_image." + extension;
+        Path uploadDir = Paths.get("uploads", "images", "menu");
+        Files.createDirectories(uploadDir);
+        Path filePath = uploadDir.resolve(filename);
+        Files.write(filePath, imageBytes);
+        return "/uploads/images/menu/" + filename;
     }
 
     private String getExtensionFromMimeType(String mimeType) {
