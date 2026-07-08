@@ -30,6 +30,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import com.cafex.pos.dto.RestaurantPageResponse;
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 
 @Service
@@ -112,7 +116,7 @@ public class RestaurantService {
         log.info("Saving new restaurant: {}", restaurantRequest.getName());
 
         if (restaurantRepository.existsByEmail(restaurantRequest.getEmail())) {
-            throw new RuntimeException("Email already exists: " + restaurantRequest.getEmail());
+            throw new ConflictException("Email already exists: " + restaurantRequest.getEmail());
         }
 
         String logoImageBase64 = restaurantRequest.getLogoImage();
@@ -195,11 +199,11 @@ public class RestaurantService {
         log.info("Updating restaurant with ID: {}", id);
 
         Restaurant existingRestaurant = restaurantRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Restaurant not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with ID: " + id));
 
         if (!existingRestaurant.getEmail().equals(restaurantRequest.getEmail()) &&
                 restaurantRepository.existsByEmail(restaurantRequest.getEmail())) {
-            throw new RuntimeException("Email already exists: " + restaurantRequest.getEmail());
+            throw new ConflictException("Email already exists: " + restaurantRequest.getEmail());
         }
 
         existingRestaurant.setName(restaurantRequest.getName());
@@ -298,7 +302,7 @@ public class RestaurantService {
         log.info("Deleting restaurant with ID: {}", id);
 
         Restaurant existingRestaurant = restaurantRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Restaurant not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with ID: " + id));
 
         // Delete associated images if exist
         try {

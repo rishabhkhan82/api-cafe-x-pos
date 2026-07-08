@@ -1,5 +1,9 @@
 package com.cafex.pos.service;
 
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import com.cafex.pos.dto.RestaurantSubscriptionPageResponse;
 import com.cafex.pos.dto.RestaurantSubscriptionRequest;
 import com.cafex.pos.dto.RestaurantSubscriptionResponse;
@@ -48,7 +52,7 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
 
         // Check if subscriptionId already exists
         if (restaurantSubscriptionRepository.findAll().stream().anyMatch(rs -> request.getSubscriptionId().equals(rs.getSubscriptionId()))) {
-            throw new RuntimeException("Subscription ID already exists: " + request.getSubscriptionId());
+            throw new ConflictException("Subscription ID already exists: " + request.getSubscriptionId());
         }
 
         RestaurantSubscriptions entity = convertToEntity(request);
@@ -100,16 +104,16 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         Optional<RestaurantSubscriptions> existingTrial = restaurantSubscriptionRepository
                 .findByRestaurantIdAndIsTrialUsed(restaurantId, true);
         if (existingTrial.isPresent()) {
-            throw new RuntimeException("Restaurant has already used trial period");
+            throw new ConflictException("Restaurant has already used trial period");
         }
 
         // Get plan details for trial days
         SubscriptionPlans plan = subscriptionPlansRepository.findById(planId)
-                .orElseThrow(() -> new RuntimeException("Subscription plan not found with ID: " + planId));
+                .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found with ID: " + planId));
 
         // Check if plan has trial days configured
         if (plan.getTrialDays() == null || plan.getTrialDays() <= 0) {
-            throw new RuntimeException("Plan does not support trial period");
+            throw new BadRequestException("Plan does not support trial period");
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -120,7 +124,7 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         RestaurantSubscriptions trialSubscription = new RestaurantSubscriptions();
         trialSubscription.setSubscriptionId("trial_" + restaurantId + "_" + now.toString().replace(":", "").replace("-", "").substring(0, 15));
         trialSubscription.setRestaurant(restaurantRepository.findById(restaurantId)
-                .orElseThrow(() -> new RuntimeException("Restaurant not found with ID: " + restaurantId)));
+                .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with ID: " + restaurantId)));
         trialSubscription.setPlan(plan);
         trialSubscription.setStatus("trial");
         trialSubscription.setStartDate(subscriptionStart); // Actual subscription starts after trial
@@ -138,7 +142,7 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         trialSubscription.setOfferDiscountPercentageAtSubscription(plan.getOfferDiscountPercentage() != null ? plan.getOfferDiscountPercentage() : 0);
         trialSubscription.setPlanNameAtSubscription(plan.getDisplayName());
         trialSubscription.setCreatedBy(userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId)));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId)));
         trialSubscription.setCreatedAt(now);
         trialSubscription.setUpdatedAt(now);
 
@@ -165,7 +169,7 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         log.info("Updating restaurant subscription with ID: {}", id);
 
         RestaurantSubscriptions existing = restaurantSubscriptionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Restaurant subscription not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Restaurant subscription not found with ID: " + id));
 
         // Update fields
         existing.setSubscriptionId(request.getSubscriptionId());
@@ -194,17 +198,17 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         // Update relations if provided
         if (request.getRestaurantId() != null) {
             Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
-                    .orElseThrow(() -> new RuntimeException("Restaurant not found with ID: " + request.getRestaurantId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with ID: " + request.getRestaurantId()));
             existing.setRestaurant(restaurant);
         }
         if (request.getPlanId() != null) {
             SubscriptionPlans plan = subscriptionPlansRepository.findById(request.getPlanId())
-                    .orElseThrow(() -> new RuntimeException("Subscription plan not found with ID: " + request.getPlanId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found with ID: " + request.getPlanId()));
             existing.setPlan(plan);
         }
         if (request.getCreatedBy() != null) {
             User user = userRepository.findById(request.getCreatedBy())
-                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + request.getCreatedBy()));
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + request.getCreatedBy()));
             existing.setCreatedBy(user);
         }
 
@@ -310,17 +314,17 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
 
         if (request.getRestaurantId() != null) {
             Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
-                    .orElseThrow(() -> new RuntimeException("Restaurant not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found"));
             entity.setRestaurant(restaurant);
         }
         if (request.getPlanId() != null) {
             SubscriptionPlans plan = subscriptionPlansRepository.findById(request.getPlanId())
-                    .orElseThrow(() -> new RuntimeException("Subscription plan not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found"));
             entity.setPlan(plan);
         }
         if (request.getCreatedBy() != null) {
             User user = userRepository.findById(request.getCreatedBy())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
             entity.setCreatedBy(user);
         }
 

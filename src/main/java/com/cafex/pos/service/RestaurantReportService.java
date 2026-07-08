@@ -5,6 +5,7 @@ import com.cafex.pos.entity.InventoryItem;
 import com.cafex.pos.entity.Order;
 import com.cafex.pos.entity.OrderItem;
 import com.cafex.pos.entity.Restaurant;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import com.cafex.pos.repository.InventoryItemRepository;
 import com.cafex.pos.repository.OrderItemRepository;
 import com.cafex.pos.repository.OrderRepository;
@@ -39,7 +40,7 @@ public class RestaurantReportService {
         log.info("Generating restaurant report - type: {}, startDate: {}, endDate: {}, restaurantId: {}", reportType, startDate, endDate, restaurantId);
 
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
-                .orElseThrow(() -> new RuntimeException("Restaurant not found with ID: " + restaurantId));
+                .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with ID: " + restaurantId));
 
         RestaurantReportResponse.ReportMeta reportMeta = buildReportMeta(restaurant, reportType, startDate, endDate);
 

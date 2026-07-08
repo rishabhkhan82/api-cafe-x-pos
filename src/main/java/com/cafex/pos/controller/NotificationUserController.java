@@ -24,15 +24,10 @@ public class NotificationUserController {
         log.info("Notification recipients request received with restaurantId: {}, roles: {}",
                 request != null ? request.getRestaurantId() : null,
                 request != null ? request.getRoles() : null);
-        try {
-            String restaurantId = request != null ? request.getRestaurantId() : null;
-            List<String> roles = request != null ? request.getRoles() : null;
-            List<UserResponse> response = notificationUserService.getUsersForNotifications(restaurantId, roles);
-            log.info("Retrieved {} notification recipients", response.size());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Failed to get notification recipients: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
-        }
+        String restaurantId = request != null ? request.getRestaurantId() : null;
+        List<String> roles = request != null ? request.getRoles() : null;
+        List<UserResponse> response = notificationUserService.getUsersForNotifications(restaurantId, roles);
+        log.info("Retrieved {} notification recipients", response.size());
+        return ResponseEntity.ok(response);
     }
 }

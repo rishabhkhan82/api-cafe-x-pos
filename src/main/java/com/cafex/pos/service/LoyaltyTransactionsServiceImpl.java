@@ -20,6 +20,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -58,13 +62,13 @@ public class LoyaltyTransactionsServiceImpl implements LoyaltyTransactionsServic
         log.info("Creating loyalty transaction: {}", transactionId);
 
         if (loyaltyTransactionsRepository.existsByTransactionId(transactionId)) {
-            throw new RuntimeException("Transaction ID already exists: " + transactionId);
+            throw new ConflictException("Transaction ID already exists: " + transactionId);
         }
 
         Customer customer = customerRepository.findById(request.getCustomerId())
-                .orElseThrow(() -> new RuntimeException("Customer not found with ID: " + request.getCustomerId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with ID: " + request.getCustomerId()));
         Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
-                .orElseThrow(() -> new RuntimeException("Restaurant not found with ID: " + request.getRestaurantId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with ID: " + request.getRestaurantId()));
 
         LoyaltyTransactions transaction = new LoyaltyTransactions();
         transaction.setTransactionId(transactionId);
@@ -118,22 +122,22 @@ public class LoyaltyTransactionsServiceImpl implements LoyaltyTransactionsServic
         log.info("Updating loyalty transaction with ID: {}", id);
 
         LoyaltyTransactions existingTransaction = loyaltyTransactionsRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Loyalty transaction not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Loyalty transaction not found with ID: " + id));
 
         String transactionId = request.getTransactionId();
         if (transactionId == null || transactionId.trim().isEmpty()) {
-            throw new RuntimeException("Transaction ID is required for update");
+            throw new BadRequestException("Transaction ID is required for update");
         }
 
         if (!existingTransaction.getTransactionId().equals(transactionId) &&
                 loyaltyTransactionsRepository.existsByTransactionId(transactionId)) {
-            throw new RuntimeException("Transaction ID already exists: " + transactionId);
+            throw new ConflictException("Transaction ID already exists: " + transactionId);
         }
 
         Customer customer = customerRepository.findById(request.getCustomerId())
-                .orElseThrow(() -> new RuntimeException("Customer not found with ID: " + request.getCustomerId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with ID: " + request.getCustomerId()));
         Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
-                .orElseThrow(() -> new RuntimeException("Restaurant not found with ID: " + request.getRestaurantId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with ID: " + request.getRestaurantId()));
 
         existingTransaction.setTransactionId(transactionId);
         existingTransaction.setCustomer(customer);
@@ -226,7 +230,7 @@ public class LoyaltyTransactionsServiceImpl implements LoyaltyTransactionsServic
         log.info("Deleting loyalty transaction with ID: {}", id);
 
         LoyaltyTransactions transaction = loyaltyTransactionsRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Loyalty transaction not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Loyalty transaction not found with ID: " + id));
 
         loyaltyTransactionsRepository.deleteById(id);
         log.info("Loyalty transaction deleted successfully with ID: {}", id);

@@ -1,6 +1,7 @@
 package com.cafex.pos.service;
 
 import com.cafex.pos.entity.EmailServiceConfigurations;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import com.cafex.pos.repository.EmailServiceConfigurationsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +49,7 @@ public class EmailConfigurationService {
                     existing.setUpdatedAt(java.time.LocalDateTime.now());
                     return configurationRepository.save(existing);
                 })
-                .orElseThrow(() -> new RuntimeException("Email configuration not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Email configuration not found with ID: " + id));
     }
 
     public void deleteConfiguration(Long id) {

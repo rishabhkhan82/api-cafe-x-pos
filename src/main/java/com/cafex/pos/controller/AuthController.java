@@ -30,35 +30,21 @@ public class AuthController {
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         log.info("Login request received for user: {}", loginRequest.getUsername());
 
-        try {
-            LoginResponse response = authService.login(loginRequest);
-            log.info("Login successful for user: {}", loginRequest.getUsername());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Login failed for user: {} - {}", loginRequest.getUsername(), e.getMessage());
-            return ResponseEntity.badRequest().build();
-        }
+        LoginResponse response = authService.login(loginRequest);
+        log.info("Login successful for user: {}", loginRequest.getUsername());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/debug/db")
     public ResponseEntity<?> debugDatabase() {
-        try {
-            List<User> users = userRepository.findAll();
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "SUCCESS");
-            response.put("database", "connected");
-            response.put("totalUsers", users.size());
-            if (!users.isEmpty()) {
-                response.put("sampleUser", users.get(0).getUsername());
-            }
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Database debug failed: {}", e.getMessage(), e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "ERROR");
-            response.put("database", "disconnected");
-            response.put("error", e.getMessage());
-            return ResponseEntity.ok(response);
+        List<User> users = userRepository.findAll();
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "SUCCESS");
+        response.put("database", "connected");
+        response.put("totalUsers", users.size());
+        if (!users.isEmpty()) {
+            response.put("sampleUser", users.get(0).getUsername());
         }
+        return ResponseEntity.ok(response);
     }
 }

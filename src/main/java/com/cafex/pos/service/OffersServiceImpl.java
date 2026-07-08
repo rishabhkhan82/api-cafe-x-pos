@@ -14,6 +14,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -48,7 +52,7 @@ public class OffersServiceImpl implements OffersService {
 
         // Check if offerId already exists
         if (offersRepository.existsByOfferId(offerId)) {
-            throw new RuntimeException("Offer ID already exists: " + offerId);
+            throw new ConflictException("Offer ID already exists: " + offerId);
         }
 
         Offers offer = new Offers();
@@ -85,17 +89,17 @@ public class OffersServiceImpl implements OffersService {
         log.info("Updating offer with ID: {}", id);
 
         Offers existingOffer = offersRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Offer not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Offer not found with ID: " + id));
 
         String offerId = offerRequest.getOfferId();
         if (offerId == null || offerId.trim().isEmpty()) {
-            throw new RuntimeException("Offer ID is required for update");
+            throw new BadRequestException("Offer ID is required for update");
         }
 
         // Check offerId uniqueness if changed
         if (!existingOffer.getOfferId().equals(offerId) &&
             offersRepository.existsByOfferId(offerId)) {
-            throw new RuntimeException("Offer ID already exists: " + offerId);
+            throw new ConflictException("Offer ID already exists: " + offerId);
         }
 
         // Update fields
@@ -206,7 +210,7 @@ public class OffersServiceImpl implements OffersService {
         log.info("Deleting offer with ID: {}", id);
 
         Offers offer = offersRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Offer not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Offer not found with ID: " + id));
 
         offersRepository.deleteById(id);
         log.info("Offer deleted successfully with ID: {}", id);

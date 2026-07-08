@@ -15,6 +15,10 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -126,7 +130,7 @@ public class NotificationsService {
         log.info("Updating notification status for ID: {} to {}", id, status);
 
         Notifications notification = notificationsRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Notification not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found with ID: " + id));
 
         notification.setStatus(status);
 
@@ -144,7 +148,7 @@ public class NotificationsService {
     public void deleteNotification(Long id) {
         log.info("Deleting notification with ID: {}", id);
         if (!notificationsRepository.existsById(id)) {
-            throw new RuntimeException("Notification not found with ID: " + id);
+            throw new ResourceNotFoundException("Notification not found with ID: " + id);
         }
         notificationsRepository.deleteById(id);
         log.info("Notification deleted successfully with ID: {}", id);

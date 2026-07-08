@@ -15,6 +15,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -69,11 +73,11 @@ public class InventoryItemServiceImpl implements InventoryItemService {
         log.info("Updating inventory item with ID: {}", id);
 
         InventoryItem existingInventoryItem = inventoryItemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Inventory item not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Inventory item not found with ID: " + id));
 
         if (!existingInventoryItem.getItemId().equals(inventoryItemRequest.getItemId()) &&
             inventoryItemRepository.existsByItemId(inventoryItemRequest.getItemId())) {
-            throw new RuntimeException("Item ID already exists: " + inventoryItemRequest.getItemId());
+            throw new ConflictException("Item ID already exists: " + inventoryItemRequest.getItemId());
         }
 
         existingInventoryItem.setItemId(inventoryItemRequest.getItemId());
@@ -174,7 +178,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
         log.info("Deleting inventory item with ID: {}", id);
 
         InventoryItem inventoryItem = inventoryItemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Inventory item not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Inventory item not found with ID: " + id));
 
         inventoryItemRepository.deleteById(id);
         log.info("Inventory item deleted successfully with ID: {}", id);

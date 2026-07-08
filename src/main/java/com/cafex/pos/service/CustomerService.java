@@ -7,6 +7,10 @@ import com.cafex.pos.entity.Customer;
 import com.cafex.pos.entity.Restaurant;
 import com.cafex.pos.repository.CustomerRepository;
 import com.cafex.pos.repository.RestaurantRepository;
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -102,7 +106,7 @@ public class CustomerService {
         // Find restaurant
         Optional<Restaurant> restaurantOpt = restaurantRepository.findById(request.getRestaurantId());
         if (restaurantOpt.isEmpty()) {
-            throw new RuntimeException("Restaurant not found");
+            throw new ResourceNotFoundException("Restaurant not found");
         }
 
         Restaurant restaurant = restaurantOpt.get();
@@ -112,7 +116,7 @@ public class CustomerService {
         if (!email.isEmpty()) {
             Optional<Customer> existingCustomer = customerRepository.findByEmail(email);
             if (existingCustomer.isPresent()) {
-                throw new RuntimeException("Customer with this email already exists");
+                throw new ConflictException("Customer with this email already exists");
             }
         }
 
@@ -164,7 +168,7 @@ public class CustomerService {
         // Find restaurant
         Optional<Restaurant> restaurantOpt = restaurantRepository.findById(request.getRestaurantId());
         if (restaurantOpt.isEmpty()) {
-            throw new RuntimeException("Restaurant not found");
+            throw new ResourceNotFoundException("Restaurant not found");
         }
 
         Restaurant restaurant = restaurantOpt.get();
@@ -173,7 +177,7 @@ public class CustomerService {
         if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
             Optional<Customer> existingCustomer = customerRepository.findByEmail(request.getEmail());
             if (existingCustomer.isPresent()) {
-                throw new RuntimeException("Customer with this email already exists");
+                throw new ConflictException("Customer with this email already exists");
             }
         }
 
@@ -205,7 +209,7 @@ public class CustomerService {
 
         Optional<Customer> customerOpt = customerRepository.findById(id);
         if (customerOpt.isEmpty()) {
-            throw new RuntimeException("Customer not found");
+            throw new ResourceNotFoundException("Customer not found");
         }
 
         Customer customer = customerOpt.get();
@@ -296,7 +300,7 @@ public class CustomerService {
     public void deleteCustomer(Long id) {
         log.info("Deleting customer with ID: {}", id);
         if (!customerRepository.existsById(id)) {
-            throw new RuntimeException("Customer not found");
+            throw new ResourceNotFoundException("Customer not found");
         }
         customerRepository.deleteById(id);
         log.info("Customer deleted successfully with ID: {}", id);
@@ -338,7 +342,7 @@ public class CustomerService {
             // Extract base64 data
             String[] parts = avatarData.split(",");
             if (parts.length != 2) {
-                throw new IllegalArgumentException("Invalid base64 data format");
+                throw new BadRequestException("Invalid base64 data format");
             }
 
             String base64Data = parts[1];
@@ -365,7 +369,7 @@ public class CustomerService {
 
         } catch (IOException e) {
             log.error("Failed to save avatar file for customer {}: {}", customerId, e.getMessage());
-            throw new RuntimeException("Failed to process avatar image");
+            throw new BadRequestException("Failed to process avatar image");
         }
     }
 

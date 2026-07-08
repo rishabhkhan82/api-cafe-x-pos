@@ -14,6 +14,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -103,7 +107,7 @@ public class PlanFeaturesService {
 
         // Check if featureId already exists
         if (planFeaturesRepository.existsByFeatureId(planFeaturesRequest.getFeatureId())) {
-            throw new RuntimeException("Feature ID already exists: " + planFeaturesRequest.getFeatureId());
+            throw new ConflictException("Feature ID already exists: " + planFeaturesRequest.getFeatureId());
         }
 
         PlanFeatures planFeature = new PlanFeatures();
@@ -130,12 +134,12 @@ public class PlanFeaturesService {
         log.info("Updating plan feature with ID: {}", id);
 
         PlanFeatures existingFeature = planFeaturesRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Plan feature not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Plan feature not found with ID: " + id));
 
         // Check featureId uniqueness if changed
         if (!existingFeature.getFeatureId().equals(planFeaturesRequest.getFeatureId()) &&
             planFeaturesRepository.existsByFeatureId(planFeaturesRequest.getFeatureId())) {
-            throw new RuntimeException("Feature ID already exists: " + planFeaturesRequest.getFeatureId());
+            throw new ConflictException("Feature ID already exists: " + planFeaturesRequest.getFeatureId());
         }
 
         // Update fields
@@ -160,7 +164,7 @@ public class PlanFeaturesService {
         log.info("Deleting plan feature with ID: {}", id);
 
         if (!planFeaturesRepository.existsById(id)) {
-            throw new RuntimeException("Plan feature not found with ID: " + id);
+            throw new ResourceNotFoundException("Plan feature not found with ID: " + id);
         }
 
         planFeaturesRepository.deleteById(id);

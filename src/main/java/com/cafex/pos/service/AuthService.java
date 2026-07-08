@@ -13,6 +13,7 @@ import javax.crypto.SecretKey;
 import java.util.Base64;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.cafex.pos.exception.BadRequestException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -47,7 +48,7 @@ public class AuthService {
         Optional<User> userOpt = userRepository.findByUsername(loginRequest.getUsername());
 
         if (userOpt.isEmpty()) {
-            throw new RuntimeException("Invalid username or password");
+            throw new BadRequestException("Invalid username or password");
         }
 
         User user = userOpt.get();
@@ -63,7 +64,7 @@ public class AuthService {
         }
 
         if (!passwordMatches) {
-            throw new RuntimeException("Invalid username or password");
+            throw new BadRequestException("Invalid username or password");
         }
 
         // Update last login

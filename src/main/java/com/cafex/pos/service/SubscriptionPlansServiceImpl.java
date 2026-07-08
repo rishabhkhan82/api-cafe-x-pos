@@ -5,6 +5,7 @@ import com.cafex.pos.dto.SubscriptionPlansResponse;
 import com.cafex.pos.dto.SubscriptionPlansPageResponse;
 import com.cafex.pos.entity.SubscriptionPlans;
 import com.cafex.pos.entity.User;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import com.cafex.pos.repository.SubscriptionPlansRepository;
 import com.cafex.pos.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +39,7 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
     @Override
     public SubscriptionPlansResponse updateSubscriptionPlan(Long id, SubscriptionPlansRequest subscriptionPlansRequest) {
         SubscriptionPlans existingPlan = subscriptionPlansRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Subscription plan not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found"));
         updateEntityFromRequest(existingPlan, subscriptionPlansRequest);
         existingPlan.setUpdatedAt(LocalDateTime.now());
         existingPlan = subscriptionPlansRepository.save(existingPlan);
@@ -140,7 +141,7 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
         }
         if (request.getCreated_by() != null) {
             User user = userRepository.findById(request.getCreated_by())
-                    .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getCreated_by()));
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getCreated_by()));
             subscriptionPlan.setCreatedBy(user);
         }
         subscriptionPlan.setOfferName(request.getOffer_name());
@@ -171,7 +172,7 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
         }
         if (request.getUpdated_by() != null) {
             User user = userRepository.findById(request.getUpdated_by())
-                    .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUpdated_by()));
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getUpdated_by()));
             subscriptionPlan.setUpdatedBy(user);
         }
         subscriptionPlan.setOfferName(request.getOffer_name());

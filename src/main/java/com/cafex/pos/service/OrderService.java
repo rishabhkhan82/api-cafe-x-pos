@@ -28,6 +28,10 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.jpa.domain.Specification;
 import com.cafex.pos.dto.OrderPageResponse;
@@ -154,7 +158,7 @@ public class OrderService {
         // Check if orderId already exists (only when provided)
         if (orderRequest.getOrderId() != null && !orderRequest.getOrderId().isBlank()
                 && orderRepository.existsByOrderId(orderRequest.getOrderId())) {
-            throw new RuntimeException("Order ID already exists: " + orderRequest.getOrderId());
+            throw new ConflictException("Order ID already exists: " + orderRequest.getOrderId());
         }
 
         // Load related entities
@@ -241,12 +245,12 @@ public class OrderService {
         log.info("Updating order with ID: {}", id);
 
         Order existingOrder = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + id));
 
         // Check orderId uniqueness if changed
         if (!existingOrder.getOrderId().equals(orderRequest.getOrderId()) &&
             orderRepository.existsByOrderId(orderRequest.getOrderId())) {
-            throw new RuntimeException("Order ID already exists: " + orderRequest.getOrderId());
+            throw new ConflictException("Order ID already exists: " + orderRequest.getOrderId());
         }
 
         // Update fields
@@ -309,7 +313,7 @@ public class OrderService {
         log.info("Deleting order with ID: {}", id);
 
         if (!orderRepository.existsById(id)) {
-            throw new RuntimeException("Order not found with ID: " + id);
+            throw new ResourceNotFoundException("Order not found with ID: " + id);
         }
 
         // Delete order items first
@@ -431,7 +435,7 @@ public class OrderService {
         String customerIdentifier = auth.getName();
 
         Customer customer = customerRepository.findByCustomerId(customerIdentifier)
-                .orElseThrow(() -> new RuntimeException("Customer not found: " + customerIdentifier));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + customerIdentifier));
 
         List<Order> allOrders = orderRepository.findByCustomerId(customer.getId());
         List<Order> activeOrders = allOrders.stream()

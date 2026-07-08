@@ -1,5 +1,9 @@
 package com.cafex.pos.service;
 
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import com.cafex.pos.dto.PaymentOrderRequest;
 import com.cafex.pos.dto.PaymentOrderResponse;
 import com.cafex.pos.dto.SubscriptionPlansResponse;
@@ -31,7 +35,7 @@ public class PaymentService {
     public PaymentOrderResponse createOrder(PaymentOrderRequest request) throws RazorpayException {
         // Get plan details
         SubscriptionPlansResponse plan = subscriptionPlansService.getSubscriptionPlanById(request.getPlanId())
-                .orElseThrow(() -> new RuntimeException("Plan not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Plan not found"));
 
         // Calculate expected amount
         BigDecimal baseAmount = plan.getPrice().multiply(BigDecimal.valueOf(request.getMonths()));
@@ -43,7 +47,7 @@ public class PaymentService {
         BigDecimal receivedAmount = BigDecimal.valueOf(request.getCalculatedAmount());
         BigDecimal difference = expectedAmount.subtract(receivedAmount).abs();
         if (difference.compareTo(BigDecimal.valueOf(0.01)) > 0) { // Allow 1 paise difference
-            throw new RuntimeException("Amount mismatch: expected " + expectedAmount + ", received " + request.getCalculatedAmount());
+            throw new BadRequestException("Amount mismatch: expected " + expectedAmount + ", received " + request.getCalculatedAmount());
         }
 
         // Create Razorpay order

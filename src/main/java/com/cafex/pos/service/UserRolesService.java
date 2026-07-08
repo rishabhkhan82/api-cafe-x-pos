@@ -14,6 +14,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -87,7 +91,7 @@ public class UserRolesService {
 
         // Check if roleId already exists
         if (userRolesRepository.existsByRoleId(userRolesRequest.getRoleId())) {
-            throw new RuntimeException("Role ID already exists: " + userRolesRequest.getRoleId());
+            throw new ConflictException("Role ID already exists: " + userRolesRequest.getRoleId());
         }
 
         UserRoles userRole = new UserRoles();
@@ -112,12 +116,12 @@ public class UserRolesService {
         log.info("Updating user role with ID: {}", id);
 
         UserRoles existingRole = userRolesRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User role not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User role not found with ID: " + id));
 
         // Check roleId uniqueness if changed
         if (!existingRole.getRoleId().equals(userRolesRequest.getRoleId()) &&
             userRolesRepository.existsByRoleId(userRolesRequest.getRoleId())) {
-            throw new RuntimeException("Role ID already exists: " + userRolesRequest.getRoleId());
+            throw new ConflictException("Role ID already exists: " + userRolesRequest.getRoleId());
         }
 
         // Update fields
@@ -140,7 +144,7 @@ public class UserRolesService {
         log.info("Deleting user role with ID: {}", id);
 
         if (!userRolesRepository.existsById(id)) {
-            throw new RuntimeException("User role not found with ID: " + id);
+            throw new ResourceNotFoundException("User role not found with ID: " + id);
         }
 
         userRolesRepository.deleteById(id);

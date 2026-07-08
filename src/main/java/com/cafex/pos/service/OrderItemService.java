@@ -9,6 +9,10 @@ import com.cafex.pos.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -66,7 +70,7 @@ public class OrderItemService {
 
         // Validate order exists
         Order order = orderRepository.findById(orderItemRequest.getOrderId())
-                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderItemRequest.getOrderId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderItemRequest.getOrderId()));
 
         OrderItem orderItem = new OrderItem();
         orderItem.setOrder(order);
@@ -88,12 +92,12 @@ public class OrderItemService {
         log.info("Updating order item with ID: {}", id);
 
         OrderItem existingOrderItem = orderItemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order item not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Order item not found with ID: " + id));
 
         // Validate order exists if orderId is provided
         if (orderItemRequest.getOrderId() != null) {
             Order order = orderRepository.findById(orderItemRequest.getOrderId())
-                    .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderItemRequest.getOrderId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderItemRequest.getOrderId()));
             existingOrderItem.setOrder(order);
         }
 
@@ -116,7 +120,7 @@ public class OrderItemService {
         log.info("Deleting order item with ID: {}", id);
 
         if (!orderItemRepository.existsById(id)) {
-            throw new RuntimeException("Order item not found with ID: " + id);
+            throw new ResourceNotFoundException("Order item not found with ID: " + id);
         }
 
         orderItemRepository.deleteById(id);

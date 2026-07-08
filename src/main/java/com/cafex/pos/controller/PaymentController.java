@@ -3,6 +3,7 @@ package com.cafex.pos.controller;
 import com.cafex.pos.dto.PaymentOrderRequest;
 import com.cafex.pos.dto.PaymentOrderResponse;
 import com.cafex.pos.service.PaymentService;
+import com.razorpay.RazorpayException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,15 +20,10 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping("/create-order")
-    public ResponseEntity<PaymentOrderResponse> createOrder(@Valid @RequestBody PaymentOrderRequest request) {
+    public ResponseEntity<PaymentOrderResponse> createOrder(@Valid @RequestBody PaymentOrderRequest request) throws RazorpayException {
         log.info("Create Razorpay order request for planId: {}, months: {}, amount: {}", request.getPlanId(), request.getMonths(), request.getCalculatedAmount());
-        try {
-            PaymentOrderResponse response = paymentService.createOrder(request);
-            log.info("Razorpay order created with ID: {}", response.getOrderId());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Failed to create Razorpay order: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
-        }
+        PaymentOrderResponse response = paymentService.createOrder(request);
+        log.info("Razorpay order created with ID: {}", response.getOrderId());
+        return ResponseEntity.ok(response);
     }
 }

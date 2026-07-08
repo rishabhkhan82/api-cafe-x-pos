@@ -25,66 +25,48 @@ public class FileController {
     public ResponseEntity<OperationResponse> uploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam("category") String category,
-            @RequestParam(value = "entityId", required = false) String entityId) {
+            @RequestParam(value = "entityId", required = false) String entityId) throws IOException {
 
         log.info("File upload request received - category: {}, entityId: {}, filename: {}", category, entityId, file.getOriginalFilename());
 
-        try {
-            // Validate file
-            if (file.isEmpty()) {
-                OperationResponse operationResponse = new OperationResponse("failure", "FILE_EMPTY", null, null);
-                return ResponseEntity.badRequest().body(operationResponse);
-            }
-
-            // Determine upload directory based on category
-            String uploadDir = getUploadDirectory(category);
-            if (uploadDir == null) {
-                OperationResponse operationResponse = new OperationResponse("failure", "INVALID_CATEGORY", null, null);
-                return ResponseEntity.badRequest().body(operationResponse);
-            }
-
-            // Create directory if it doesn't exist
-            Path uploadPath = Paths.get(uploadDir);
-            Files.createDirectories(uploadPath);
-
-            // Generate unique filename
-            String originalFilename = file.getOriginalFilename();
-            String fileExtension = getFileExtension(originalFilename);
-            String uniqueFilename = UUID.randomUUID().toString() + (fileExtension != null ? "." + fileExtension : "");
-            Path filePath = uploadPath.resolve(uniqueFilename);
-
-            // Save file
-            Files.copy(file.getInputStream(), filePath);
-
-            // Generate URL
-            String fileUrl = "/" + uploadDir.replace("\\", "/") + "/" + uniqueFilename;
-
-            log.info("File uploaded successfully: {}", fileUrl);
-
-            // Create response data
-            FileUploadResponse responseData = new FileUploadResponse(
-                uniqueFilename,
-                originalFilename,
-                file.getSize(),
-                file.getContentType(),
-                fileUrl,
-                category,
-                entityId,
-                LocalDateTime.now()
-            );
-
-            OperationResponse operationResponse = new OperationResponse("success", "FILE_UPLOADED", null, responseData);
-            return ResponseEntity.ok(operationResponse);
-
-        } catch (IOException e) {
-            log.error("Failed to upload file: {}", e.getMessage());
-            OperationResponse operationResponse = new OperationResponse("failure", "FILE_UPLOAD_FAILED", null, null);
+        if (file.isEmpty()) {
+            OperationResponse operationResponse = new OperationResponse("failure", "FILE_EMPTY", null, null);
             return ResponseEntity.badRequest().body(operationResponse);
-        } catch (Exception e) {
-            log.error("Unexpected error during file upload: {}", e.getMessage());
-            OperationResponse operationResponse = new OperationResponse("failure", "INTERNAL_ERROR", null, null);
-            return ResponseEntity.internalServerError().body(operationResponse);
         }
+
+        String uploadDir = getUploadDirectory(category);
+        if (uploadDir == null) {
+            OperationResponse operationResponse = new OperationResponse("failure", "INVALID_CATEGORY", null, null);
+            return ResponseEntity.badRequest().body(operationResponse);
+        }
+
+        Path uploadPath = Paths.get(uploadDir);
+        Files.createDirectories(uploadPath);
+
+        String originalFilename = file.getOriginalFilename();
+        String fileExtension = getFileExtension(originalFilename);
+        String uniqueFilename = UUID.randomUUID().toString() + (fileExtension != null ? "." + fileExtension : "");
+        Path filePath = uploadPath.resolve(uniqueFilename);
+
+        Files.copy(file.getInputStream(), filePath);
+
+        String fileUrl = "/" + uploadDir.replace("\\", "/") + "/" + uniqueFilename;
+
+        log.info("File uploaded successfully: {}", fileUrl);
+
+        FileUploadResponse responseData = new FileUploadResponse(
+            uniqueFilename,
+            originalFilename,
+            file.getSize(),
+            file.getContentType(),
+            fileUrl,
+            category,
+            entityId,
+            LocalDateTime.now()
+        );
+
+        OperationResponse operationResponse = new OperationResponse("success", "FILE_UPLOADED", null, responseData);
+        return ResponseEntity.ok(operationResponse);
     }
 
     private String getUploadDirectory(String category) {

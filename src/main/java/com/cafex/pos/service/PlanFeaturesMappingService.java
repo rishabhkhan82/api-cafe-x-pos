@@ -16,6 +16,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -95,11 +99,11 @@ public class PlanFeaturesMappingService {
 
         // Check if plan exists
         SubscriptionPlans plan = subscriptionPlansRepository.findById(planFeaturesMappingRequest.getPlanId())
-                .orElseThrow(() -> new RuntimeException("Subscription plan not found with ID: " + planFeaturesMappingRequest.getPlanId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found with ID: " + planFeaturesMappingRequest.getPlanId()));
 
         // Check for duplicate plan-feature combination
         if (planFeaturesMappingRepository.existsByPlanIdAndFeatureId(planFeaturesMappingRequest.getPlanId(), planFeaturesMappingRequest.getFeatureId())) {
-            throw new RuntimeException("Plan-feature mapping already exists for planId: " + planFeaturesMappingRequest.getPlanId() + " and featureId: " + planFeaturesMappingRequest.getFeatureId());
+            throw new ConflictException("Plan-feature mapping already exists for planId: " + planFeaturesMappingRequest.getPlanId() + " and featureId: " + planFeaturesMappingRequest.getFeatureId());
         }
 
         PlanFeaturesMapping mapping = new PlanFeaturesMapping();
@@ -119,13 +123,13 @@ public class PlanFeaturesMappingService {
         log.info("Updating plan features mapping with ID: {}", id);
 
         PlanFeaturesMapping existingMapping = planFeaturesMappingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Plan features mapping not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Plan features mapping not found with ID: " + id));
 
         // Update fields only if provided
         if (planFeaturesMappingRequest.getPlanId() != null) {
             // Check if plan exists
             SubscriptionPlans plan = subscriptionPlansRepository.findById(planFeaturesMappingRequest.getPlanId())
-                    .orElseThrow(() -> new RuntimeException("Subscription plan not found with ID: " + planFeaturesMappingRequest.getPlanId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found with ID: " + planFeaturesMappingRequest.getPlanId()));
             existingMapping.setPlan(plan);
         }
 
@@ -139,7 +143,7 @@ public class PlanFeaturesMappingService {
             if (!existingMapping.getPlan().getId().equals(planFeaturesMappingRequest.getPlanId()) ||
                 !existingMapping.getFeatureId().equals(planFeaturesMappingRequest.getFeatureId())) {
                 if (planFeaturesMappingRepository.existsByPlanIdAndFeatureId(planFeaturesMappingRequest.getPlanId(), planFeaturesMappingRequest.getFeatureId())) {
-                    throw new RuntimeException("Plan-feature mapping already exists for planId: " + planFeaturesMappingRequest.getPlanId() + " and featureId: " + planFeaturesMappingRequest.getFeatureId());
+                    throw new ConflictException("Plan-feature mapping already exists for planId: " + planFeaturesMappingRequest.getPlanId() + " and featureId: " + planFeaturesMappingRequest.getFeatureId());
                 }
             }
         }
@@ -160,7 +164,7 @@ public class PlanFeaturesMappingService {
         log.info("Deleting plan features mapping with ID: {}", id);
 
         if (!planFeaturesMappingRepository.existsById(id)) {
-            throw new RuntimeException("Plan features mapping not found with ID: " + id);
+            throw new ResourceNotFoundException("Plan features mapping not found with ID: " + id);
         }
 
         planFeaturesMappingRepository.deleteById(id);

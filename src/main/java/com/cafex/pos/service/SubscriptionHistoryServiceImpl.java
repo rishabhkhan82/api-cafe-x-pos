@@ -5,6 +5,7 @@ import com.cafex.pos.dto.SubscriptionHistoryResponse;
 import com.cafex.pos.dto.SubscriptionHistoryPageResponse;
 import com.cafex.pos.entity.Restaurant;
 import com.cafex.pos.entity.SubscriptionHistory;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import com.cafex.pos.repository.RestaurantRepository;
 import com.cafex.pos.repository.SubscriptionHistoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +50,7 @@ public class SubscriptionHistoryServiceImpl implements SubscriptionHistoryServic
         log.info("Updating subscription history with ID: {}", id);
 
         SubscriptionHistory existing = subscriptionHistoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Subscription history not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Subscription history not found with ID: " + id));
 
         // Update fields
         existing.setHistoryId(request.getHistoryId());
@@ -76,7 +77,7 @@ public class SubscriptionHistoryServiceImpl implements SubscriptionHistoryServic
 
         if (request.getRestaurantId() != null) {
             Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
-                    .orElseThrow(() -> new RuntimeException("Restaurant not found with ID: " + request.getRestaurantId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with ID: " + request.getRestaurantId()));
             existing.setRestaurant(restaurant);
         }
         if (request.getPreviousPlanId() != null) {
@@ -169,7 +170,7 @@ public class SubscriptionHistoryServiceImpl implements SubscriptionHistoryServic
 
         if (request.getRestaurantId() != null) {
             Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
-                    .orElseThrow(() -> new RuntimeException("Restaurant not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found"));
             entity.setRestaurant(restaurant);
         }
         entity.setPreviousPlanId(request.getPreviousPlanId());

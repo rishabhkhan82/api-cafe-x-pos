@@ -8,6 +8,7 @@ import com.cafex.pos.entity.OfferRedemptions;
 import com.cafex.pos.entity.Offers;
 import com.cafex.pos.entity.Order;
 import com.cafex.pos.entity.Restaurant;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import com.cafex.pos.repository.OfferRedemptionsRepository;
 import com.cafex.pos.repository.CustomerRepository;
 import com.cafex.pos.repository.OffersRepository;
@@ -61,13 +62,13 @@ public class OfferRedemptionsServiceImpl implements OfferRedemptionsService {
         log.info("Creating offer redemption: {}", redemptionId);
 
         Customer customer = customerRepository.findById(request.getCustomerId())
-                .orElseThrow(() -> new RuntimeException("Customer not found with ID: " + request.getCustomerId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with ID: " + request.getCustomerId()));
         Offers offer = offersRepository.findById(request.getOfferId())
-                .orElseThrow(() -> new RuntimeException("Offer not found with ID: " + request.getOfferId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Offer not found with ID: " + request.getOfferId()));
         Order order = orderRepository.findById(request.getOrderId())
-                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + request.getOrderId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + request.getOrderId()));
         Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
-                .orElseThrow(() -> new RuntimeException("Restaurant not found with ID: " + request.getRestaurantId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with ID: " + request.getRestaurantId()));
 
         OfferRedemptions redemption = new OfferRedemptions();
         redemption.setRedemptionId(redemptionId);
@@ -103,16 +104,16 @@ public class OfferRedemptionsServiceImpl implements OfferRedemptionsService {
         log.info("Updating offer redemption with ID: {}", id);
 
         OfferRedemptions existingRedemption = offerRedemptionsRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Offer redemption not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Offer redemption not found with ID: " + id));
 
         Customer customer = customerRepository.findById(request.getCustomerId())
-                .orElseThrow(() -> new RuntimeException("Customer not found with ID: " + request.getCustomerId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with ID: " + request.getCustomerId()));
         Offers offer = offersRepository.findById(request.getOfferId())
-                .orElseThrow(() -> new RuntimeException("Offer not found with ID: " + request.getOfferId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Offer not found with ID: " + request.getOfferId()));
         Order order = orderRepository.findById(request.getOrderId())
-                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + request.getOrderId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + request.getOrderId()));
         Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
-                .orElseThrow(() -> new RuntimeException("Restaurant not found with ID: " + request.getRestaurantId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with ID: " + request.getRestaurantId()));
 
         existingRedemption.setOffer(offer);
         existingRedemption.setOrder(order);
@@ -208,7 +209,7 @@ public class OfferRedemptionsServiceImpl implements OfferRedemptionsService {
         log.info("Deleting offer redemption with ID: {}", id);
 
         OfferRedemptions redemption = offerRedemptionsRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Offer redemption not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Offer redemption not found with ID: " + id));
 
         offerRedemptionsRepository.deleteById(id);
         log.info("Offer redemption deleted successfully with ID: {}", id);

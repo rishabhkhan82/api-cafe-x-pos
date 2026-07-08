@@ -15,6 +15,10 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -45,7 +49,7 @@ public class MenuItemServiceImpl implements MenuItemService {
 
         // Check if itemId already exists
         if (menuItemRepository.existsByItemId(menuItemRequest.getItemId())) {
-            throw new RuntimeException("Item ID already exists: " + menuItemRequest.getItemId());
+            throw new ConflictException("Item ID already exists: " + menuItemRequest.getItemId());
         }
 
         MenuItem menuItem = new MenuItem();
@@ -98,12 +102,12 @@ public class MenuItemServiceImpl implements MenuItemService {
         log.info("Updating menu item with ID: {}", id);
 
         MenuItem existingMenuItem = menuItemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Menu item not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with ID: " + id));
 
         // Check itemId uniqueness if changed
         if (!existingMenuItem.getItemId().equals(menuItemRequest.getItemId()) &&
             menuItemRepository.existsByItemId(menuItemRequest.getItemId())) {
-            throw new RuntimeException("Item ID already exists: " + menuItemRequest.getItemId());
+            throw new ConflictException("Item ID already exists: " + menuItemRequest.getItemId());
         }
 
         // Handle image change if provided as base64
@@ -257,7 +261,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         log.info("Deleting menu item with ID: {}", id);
 
         MenuItem menuItem = menuItemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Menu item not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with ID: " + id));
 
         // Delete associated image if exists
         if (menuItem.getImage() != null && !menuItem.getImage().isEmpty()) {

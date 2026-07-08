@@ -16,7 +16,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
 import jakarta.persistence.criteria.Predicate;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -52,11 +56,11 @@ public class LoyaltyProgramsServiceImpl implements LoyaltyProgramsService {
         log.info("Saving new loyalty program: {}", programId);
 
         if (loyaltyProgramsRepository.existsByProgramId(programId)) {
-            throw new RuntimeException("Program ID already exists: " + programId);
+            throw new ConflictException("Program ID already exists: " + programId);
         }
 
         Customer customer = customerRepository.findById(request.getCustomerId())
-                .orElseThrow(() -> new RuntimeException("Customer not found with ID: " + request.getCustomerId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with ID: " + request.getCustomerId()));
 
         LoyaltyPrograms program = new LoyaltyPrograms();
         program.setProgramId(programId);
@@ -83,16 +87,16 @@ public class LoyaltyProgramsServiceImpl implements LoyaltyProgramsService {
         log.info("Updating loyalty program with ID: {}", id);
 
         LoyaltyPrograms existingProgram = loyaltyProgramsRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Loyalty program not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Loyalty program not found with ID: " + id));
 
         String programId = request.getProgramId();
         if (programId == null || programId.trim().isEmpty()) {
-            throw new RuntimeException("Program ID is required for update");
+            throw new BadRequestException("Program ID is required for update");
         }
 
         if (!existingProgram.getProgramId().equals(programId) &&
                 loyaltyProgramsRepository.existsByProgramId(programId)) {
-            throw new RuntimeException("Program ID already exists: " + programId);
+            throw new ConflictException("Program ID already exists: " + programId);
         }
 
         existingProgram.setProgramId(programId);
@@ -117,7 +121,7 @@ public class LoyaltyProgramsServiceImpl implements LoyaltyProgramsService {
         log.info("Auto-creating loyalty program for customerId: {}", request.getCustomerId());
 
         Customer customer = customerRepository.findById(request.getCustomerId())
-                .orElseThrow(() -> new RuntimeException("Customer not found with ID: " + request.getCustomerId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with ID: " + request.getCustomerId()));
 
         LoyaltyPrograms program = new LoyaltyPrograms();
         program.setCustomer(customer);
@@ -189,7 +193,7 @@ public class LoyaltyProgramsServiceImpl implements LoyaltyProgramsService {
         log.info("Deleting loyalty program with ID: {}", id);
 
         LoyaltyPrograms program = loyaltyProgramsRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Loyalty program not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Loyalty program not found with ID: " + id));
 
         loyaltyProgramsRepository.deleteById(id);
         log.info("Loyalty program deleted successfully with ID: {}", id);

@@ -24,6 +24,10 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -194,12 +198,12 @@ public class UserService {
 
         // Check if username already exists
         if (userRepository.existsByUsername(userRequest.getUsername())) {
-            throw new RuntimeException("Username already exists: " + userRequest.getUsername());
+            throw new ConflictException("Username already exists: " + userRequest.getUsername());
         }
 
         // Check if email already exists
         if (userRepository.existsByEmail(userRequest.getEmail())) {
-            throw new RuntimeException("Email already exists: " + userRequest.getEmail());
+            throw new ConflictException("Email already exists: " + userRequest.getEmail());
         }
 
         String plaintextPassword = userRequest.getPassword();
@@ -268,18 +272,18 @@ public class UserService {
         log.info("Updating user with ID: {}", id);
 
         User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
 
         // Check username uniqueness if changed
         if (!existingUser.getUsername().equals(userRequest.getUsername()) &&
             userRepository.existsByUsername(userRequest.getUsername())) {
-            throw new RuntimeException("Username already exists: " + userRequest.getUsername());
+            throw new ConflictException("Username already exists: " + userRequest.getUsername());
         }
 
         // Check email uniqueness if changed
         if (!existingUser.getEmail().equals(userRequest.getEmail()) &&
             userRepository.existsByEmail(userRequest.getEmail())) {
-            throw new RuntimeException("Email already exists: " + userRequest.getEmail());
+            throw new ConflictException("Email already exists: " + userRequest.getEmail());
         }
 
         // Update fields
@@ -331,7 +335,7 @@ public class UserService {
         log.info("Deleting user with ID: {}", id);
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
 
         // Delete associated avatar if exists
         if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {

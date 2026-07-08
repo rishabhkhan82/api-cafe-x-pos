@@ -29,14 +29,9 @@ public class RestaurantReportController {
             @RequestParam(required = false) String endDate,
             @RequestParam @NotNull Long restaurantId) {
         log.info("Restaurant report request received - reportType: {}, startDate: {}, endDate: {}, restaurantId: {}", reportType, startDate, endDate, restaurantId);
-        try {
-            RestaurantReportResponse response = restaurantReportService.getRestaurantReport(reportType, startDate, endDate, restaurantId);
-            log.info("Restaurant report generated successfully - type: {}", reportType);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Failed to generate restaurant report: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
-        }
+        RestaurantReportResponse response = restaurantReportService.getRestaurantReport(reportType, startDate, endDate, restaurantId);
+        log.info("Restaurant report generated successfully - type: {}", reportType);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/pdf")
@@ -44,27 +39,22 @@ public class RestaurantReportController {
             @RequestParam @NotNull String reportType,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
-            @RequestParam @NotNull Long restaurantId) {
+            @RequestParam @NotNull Long restaurantId) throws Exception {
         log.info("Restaurant report PDF request received - reportType: {}, startDate: {}, endDate: {}, restaurantId: {}", reportType, startDate, endDate, restaurantId);
-        try {
-            RestaurantReportResponse response = restaurantReportService.getRestaurantReport(reportType, startDate, endDate, restaurantId);
-            ByteArrayResource pdfResource = restaurantReportPdfService.generatePdf(response);
+        RestaurantReportResponse response = restaurantReportService.getRestaurantReport(reportType, startDate, endDate, restaurantId);
+        ByteArrayResource pdfResource = restaurantReportPdfService.generatePdf(response);
 
-            String filename = "report-" + reportType.toLowerCase() + "-" + System.currentTimeMillis() + ".pdf";
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename);
-            headers.add(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate");
-            headers.add(HttpHeaders.PRAGMA, "no-cache");
-            headers.add(HttpHeaders.EXPIRES, "0");
+        String filename = "report-" + reportType.toLowerCase() + "-" + System.currentTimeMillis() + ".pdf";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename);
+        headers.add(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate");
+        headers.add(HttpHeaders.PRAGMA, "no-cache");
+        headers.add(HttpHeaders.EXPIRES, "0");
 
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .contentLength(pdfResource.contentLength())
-                    .contentType(MediaType.APPLICATION_PDF)
-                    .body(pdfResource);
-        } catch (Exception e) {
-            log.error("Failed to generate restaurant report PDF: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().build();
-        }
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentLength(pdfResource.contentLength())
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfResource);
     }
 }

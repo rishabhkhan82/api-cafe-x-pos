@@ -18,6 +18,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -104,16 +108,16 @@ public class RoleFeaturesMappingService {
 
         // Check if plan exists
         SubscriptionPlans plan = subscriptionPlansRepository.findById(roleFeaturesMappingRequest.getPlanId())
-                .orElseThrow(() -> new RuntimeException("Subscription plan not found with ID: " + roleFeaturesMappingRequest.getPlanId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found with ID: " + roleFeaturesMappingRequest.getPlanId()));
 
         // Check if role exists
         UserRoles role = userRolesRepository.findById(roleFeaturesMappingRequest.getRoleId())
-                .orElseThrow(() -> new RuntimeException("User role not found with ID: " + roleFeaturesMappingRequest.getRoleId()));
+                .orElseThrow(() -> new ResourceNotFoundException("User role not found with ID: " + roleFeaturesMappingRequest.getRoleId()));
 
         // Check for duplicate plan-role-feature combination
         if (roleFeaturesMappingRepository.existsByPlanIdAndRoleIdAndFeatureId(
                 roleFeaturesMappingRequest.getPlanId(), roleFeaturesMappingRequest.getRoleId(), roleFeaturesMappingRequest.getFeatureId())) {
-            throw new RuntimeException("Role-feature mapping already exists for planId: " + roleFeaturesMappingRequest.getPlanId() + 
+            throw new ConflictException("Role-feature mapping already exists for planId: " + roleFeaturesMappingRequest.getPlanId() + 
                     ", roleId: " + roleFeaturesMappingRequest.getRoleId() + " and featureId: " + roleFeaturesMappingRequest.getFeatureId());
         }
 
@@ -135,15 +139,15 @@ public class RoleFeaturesMappingService {
         log.info("Updating role features mapping with ID: {}", id);
 
         RoleFeaturesMapping existingMapping = roleFeaturesMappingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Role features mapping not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Role features mapping not found with ID: " + id));
 
         // Check if plan exists
         SubscriptionPlans plan = subscriptionPlansRepository.findById(roleFeaturesMappingRequest.getPlanId())
-                .orElseThrow(() -> new RuntimeException("Subscription plan not found with ID: " + roleFeaturesMappingRequest.getPlanId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found with ID: " + roleFeaturesMappingRequest.getPlanId()));
 
         // Check if role exists
         UserRoles role = userRolesRepository.findById(roleFeaturesMappingRequest.getRoleId())
-                .orElseThrow(() -> new RuntimeException("User role not found with ID: " + roleFeaturesMappingRequest.getRoleId()));
+                .orElseThrow(() -> new ResourceNotFoundException("User role not found with ID: " + roleFeaturesMappingRequest.getRoleId()));
 
         // Check for duplicate if plan, role or feature changed
         if (!existingMapping.getPlan().getId().equals(roleFeaturesMappingRequest.getPlanId()) ||
@@ -151,7 +155,7 @@ public class RoleFeaturesMappingService {
             !existingMapping.getFeatureId().equals(roleFeaturesMappingRequest.getFeatureId())) {
             if (roleFeaturesMappingRepository.existsByPlanIdAndRoleIdAndFeatureId(
                     roleFeaturesMappingRequest.getPlanId(), roleFeaturesMappingRequest.getRoleId(), roleFeaturesMappingRequest.getFeatureId())) {
-                throw new RuntimeException("Role-feature mapping already exists for planId: " + roleFeaturesMappingRequest.getPlanId() + 
+                throw new ConflictException("Role-feature mapping already exists for planId: " + roleFeaturesMappingRequest.getPlanId() +
                         ", roleId: " + roleFeaturesMappingRequest.getRoleId() + " and featureId: " + roleFeaturesMappingRequest.getFeatureId());
             }
         }
@@ -172,7 +176,7 @@ public class RoleFeaturesMappingService {
         log.info("Deleting role features mapping with ID: {}", id);
 
         if (!roleFeaturesMappingRepository.existsById(id)) {
-            throw new RuntimeException("Role features mapping not found with ID: " + id);
+            throw new ResourceNotFoundException("Role features mapping not found with ID: " + id);
         }
 
         roleFeaturesMappingRepository.deleteById(id);

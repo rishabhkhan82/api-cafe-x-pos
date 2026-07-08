@@ -14,6 +14,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -99,7 +103,7 @@ public class NavigationMenuService {
 
         // Check if menuId already exists
         if (navigationMenuRepository.existsByMenuId(navigationMenuRequest.getMenuId())) {
-            throw new RuntimeException("Menu ID already exists: " + navigationMenuRequest.getMenuId());
+            throw new ConflictException("Menu ID already exists: " + navigationMenuRequest.getMenuId());
         }
 
         NavigationMenu navigationMenu = new NavigationMenu();
@@ -126,12 +130,12 @@ public class NavigationMenuService {
         log.info("Updating navigation menu with ID: {}", id);
 
         NavigationMenu existingMenu = navigationMenuRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Navigation menu not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Navigation menu not found with ID: " + id));
 
         // Check menuId uniqueness if changed
         if (!existingMenu.getMenuId().equals(navigationMenuRequest.getMenuId()) &&
             navigationMenuRepository.existsByMenuId(navigationMenuRequest.getMenuId())) {
-            throw new RuntimeException("Menu ID already exists: " + navigationMenuRequest.getMenuId());
+            throw new ConflictException("Menu ID already exists: " + navigationMenuRequest.getMenuId());
         }
 
         // Update fields
@@ -156,7 +160,7 @@ public class NavigationMenuService {
         log.info("Deleting navigation menu with ID: {}", id);
 
         if (!navigationMenuRepository.existsById(id)) {
-            throw new RuntimeException("Navigation menu not found with ID: " + id);
+            throw new ResourceNotFoundException("Navigation menu not found with ID: " + id);
         }
 
         navigationMenuRepository.deleteById(id);

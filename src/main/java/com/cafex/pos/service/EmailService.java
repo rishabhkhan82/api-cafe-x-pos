@@ -2,7 +2,11 @@ package com.cafex.pos.service;
 
 import com.cafex.pos.entity.EmailServiceConfigurations;
 import com.cafex.pos.repository.EmailServiceConfigurationsRepository;
+import com.cafex.pos.exception.ApiException;
 import jakarta.mail.MessagingException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +68,7 @@ public class EmailService {
             log.info("Email sent successfully to: {} with template: {}", to, templateName);
         } catch (MessagingException e) {
             log.error("Failed to send email to: {} with template: {}. Error: {}", to, templateName, e.getMessage(), e);
-            throw new RuntimeException("Failed to send email: " + e.getMessage(), e);
+            throw new ApiException("INTERNAL_ERROR", "Failed to send email: " + e.getMessage(), 500);
         }
     }
 
@@ -90,7 +94,7 @@ public class EmailService {
             log.info("Text email sent successfully to: {}", to);
         } catch (MessagingException e) {
             log.error("Failed to send text email to: {}. Error: {}", to, e.getMessage(), e);
-            throw new RuntimeException("Failed to send email: " + e.getMessage(), e);
+            throw new ApiException("INTERNAL_ERROR", "Failed to send email: " + e.getMessage(), 500);
         }
     }
 
