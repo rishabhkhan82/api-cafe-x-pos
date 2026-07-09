@@ -2,6 +2,8 @@ package com.cafex.pos.controller;
 
 import com.cafex.pos.dto.LoginRequest;
 import com.cafex.pos.dto.LoginResponse;
+import com.cafex.pos.dto.ForgotPasswordRequest;
+import com.cafex.pos.dto.OperationResponse;
 import com.cafex.pos.entity.User;
 import com.cafex.pos.repository.UserRepository;
 import com.cafex.pos.service.AuthService;
@@ -33,6 +35,14 @@ public class AuthController {
         LoginResponse response = authService.login(loginRequest);
         log.info("Login successful for user: {}", loginRequest.getUsername());
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<OperationResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        log.info("Forgot password request received for identifier: {}", request.getIdentifier());
+        authService.forgotPassword(request.getIdentifier());
+        log.info("Forgot password processed for identifier: {}", request.getIdentifier());
+        return ResponseEntity.ok(new OperationResponse("success", "PASSWORD_SENT", null, null));
     }
 
     @GetMapping("/debug/db")

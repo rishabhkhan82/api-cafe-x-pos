@@ -6,21 +6,24 @@ import com.cafex.pos.entity.User;
 import com.cafex.pos.entity.Customer;
 import com.cafex.pos.repository.UserRepository;
 import com.cafex.pos.repository.CustomerRepository;
+import com.cafex.pos.service.EmailService;
+import com.cafex.pos.exception.BadRequestException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import javax.crypto.SecretKey;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.cafex.pos.exception.BadRequestException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +33,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     @Value("${app.jwt.secret}")
     private String jwtSecret;
@@ -81,6 +85,42 @@ public class AuthService {
 
         log.info("Login successful for user: {}", user.getUsername());
         return response;
+    }
+
+    public void forgotPassword(String identifier) {
+        log.info("Forgot password request for identifier: {}", identifier);
+
+        Optional<User> userOpt = Optional.empty();
+
+        if (identifier != null && identifier.contains("@")) {
+            userOpt = userRepository.findByEmail(identifier.trim());
+        }
+        if (userOpt.isEmpty()) {
+            userOpt = userRepository.findByUsername(identifier.trim());
+        }
+
+        if (userOpt.isEmpty()) {
+            log.warn("No user found for identifier: {}", identifier);
+            throw new BadRequestException("No account found with the provided email or username");
+        }
+
+        User user = userOpt.get();
+        String password = user.getPassword();
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("username", user.getUsername());
+        variables.put("email", user.getEmail());
+        variables.put("password", password);
+        variables.put("loginUrl", "http://localhost:4200/login");
+
+        emailService.sendHtmlEmail(
+            user.getEmail(),
+            "Your CafeX POS Password",
+            "forgot_password.html",
+            variables
+        );
+
+        log.info("Forgot password email sent to: {}", user.getEmail());
     }
 
     private String generateToken(User user) {
