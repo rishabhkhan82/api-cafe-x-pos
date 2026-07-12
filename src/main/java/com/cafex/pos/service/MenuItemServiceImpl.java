@@ -70,6 +70,8 @@ public class MenuItemServiceImpl implements MenuItemService {
         menuItem.setIsRecommended(menuItemRequest.getIsRecommended() != null ? menuItemRequest.getIsRecommended() : false);
         menuItem.setPreparationTime(menuItemRequest.getPreparationTime());
         menuItem.setDiscount(menuItemRequest.getDiscount());
+        menuItem.setType(menuItemRequest.getType() != null ? menuItemRequest.getType() : "RAW");
+        menuItem.setRecipeId(menuItemRequest.getRecipeId());
         menuItem.setRestaurantId(menuItemRequest.getRestaurantId());
         menuItem.setCreatedAt(menuItemRequest.getCreatedAt() != null ? menuItemRequest.getCreatedAt().toLocalDateTime() : LocalDateTime.now());
         menuItem.setUpdatedAt(menuItemRequest.getUpdatedAt() != null ? menuItemRequest.getUpdatedAt().toLocalDateTime() : LocalDateTime.now());
@@ -143,6 +145,8 @@ public class MenuItemServiceImpl implements MenuItemService {
         existingMenuItem.setIsRecommended(menuItemRequest.getIsRecommended());
         existingMenuItem.setPreparationTime(menuItemRequest.getPreparationTime());
         existingMenuItem.setDiscount(menuItemRequest.getDiscount());
+        existingMenuItem.setType(menuItemRequest.getType());
+        existingMenuItem.setRecipeId(menuItemRequest.getRecipeId());
         existingMenuItem.setRestaurantId(menuItemRequest.getRestaurantId());
         existingMenuItem.setUpdatedAt(menuItemRequest.getUpdatedAt() != null ? menuItemRequest.getUpdatedAt().toLocalDateTime() : LocalDateTime.now());
         existingMenuItem.setUpdatedBy(menuItemRequest.getUpdatedBy());
@@ -353,6 +357,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         response.setIsRecommended(menuItem.getIsRecommended());
         response.setPreparationTime(menuItem.getPreparationTime());
         response.setDiscount(menuItem.getDiscount());
+        response.setType(menuItem.getType());
         response.setRestaurantId(menuItem.getRestaurantId());
         response.setCreatedAt(menuItem.getCreatedAt());
         response.setUpdatedAt(menuItem.getUpdatedAt());

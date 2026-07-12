@@ -59,9 +59,8 @@ public class InventoryItemRequest {
     @JsonProperty("location_in_store")
     private String locationInStore;
 
-    @NotNull(message = "Is active is required")
-    @JsonProperty("is_active")
-    private Boolean isActive = true;
+    @JsonProperty("type")
+    private String type;
 
     @JsonProperty("expiry_date")
     private LocalDateTime expiryDate;

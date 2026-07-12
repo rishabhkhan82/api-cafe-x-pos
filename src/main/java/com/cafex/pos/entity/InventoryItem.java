@@ -57,6 +57,9 @@ public class InventoryItem {
     @Column(name = "last_stock_update")
     private LocalDateTime lastStockUpdate;
 
+    @Column(name = "type")
+    private String type;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -142,7 +145,6 @@ public class InventoryItem {
     public void setCurrentStock(BigDecimal currentStock) {
         this.currentStock = currentStock;
         this.lastStockUpdate = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
     public BigDecimal getMinimumStock() {
@@ -215,6 +217,14 @@ public class InventoryItem {
 
     public void setLastStockUpdate(LocalDateTime lastStockUpdate) {
         this.lastStockUpdate = lastStockUpdate;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public LocalDateTime getCreatedAt() {

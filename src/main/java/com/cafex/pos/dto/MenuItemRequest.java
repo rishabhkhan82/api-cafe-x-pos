@@ -77,6 +77,12 @@ public class MenuItemRequest {
     @JsonProperty("discount")
     private String discount;
 
+    @JsonProperty("type")
+    private String type;
+
+    @JsonProperty("recipe_id")
+    private Long recipeId;
+
     @JsonProperty("restaurant_id")
     private Long restaurantId;
 

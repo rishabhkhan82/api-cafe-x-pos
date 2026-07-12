@@ -4,8 +4,10 @@ import com.cafex.pos.dto.InventoryItemRequest;
 import com.cafex.pos.dto.InventoryItemResponse;
 import com.cafex.pos.dto.InventoryItemPageResponse;
 import com.cafex.pos.entity.InventoryItem;
+import com.cafex.pos.entity.InventoryStockLog;
 import com.cafex.pos.entity.Restaurant;
 import com.cafex.pos.repository.InventoryItemRepository;
+import com.cafex.pos.repository.InventoryStockLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -20,6 +22,7 @@ import com.cafex.pos.exception.BadRequestException;
 import com.cafex.pos.exception.ConflictException;
 import com.cafex.pos.exception.ResourceNotFoundException;
 import jakarta.persistence.criteria.Predicate;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +35,7 @@ import java.util.stream.Collectors;
 public class InventoryItemServiceImpl implements InventoryItemService {
 
     private final InventoryItemRepository inventoryItemRepository;
+    private final InventoryStockLogRepository inventoryStockLogRepository;
 
     @Override
     public InventoryItemResponse saveInventoryItem(InventoryItemRequest inventoryItemRequest) {
@@ -50,14 +54,12 @@ public class InventoryItemServiceImpl implements InventoryItemService {
         inventoryItem.setSellingPrice(inventoryItemRequest.getSellingPrice());
         inventoryItem.setSupplierId(inventoryItemRequest.getSupplierId());
         inventoryItem.setLocationInStore(inventoryItemRequest.getLocationInStore());
-        inventoryItem.setIsActive(inventoryItemRequest.getIsActive() != null ? inventoryItemRequest.getIsActive() : true);
+        inventoryItem.setType(inventoryItemRequest.getType() != null ? inventoryItemRequest.getType() : "RAW");
         inventoryItem.setExpiryDate(inventoryItemRequest.getExpiryDate());
         inventoryItem.setRestaurant(new Restaurant());
         inventoryItem.getRestaurant().setId(inventoryItemRequest.getRestaurantId());
         inventoryItem.setCreatedAt(LocalDateTime.now());
-        inventoryItem.setUpdatedAt(LocalDateTime.now());
         inventoryItem.setCreatedBy(inventoryItemRequest.getCreatedBy());
-        inventoryItem.setUpdatedBy(inventoryItemRequest.getUpdatedBy());
 
         InventoryItem savedInventoryItem = inventoryItemRepository.save(inventoryItem);
 
@@ -80,6 +82,8 @@ public class InventoryItemServiceImpl implements InventoryItemService {
             throw new ConflictException("Item ID already exists: " + inventoryItemRequest.getItemId());
         }
 
+        java.math.BigDecimal oldStock = existingInventoryItem.getCurrentStock();
+
         existingInventoryItem.setItemId(inventoryItemRequest.getItemId());
         existingInventoryItem.setName(inventoryItemRequest.getName());
         existingInventoryItem.setDescription(inventoryItemRequest.getDescription());
@@ -92,7 +96,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
         existingInventoryItem.setSellingPrice(inventoryItemRequest.getSellingPrice());
         existingInventoryItem.setSupplierId(inventoryItemRequest.getSupplierId());
         existingInventoryItem.setLocationInStore(inventoryItemRequest.getLocationInStore());
-        existingInventoryItem.setIsActive(inventoryItemRequest.getIsActive());
+        existingInventoryItem.setType(inventoryItemRequest.getType());
         existingInventoryItem.setExpiryDate(inventoryItemRequest.getExpiryDate());
         if (inventoryItemRequest.getRestaurantId() != null) {
             Restaurant restaurant = new Restaurant();
@@ -104,6 +108,24 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
         InventoryItem updatedInventoryItem = inventoryItemRepository.save(existingInventoryItem);
         log.info("Inventory item updated successfully with ID: {}", updatedInventoryItem.getId());
+
+        java.math.BigDecimal newStock = updatedInventoryItem.getCurrentStock();
+        if (newStock != null && oldStock != null && newStock.compareTo(oldStock) != 0) {
+            java.math.BigDecimal change = newStock.subtract(oldStock);
+            InventoryStockLog stockLog = new InventoryStockLog();
+            stockLog.setInventoryItemId(updatedInventoryItem.getId());
+            stockLog.setInventoryItemName(updatedInventoryItem.getName());
+            stockLog.setRestaurantId(updatedInventoryItem.getRestaurant() != null ? updatedInventoryItem.getRestaurant().getId() : null);
+            stockLog.setQuantityChange(change);
+            stockLog.setBalanceAfter(newStock);
+            stockLog.setType("ADJUSTMENT");
+            stockLog.setReferenceId(updatedInventoryItem.getId());
+            stockLog.setReferenceType("INVENTORY_UPDATE");
+            stockLog.setNote("Manual stock update via inventory form");
+            stockLog.setCreatedBy(inventoryItemRequest.getUpdatedBy());
+            inventoryStockLogRepository.save(stockLog);
+            log.info("Stock adjustment logged for inventory item ID: {} (change: {})", updatedInventoryItem.getId(), change);
+        }
 
         return convertToResponse(updatedInventoryItem);
     }
@@ -199,7 +221,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
         response.setSellingPrice(inventoryItem.getSellingPrice());
         response.setSupplierId(inventoryItem.getSupplierId());
         response.setLocationInStore(inventoryItem.getLocationInStore());
-        response.setIsActive(inventoryItem.getIsActive());
+        response.setType(inventoryItem.getType());
         response.setExpiryDate(inventoryItem.getExpiryDate());
         response.setLastStockUpdate(inventoryItem.getLastStockUpdate());
         response.setRestaurantId(inventoryItem.getRestaurant() != null ? inventoryItem.getRestaurant().getId() : null);

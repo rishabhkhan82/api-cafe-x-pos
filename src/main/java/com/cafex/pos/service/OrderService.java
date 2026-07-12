@@ -14,6 +14,10 @@ import com.cafex.pos.repository.OrderItemRepository;
 import com.cafex.pos.repository.CustomerRepository;
 import com.cafex.pos.repository.RestaurantRepository;
 import com.cafex.pos.repository.MenuItemRepository;
+import com.cafex.pos.repository.InventoryItemRepository;
+import com.cafex.pos.repository.InventoryStockLogRepository;
+import com.cafex.pos.entity.InventoryItem;
+import com.cafex.pos.entity.InventoryStockLog;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -54,6 +59,155 @@ public class OrderService {
     private final SimpMessagingTemplate messagingTemplate;
     private final ApplicationEventPublisher eventPublisher;
     private final OwnerDashboardService ownerDashboardService;
+    private final InventoryItemRepository inventoryItemRepository;
+    private final InventoryStockLogRepository inventoryStockLogRepository;
+
+    public OrderResponse saveOrder(OrderRequest orderRequest) {
+        log.info("Saving new order: {}", orderRequest.getOrderId());
+
+        // Check if orderId already exists (only when provided)
+        if (orderRequest.getOrderId() != null && !orderRequest.getOrderId().isBlank()
+                && orderRepository.existsByOrderId(orderRequest.getOrderId())) {
+            throw new ConflictException("Order ID already exists: " + orderRequest.getOrderId());
+        }
+
+        // Load related entities
+        Customer customer = null;
+        if (orderRequest.getCustomerId() != null) {
+            Optional<Customer> customerOpt = customerRepository.findById(orderRequest.getCustomerId());
+            customer = customerOpt.orElse(null);
+        }
+
+        Restaurant restaurant = null;
+        if (orderRequest.getRestaurantId() != null) {
+            Optional<Restaurant> restaurantOpt = restaurantRepository.findById(orderRequest.getRestaurantId());
+            restaurant = restaurantOpt.orElse(null);
+        }
+
+        Order order = new Order();
+        order.setOrderId(orderRequest.getOrderId());
+        order.setCustomer(customer);
+        order.setCustomerName(orderRequest.getCustomerName());
+        order.setTableNumber(orderRequest.getTableNumber());
+        order.setStatus(orderRequest.getStatus());
+        order.setTotalAmount(orderRequest.getTotalAmount());
+        order.setSpecialInstructions(orderRequest.getSpecialInstructions());
+        order.setPaymentStatus(orderRequest.getPaymentStatus());
+        order.setPaymentMethod(orderRequest.getPaymentMethod());
+        order.setOrderType(orderRequest.getOrderType());
+        order.setEstimatedReadyTime(orderRequest.getEstimatedReadyTime());
+        order.setDeliveredAt(orderRequest.getDeliveredAt());
+        order.setPriority(orderRequest.getPriority());
+        order.setTaxAmount(orderRequest.getTaxAmount());
+        order.setDiscountAmount(orderRequest.getDiscountAmount());
+        order.setLoyaltyDiscountAmount(orderRequest.getLoyaltyDiscountAmount());
+        order.setRestaurant(restaurant);
+        order.setInvoiceId(orderRequest.getInvoiceId());
+        order.setCreatedAt(orderRequest.getCreatedAt() != null ? orderRequest.getCreatedAt() : LocalDateTime.now());
+        order.setUpdatedAt(orderRequest.getUpdatedAt() != null ? orderRequest.getUpdatedAt() : LocalDateTime.now());
+
+        Order savedOrder = orderRepository.save(order);
+
+        // Auto-generate orderId if not provided: ORD-{id zero-padded to 4 digits}
+        if (savedOrder.getOrderId() == null || savedOrder.getOrderId().isBlank()) {
+            String generatedOrderId = String.format("ORD-%04d", savedOrder.getId());
+            savedOrder.setOrderId(generatedOrderId);
+            orderRepository.save(savedOrder);
+        }
+
+        // Save order items
+        if (orderRequest.getOrderItems() != null && !orderRequest.getOrderItems().isEmpty()) {
+            for (OrderItemRequest itemRequest : orderRequest.getOrderItems()) {
+                OrderItem orderItem = new OrderItem();
+                orderItem.setOrder(savedOrder);
+
+                // Load menu item entity
+                if (itemRequest.getMenuItemId() != null) {
+                    Optional<MenuItem> menuItemOpt = menuItemRepository.findById(itemRequest.getMenuItemId());
+                    menuItemOpt.ifPresent(orderItem::setMenuItem);
+                }
+
+                orderItem.setMenuItemName(itemRequest.getMenuItemName());
+                orderItem.setQuantity(itemRequest.getQuantity());
+                orderItem.setUnitPrice(itemRequest.getUnitPrice());
+                orderItem.setTotalPrice(itemRequest.getTotalPrice());
+                orderItem.setCategory(itemRequest.getCategory());
+                orderItem.setSpecialInstructions(itemRequest.getSpecialInstructions());
+                orderItem.setStatus(itemRequest.getStatus());
+                orderItemRepository.save(orderItem);
+            }
+        }
+
+        // Deduct inventory for FINISHED items
+        if (savedOrder.getRestaurant() != null && savedOrder.getRestaurant().getId() != null) {
+            deductInventoryForOrder(savedOrder.getId(), savedOrder.getRestaurant().getId());
+        }
+
+        log.info("Order saved successfully with ID: {}", savedOrder.getId());
+
+        savedOrder.setItems(orderItemRepository.findByOrderId(savedOrder.getId()));
+
+        OrderResponse response = convertToResponse(savedOrder);
+        emitOrderUpdate(response, "NEW");
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
+        if (savedOrder.getRestaurant() != null && savedOrder.getRestaurant().getId() != null) {
+            ownerDashboardService.emitUpdate(savedOrder.getRestaurant().getId());
+        }
+        return response;
+    }
+
+    private void deductInventoryForOrder(Long orderId, Long restaurantId) {
+        log.info("Deducting inventory for order: {}", orderId);
+
+        List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+        for (OrderItem orderItem : orderItems) {
+            if (orderItem.getMenuItem() == null || orderItem.getQuantity() == null) {
+                continue;
+            }
+
+            MenuItem menuItem = orderItem.getMenuItem();
+            if (!"FINISHED".equals(menuItem.getType())) {
+                continue;
+            }
+
+            // Find inventory item by matching name within the same restaurant
+            Optional<InventoryItem> inventoryOpt = inventoryItemRepository.findAll((root, query, criteriaBuilder) -> {
+                Predicate predicate = criteriaBuilder.and(
+                    criteriaBuilder.equal(root.get("restaurant").get("id"), restaurantId),
+                    criteriaBuilder.equal(root.get("name"), menuItem.getName())
+                );
+                return predicate;
+            }).stream().findFirst();
+
+            if (inventoryOpt.isEmpty()) {
+                log.warn("No inventory item found for FINISHED menu item: {} (menu_item_id={})", menuItem.getName(), menuItem.getId());
+                continue;
+            }
+
+            InventoryItem inventoryItem = inventoryOpt.get();
+            int deductQty = orderItem.getQuantity();
+
+            BigDecimal newStock = inventoryItem.getCurrentStock().subtract(BigDecimal.valueOf(deductQty));
+            inventoryItem.setCurrentStock(newStock);
+            inventoryItemRepository.save(inventoryItem);
+
+            BigDecimal balanceAfter = newStock;
+
+            InventoryStockLog stockLog = new InventoryStockLog();
+            stockLog.setInventoryItemId(inventoryItem.getId());
+            stockLog.setInventoryItemName(inventoryItem.getName());
+            stockLog.setRestaurantId(restaurantId);
+            stockLog.setQuantityChange(BigDecimal.valueOf(-deductQty));
+            stockLog.setBalanceAfter(balanceAfter);
+            stockLog.setType("SALE");
+            stockLog.setReferenceId(orderId);
+            stockLog.setReferenceType("ORDER");
+            stockLog.setNote("Auto deduction for order: " + orderId);
+            inventoryStockLogRepository.save(stockLog);
+
+            log.info("Deducted {} units from inventory item: {} (new stock: {})", deductQty, inventoryItem.getName(), balanceAfter);
+        }
+    }
 
     public List<OrderResponse> getAllOrders() {
         log.info("Fetching all orders");
@@ -150,95 +304,6 @@ public class OrderService {
         log.info("Fetching order by ID: {}", id);
         return orderRepository.findById(id)
                 .map(this::convertToResponse);
-    }
-
-    public OrderResponse saveOrder(OrderRequest orderRequest) {
-        log.info("Saving new order: {}", orderRequest.getOrderId());
-
-        // Check if orderId already exists (only when provided)
-        if (orderRequest.getOrderId() != null && !orderRequest.getOrderId().isBlank()
-                && orderRepository.existsByOrderId(orderRequest.getOrderId())) {
-            throw new ConflictException("Order ID already exists: " + orderRequest.getOrderId());
-        }
-
-        // Load related entities
-        Customer customer = null;
-        if (orderRequest.getCustomerId() != null) {
-            Optional<Customer> customerOpt = customerRepository.findById(orderRequest.getCustomerId());
-            customer = customerOpt.orElse(null);
-        }
-
-        Restaurant restaurant = null;
-        if (orderRequest.getRestaurantId() != null) {
-            Optional<Restaurant> restaurantOpt = restaurantRepository.findById(orderRequest.getRestaurantId());
-            restaurant = restaurantOpt.orElse(null);
-        }
-
-        Order order = new Order();
-        order.setOrderId(orderRequest.getOrderId());
-        order.setCustomer(customer);
-        order.setCustomerName(orderRequest.getCustomerName());
-        order.setTableNumber(orderRequest.getTableNumber());
-        order.setStatus(orderRequest.getStatus());
-        order.setTotalAmount(orderRequest.getTotalAmount());
-        order.setSpecialInstructions(orderRequest.getSpecialInstructions());
-        order.setPaymentStatus(orderRequest.getPaymentStatus());
-        order.setPaymentMethod(orderRequest.getPaymentMethod());
-        order.setOrderType(orderRequest.getOrderType());
-        order.setEstimatedReadyTime(orderRequest.getEstimatedReadyTime());
-        order.setDeliveredAt(orderRequest.getDeliveredAt());
-        order.setPriority(orderRequest.getPriority());
-        order.setTaxAmount(orderRequest.getTaxAmount());
-        order.setDiscountAmount(orderRequest.getDiscountAmount());
-        order.setLoyaltyDiscountAmount(orderRequest.getLoyaltyDiscountAmount());
-        order.setRestaurant(restaurant);
-        order.setInvoiceId(orderRequest.getInvoiceId());
-        order.setCreatedAt(orderRequest.getCreatedAt() != null ? orderRequest.getCreatedAt() : LocalDateTime.now());
-        order.setUpdatedAt(orderRequest.getUpdatedAt() != null ? orderRequest.getUpdatedAt() : LocalDateTime.now());
-
-        Order savedOrder = orderRepository.save(order);
-
-        // Auto-generate orderId if not provided: ORD-{id zero-padded to 4 digits}
-        if (savedOrder.getOrderId() == null || savedOrder.getOrderId().isBlank()) {
-            String generatedOrderId = String.format("ORD-%04d", savedOrder.getId());
-            savedOrder.setOrderId(generatedOrderId);
-            orderRepository.save(savedOrder);
-        }
-
-        // Save order items
-        if (orderRequest.getOrderItems() != null && !orderRequest.getOrderItems().isEmpty()) {
-            for (OrderItemRequest itemRequest : orderRequest.getOrderItems()) {
-                OrderItem orderItem = new OrderItem();
-                orderItem.setOrder(savedOrder);
-
-                // Load menu item entity
-                if (itemRequest.getMenuItemId() != null) {
-                    Optional<MenuItem> menuItemOpt = menuItemRepository.findById(itemRequest.getMenuItemId());
-                    menuItemOpt.ifPresent(orderItem::setMenuItem);
-                }
-
-                orderItem.setMenuItemName(itemRequest.getMenuItemName());
-                orderItem.setQuantity(itemRequest.getQuantity());
-                orderItem.setUnitPrice(itemRequest.getUnitPrice());
-                orderItem.setTotalPrice(itemRequest.getTotalPrice());
-                orderItem.setCategory(itemRequest.getCategory());
-                orderItem.setSpecialInstructions(itemRequest.getSpecialInstructions());
-                orderItem.setStatus(itemRequest.getStatus());
-                orderItemRepository.save(orderItem);
-            }
-        }
-
-        log.info("Order saved successfully with ID: {}", savedOrder.getId());
-
-        savedOrder.setItems(orderItemRepository.findByOrderId(savedOrder.getId()));
-
-        OrderResponse response = convertToResponse(savedOrder);
-        emitOrderUpdate(response, "NEW");
-        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
-        if (savedOrder.getRestaurant() != null && savedOrder.getRestaurant().getId() != null) {
-            ownerDashboardService.emitUpdate(savedOrder.getRestaurant().getId());
-        }
-        return response;
     }
 
     public OrderResponse updateOrder(Long id, OrderRequest orderRequest) {

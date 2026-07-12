@@ -63,6 +63,12 @@ public class MenuItem {
     @Column(name = "discount")
     private String discount;
 
+    @Column(name = "type")
+    private String type;
+
+    @Column(name = "recipe_id")
+    private Long recipeId;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -243,6 +249,22 @@ public class MenuItem {
         this.discount = discount;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public Long getRecipeId() {
+        return recipeId;
+    }
+
+    public void setRecipeId(Long recipeId) {
+        this.recipeId = recipeId;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -257,14 +279,6 @@ public class MenuItem {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public Long getRestaurantId() {
-        return restaurantId;
-    }
-
-    public void setRestaurantId(Long restaurantId) {
-        this.restaurantId = restaurantId;
     }
 
     public Long getCreatedBy() {
@@ -282,4 +296,13 @@ public class MenuItem {
     public void setUpdatedBy(Long updatedBy) {
         this.updatedBy = updatedBy;
     }
+
+    public Long getRestaurantId() {
+        return restaurantId;
+    }
+
+    public void setRestaurantId(Long restaurantId) {
+        this.restaurantId = restaurantId;
+    }
 }
+

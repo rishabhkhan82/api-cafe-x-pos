@@ -47,8 +47,8 @@ public class InventoryItemResponse {
     @JsonProperty("location_in_store")
     private String locationInStore;
 
-    @JsonProperty("is_active")
-    private Boolean isActive;
+    @JsonProperty("type")
+    private String type;
 
     @JsonProperty("expiry_date")
     private LocalDateTime expiryDate;
