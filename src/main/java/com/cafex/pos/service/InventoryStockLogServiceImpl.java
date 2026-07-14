@@ -99,7 +99,7 @@ public class InventoryStockLogServiceImpl implements InventoryStockLogService {
     }
 
     @Override
-    public Map<String, Object> getStockLogsByRestaurant(Long restaurantId, Pageable pageable, String type, Long batchId) {
+    public Map<String, Object> getStockLogsByRestaurant(Long restaurantId, Pageable pageable, String type, Long batchId, String search) {
         log.info("Fetching stock logs for restaurant: {}, type: {}, batchId: {}", restaurantId, type, batchId);
         Page<InventoryStockLog> page = inventoryStockLogRepository.findAll((root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.and(
@@ -110,6 +110,9 @@ public class InventoryStockLogServiceImpl implements InventoryStockLogService {
             }
             if (batchId != null) {
                 predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("batchId"), batchId));
+            }
+            if (search != null && !search.isBlank()) {
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(criteriaBuilder.lower(root.get("inventoryItemName")), "%" + search.toLowerCase() + "%"));
             }
             return predicate;
         }, pageable);

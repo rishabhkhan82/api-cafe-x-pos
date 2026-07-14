@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface InventoryStockLogService {
     InventoryStockLogResponse createStockLog(InventoryStockLogRequest request);
-    Map<String, Object> getStockLogsByRestaurant(Long restaurantId, Pageable pageable, String type, Long batchId);
+    Map<String, Object> getStockLogsByRestaurant(Long restaurantId, Pageable pageable, String type, Long batchId, String search);
     InventoryStockLogSummaryResponse getSummaryByRestaurant(Long restaurantId);
     Optional<InventoryStockLogResponse> getStockLogById(Long id);
 }

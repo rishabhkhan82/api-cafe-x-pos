@@ -38,10 +38,11 @@ public class InventoryStockLogController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String type,
-            @RequestParam(required = false) Long batch_id) {
+            @RequestParam(required = false) Long batch_id,
+            @RequestParam(required = false) String search) {
         log.info("Get stock logs request for restaurant: {}", restaurantId);
         Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
-        Map<String, Object> response = inventoryStockLogService.getStockLogsByRestaurant(restaurantId, pageable, type, batch_id);
+        Map<String, Object> response = inventoryStockLogService.getStockLogsByRestaurant(restaurantId, pageable, type, batch_id, search);
         return ResponseEntity.ok(response);
     }
 
