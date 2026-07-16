@@ -5,6 +5,7 @@ import com.cafex.pos.repository.SystemSettingsRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,9 @@ public class SystemSettingsService {
 
     @Autowired
     private SystemSettingsRepository systemSettingsRepository;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -50,13 +54,15 @@ public class SystemSettingsService {
     }
 
     /**
-     * Save system settings
-     */
-    public SystemSetting saveSystemSettings(SystemSetting settings) {
-        settings.setId(1L);
-        settings.setUpdatedAt(LocalDateTime.now());
-        return systemSettingsRepository.save(settings);
-    }
+      * Save system settings
+      */
+     public SystemSetting saveSystemSettings(SystemSetting settings) {
+         settings.setId(1L);
+         settings.setUpdatedAt(LocalDateTime.now());
+         SystemSetting savedSettings = systemSettingsRepository.save(settings);
+         messagingTemplate.convertAndSend("/topic/system/settings-updated", Map.of("updatedAt", savedSettings.getUpdatedAt()));
+         return savedSettings;
+     }
 
 
 }
