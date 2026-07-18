@@ -4,11 +4,16 @@ import com.cafex.pos.dto.RestaurantRequest;
 import com.cafex.pos.dto.RestaurantResponse;
 import com.cafex.pos.dto.OperationResponse;
 import com.cafex.pos.dto.RestaurantPageResponse;
+import com.cafex.pos.dto.RestaurantSubscriptionRequest;
 import com.cafex.pos.entity.Restaurant;
+import com.cafex.pos.entity.User;
 import com.cafex.pos.repository.RestaurantRepository;
+import com.cafex.pos.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +48,7 @@ import jakarta.persistence.criteria.Predicate;
 public class RestaurantService {
 
     private final RestaurantRepository restaurantRepository;
+    private final UserRepository userRepository;
     private final EmailService emailService;
     private final SimpMessagingTemplate messagingTemplate;
     private final ApplicationEventPublisher eventPublisher;
@@ -296,6 +302,27 @@ public class RestaurantService {
         ownerDashboardService.emitUpdate(updatedRestaurant.getId());
 
         return response;
+    }
+
+    public void updateRestaurantSubscriptionDetails(Long id, RestaurantSubscriptionRequest request) {
+        log.info("Updating restaurant subscription details for ID: {}", id);
+
+        Restaurant existingRestaurant = restaurantRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with ID: " + id));
+
+        existingRestaurant.setSubscriptionPlan(request.getSubscriptionPlan());
+        existingRestaurant.setSubscriptionStartDate(request.getSubscriptionStartDate());
+        existingRestaurant.setSubscriptionEndDate(request.getSubscriptionEndDate());
+        existingRestaurant.setUpdatedAt(LocalDateTime.now());
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getName() != null) {
+            Optional<User> userOpt = userRepository.findByUsername(auth.getName());
+            existingRestaurant.setUpdatedBy(userOpt.map(User::getId).orElse(null));
+        }
+
+        restaurantRepository.save(existingRestaurant);
+        log.info("Restaurant subscription details updated successfully for ID: {}", id);
     }
 
     public void deleteRestaurant(Long id) {

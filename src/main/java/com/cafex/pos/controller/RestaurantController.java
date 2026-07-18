@@ -4,6 +4,7 @@ import com.cafex.pos.dto.RestaurantRequest;
 import com.cafex.pos.dto.RestaurantResponse;
 import com.cafex.pos.dto.OperationResponse;
 import com.cafex.pos.dto.RestaurantPageResponse;
+import com.cafex.pos.dto.RestaurantSubscriptionRequest;
 import com.cafex.pos.exception.ResourceNotFoundException;
 import com.cafex.pos.service.RestaurantService;
 import jakarta.validation.Valid;
@@ -37,7 +38,17 @@ public class RestaurantController {
         log.info("Update restaurant request received for ID: {}", id);
         RestaurantResponse response = restaurantService.updateRestaurant(id, restaurantRequest);
         log.info("Restaurant updated successfully with ID: {}", response.getId());
-        OperationResponse operationResponse = new OperationResponse("success", "RESTAURANT_UPDATED", response.getId(), response);
+        OperationResponse operationResponse = new OperationResponse("success", "RESTAURANT_UPDATED", id, response);
+        return ResponseEntity.ok(operationResponse);
+    }
+
+    @PutMapping("/{id}/subscription-details")
+    public ResponseEntity<OperationResponse> updateRestaurantSubscriptionDetails(
+            @PathVariable Long id,
+            @RequestBody RestaurantSubscriptionRequest request) {
+        log.info("Update restaurant subscription details request received for ID: {}", id);
+        restaurantService.updateRestaurantSubscriptionDetails(id, request);
+        OperationResponse operationResponse = new OperationResponse("success", "RESTAURANT_SUBSCRIPTION_UPDATED", id, null);
         return ResponseEntity.ok(operationResponse);
     }
 

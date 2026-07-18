@@ -19,7 +19,7 @@ public class SubscriptionPlansRequest {
     private String description;
 
     @NotNull(message = "Price is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than 0")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Price must not be less than 0")
     private BigDecimal price;
 
     @NotBlank(message = "Currency is required")
@@ -45,7 +45,7 @@ public class SubscriptionPlansRequest {
     private Integer trial_days = 0;
 
     @NotNull(message = "Setup fee is required")
-    @DecimalMin(value = "0.0", inclusive = true, message = "Setup fee must be at least 0")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Setup fee must not be less than 0")
     private BigDecimal setup_fee = BigDecimal.ZERO;
 
     private Integer subscriber_count;
