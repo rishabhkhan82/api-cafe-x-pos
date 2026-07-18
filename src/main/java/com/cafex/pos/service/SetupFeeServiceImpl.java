@@ -33,18 +33,9 @@ public class SetupFeeServiceImpl implements SetupFeeService {
     @Override
     public SetupFeePageResponse getSetupFeesWithFilters(String name, Boolean isActive, int page, int size) {
         log.info("Fetching setup fees with filters - name: {}, isActive: {}, page: {}, size: {}", name, isActive, page, size);
-        List<SetupFeeResponse> all = getAllSetupFees();
+
         SetupFeePageResponse allResponse = new SetupFeePageResponse();
-        allResponse.setData(all);
-        allResponse.setCurrentPage(1);
-        allResponse.setPageCount(1);
-        allResponse.setTotalRowCount(all.size());
 
-        if (page == 0 && size == 0) {
-            return allResponse;
-        }
-
-        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
         Specification<SetupFeesMaster> spec = (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
             if (name != null && !name.trim().isEmpty()) {
@@ -57,6 +48,17 @@ public class SetupFeeServiceImpl implements SetupFeeService {
             return predicate;
         };
 
+        if (page == 0 && size == 0) {
+            List<SetupFeesMaster> filteredFees = setupFeesMasterRepository.findAll(spec);
+            List<SetupFeeResponse> content = filteredFees.stream().map(this::convertToResponse).collect(Collectors.toList());
+            allResponse.setData(content);
+            allResponse.setCurrentPage(1);
+            allResponse.setPageCount(1);
+            allResponse.setTotalRowCount(content.size());
+            return allResponse;
+        }
+
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
         Page<SetupFeesMaster> typePage = setupFeesMasterRepository.findAll(spec, pageable);
         List<SetupFeeResponse> content = typePage.getContent().stream().map(this::convertToResponse).collect(Collectors.toList());
 

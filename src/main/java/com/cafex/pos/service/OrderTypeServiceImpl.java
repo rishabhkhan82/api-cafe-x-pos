@@ -36,16 +36,6 @@ public class OrderTypeServiceImpl implements OrderTypeService {
                 name, isActive, page, size);
 
         OrderTypePageResponse allResponse = new OrderTypePageResponse();
-        allResponse.setData(getAllOrderTypes());
-        allResponse.setCurrentPage(1);
-        allResponse.setPageCount(1);
-        allResponse.setTotalRowCount(allResponse.getData().size());
-
-        if (page == 0 && size == 0) {
-            return allResponse;
-        }
-
-        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
         Specification<OrderTypeMaster> spec = (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
@@ -63,6 +53,20 @@ public class OrderTypeServiceImpl implements OrderTypeService {
 
             return predicate;
         };
+
+        if (page == 0 && size == 0) {
+            List<OrderTypeMaster> filteredOrders = orderTypeMasterRepository.findAll(spec);
+            List<OrderTypeResponse> content = filteredOrders.stream()
+                    .map(this::convertToResponse)
+                    .collect(Collectors.toList());
+            allResponse.setData(content);
+            allResponse.setCurrentPage(1);
+            allResponse.setPageCount(1);
+            allResponse.setTotalRowCount(content.size());
+            return allResponse;
+        }
+
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
         Page<OrderTypeMaster> orderPage = orderTypeMasterRepository.findAll(spec, pageable);
 

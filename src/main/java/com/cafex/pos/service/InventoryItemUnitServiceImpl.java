@@ -36,16 +36,6 @@ public class InventoryItemUnitServiceImpl implements InventoryItemUnitService {
                 name, isActive, page, size);
 
         InventoryItemUnitPageResponse allResponse = new InventoryItemUnitPageResponse();
-        allResponse.setData(getAllInventoryItemUnits());
-        allResponse.setCurrentPage(1);
-        allResponse.setPageCount(1);
-        allResponse.setTotalRowCount(allResponse.getData().size());
-
-        if (page == 0 && size == 0) {
-            return allResponse;
-        }
-
-        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
         Specification<InventoryItemUnitsMaster> spec = (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
@@ -63,6 +53,20 @@ public class InventoryItemUnitServiceImpl implements InventoryItemUnitService {
 
             return predicate;
         };
+
+        if (page == 0 && size == 0) {
+            List<InventoryItemUnitsMaster> filteredUnits = inventoryItemUnitsMasterRepository.findAll(spec);
+            List<InventoryItemUnitResponse> content = filteredUnits.stream()
+                    .map(this::convertToResponse)
+                    .collect(Collectors.toList());
+            allResponse.setData(content);
+            allResponse.setCurrentPage(1);
+            allResponse.setPageCount(1);
+            allResponse.setTotalRowCount(content.size());
+            return allResponse;
+        }
+
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
         Page<InventoryItemUnitsMaster> unitPage = inventoryItemUnitsMasterRepository.findAll(spec, pageable);
 

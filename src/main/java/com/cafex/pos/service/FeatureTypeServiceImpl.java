@@ -33,18 +33,9 @@ public class FeatureTypeServiceImpl implements FeatureTypeService {
     @Override
     public FeatureTypePageResponse getFeatureTypesWithFilters(String name, Boolean isActive, int page, int size) {
         log.info("Fetching feature types with filters - name: {}, isActive: {}, page: {}, size: {}", name, isActive, page, size);
-        List<FeatureTypeResponse> all = getAllFeatureTypes();
+
         FeatureTypePageResponse allResponse = new FeatureTypePageResponse();
-        allResponse.setData(all);
-        allResponse.setCurrentPage(1);
-        allResponse.setPageCount(1);
-        allResponse.setTotalRowCount(all.size());
 
-        if (page == 0 && size == 0) {
-            return allResponse;
-        }
-
-        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
         Specification<FeatureTypesMaster> spec = (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
             if (name != null && !name.trim().isEmpty()) {
@@ -57,6 +48,17 @@ public class FeatureTypeServiceImpl implements FeatureTypeService {
             return predicate;
         };
 
+        if (page == 0 && size == 0) {
+            List<FeatureTypesMaster> filteredTypes = featureTypesMasterRepository.findAll(spec);
+            List<FeatureTypeResponse> content = filteredTypes.stream().map(this::convertToResponse).collect(Collectors.toList());
+            allResponse.setData(content);
+            allResponse.setCurrentPage(1);
+            allResponse.setPageCount(1);
+            allResponse.setTotalRowCount(content.size());
+            return allResponse;
+        }
+
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
         Page<FeatureTypesMaster> typePage = featureTypesMasterRepository.findAll(spec, pageable);
         List<FeatureTypeResponse> content = typePage.getContent().stream().map(this::convertToResponse).collect(Collectors.toList());
 

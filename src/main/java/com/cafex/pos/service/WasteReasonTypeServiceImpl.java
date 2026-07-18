@@ -36,16 +36,6 @@ public class WasteReasonTypeServiceImpl implements WasteReasonTypeService {
                 name, isActive, page, size);
 
         WasteReasonTypePageResponse allResponse = new WasteReasonTypePageResponse();
-        allResponse.setData(getAllWasteReasonTypes());
-        allResponse.setCurrentPage(1);
-        allResponse.setPageCount(1);
-        allResponse.setTotalRowCount(allResponse.getData().size());
-
-        if (page == 0 && size == 0) {
-            return allResponse;
-        }
-
-        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
         Specification<WasteReasonTypeMaster> spec = (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
@@ -63,6 +53,20 @@ public class WasteReasonTypeServiceImpl implements WasteReasonTypeService {
 
             return predicate;
         };
+
+        if (page == 0 && size == 0) {
+            List<WasteReasonTypeMaster> filteredReasons = wasteReasonTypeMasterRepository.findAll(spec);
+            List<WasteReasonTypeResponse> content = filteredReasons.stream()
+                    .map(this::convertToResponse)
+                    .collect(Collectors.toList());
+            allResponse.setData(content);
+            allResponse.setCurrentPage(1);
+            allResponse.setPageCount(1);
+            allResponse.setTotalRowCount(content.size());
+            return allResponse;
+        }
+
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
         Page<WasteReasonTypeMaster> reasonPage = wasteReasonTypeMasterRepository.findAll(spec, pageable);
 

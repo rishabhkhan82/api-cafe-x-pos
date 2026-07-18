@@ -36,16 +36,6 @@ public class MenuItemsTypeServiceImpl implements MenuItemsTypeService {
                 name, isActive, page, size);
 
         MenuItemsTypePageResponse allResponse = new MenuItemsTypePageResponse();
-        allResponse.setData(getAllMenuItemsTypes());
-        allResponse.setCurrentPage(1);
-        allResponse.setPageCount(1);
-        allResponse.setTotalRowCount(allResponse.getData().size());
-
-        if (page == 0 && size == 0) {
-            return allResponse;
-        }
-
-        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
         Specification<MenuItemsTypeMaster> spec = (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
@@ -63,6 +53,20 @@ public class MenuItemsTypeServiceImpl implements MenuItemsTypeService {
 
             return predicate;
         };
+
+        if (page == 0 && size == 0) {
+            List<MenuItemsTypeMaster> filteredTypes = menuItemsTypeMasterRepository.findAll(spec);
+            List<MenuItemsTypeResponse> content = filteredTypes.stream()
+                    .map(this::convertToResponse)
+                    .collect(Collectors.toList());
+            allResponse.setData(content);
+            allResponse.setCurrentPage(1);
+            allResponse.setPageCount(1);
+            allResponse.setTotalRowCount(content.size());
+            return allResponse;
+        }
+
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
         Page<MenuItemsTypeMaster> typePage = menuItemsTypeMasterRepository.findAll(spec, pageable);
 

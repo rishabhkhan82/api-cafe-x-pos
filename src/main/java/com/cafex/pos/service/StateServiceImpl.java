@@ -33,18 +33,9 @@ public class StateServiceImpl implements StateService {
     @Override
     public StatePageResponse getStatesWithFilters(String name, Boolean isActive, int page, int size) {
         log.info("Fetching states with filters - name: {}, isActive: {}, page: {}, size: {}", name, isActive, page, size);
-        List<StateResponse> all = getAllStates();
+
         StatePageResponse allResponse = new StatePageResponse();
-        allResponse.setData(all);
-        allResponse.setCurrentPage(1);
-        allResponse.setPageCount(1);
-        allResponse.setTotalRowCount(all.size());
 
-        if (page == 0 && size == 0) {
-            return allResponse;
-        }
-
-        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
         Specification<StatesMaster> spec = (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
             if (name != null && !name.trim().isEmpty()) {
@@ -57,6 +48,17 @@ public class StateServiceImpl implements StateService {
             return predicate;
         };
 
+        if (page == 0 && size == 0) {
+            List<StatesMaster> filteredStates = statesMasterRepository.findAll(spec);
+            List<StateResponse> content = filteredStates.stream().map(this::convertToResponse).collect(Collectors.toList());
+            allResponse.setData(content);
+            allResponse.setCurrentPage(1);
+            allResponse.setPageCount(1);
+            allResponse.setTotalRowCount(content.size());
+            return allResponse;
+        }
+
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
         Page<StatesMaster> typePage = statesMasterRepository.findAll(spec, pageable);
         List<StateResponse> content = typePage.getContent().stream().map(this::convertToResponse).collect(Collectors.toList());
 

@@ -36,16 +36,6 @@ public class InventoryItemCategoryServiceImpl implements InventoryItemCategorySe
                 name, isActive, page, size);
 
         InventoryItemCategoryPageResponse allResponse = new InventoryItemCategoryPageResponse();
-        allResponse.setData(getAllInventoryItemCategories());
-        allResponse.setCurrentPage(1);
-        allResponse.setPageCount(1);
-        allResponse.setTotalRowCount(allResponse.getData().size());
-
-        if (page == 0 && size == 0) {
-            return allResponse;
-        }
-
-        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
         Specification<InventoryItemCategoriesMaster> spec = (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
@@ -63,6 +53,20 @@ public class InventoryItemCategoryServiceImpl implements InventoryItemCategorySe
 
             return predicate;
         };
+
+        if (page == 0 && size == 0) {
+            List<InventoryItemCategoriesMaster> filteredCategories = inventoryItemCategoriesMasterRepository.findAll(spec);
+            List<InventoryItemCategoryResponse> content = filteredCategories.stream()
+                    .map(this::convertToResponse)
+                    .collect(Collectors.toList());
+            allResponse.setData(content);
+            allResponse.setCurrentPage(1);
+            allResponse.setPageCount(1);
+            allResponse.setTotalRowCount(content.size());
+            return allResponse;
+        }
+
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
         Page<InventoryItemCategoriesMaster> categoryPage = inventoryItemCategoriesMasterRepository.findAll(spec, pageable);
 

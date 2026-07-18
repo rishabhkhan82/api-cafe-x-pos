@@ -32,20 +32,9 @@ public class MenuCategoryServiceImpl implements MenuCategoryService {
 
     @Override
     public MenuCategoryPageResponse getMenuCategoriesWithFilters(String name, Boolean isActive, int page, int size) {
-        log.info("Fetching menu categories with filters - name: {}, isActive: {}, page: {}, size: {}",
-                name, isActive, page, size);
+        log.info("Fetching menu categories with filters - name: {}, isActive: {}, page: {}, size: {}", name, isActive, page, size);
 
         MenuCategoryPageResponse allResponse = new MenuCategoryPageResponse();
-        allResponse.setData(getAllMenuCategories());
-        allResponse.setCurrentPage(1);
-        allResponse.setPageCount(1);
-        allResponse.setTotalRowCount(allResponse.getData().size());
-
-        if (page == 0 && size == 0) {
-            return allResponse;
-        }
-
-        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
         Specification<MenuCategoriesMaster> spec = (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
@@ -63,6 +52,20 @@ public class MenuCategoryServiceImpl implements MenuCategoryService {
 
             return predicate;
         };
+
+        if (page == 0 && size == 0) {
+            List<MenuCategoriesMaster> filteredCategories = menuCategoriesMasterRepository.findAll(spec);
+            List<MenuCategoryResponse> content = filteredCategories.stream()
+                    .map(this::convertToResponse)
+                    .collect(Collectors.toList());
+            allResponse.setData(content);
+            allResponse.setCurrentPage(1);
+            allResponse.setPageCount(1);
+            allResponse.setTotalRowCount(content.size());
+            return allResponse;
+        }
+
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
         Page<MenuCategoriesMaster> categoryPage = menuCategoriesMasterRepository.findAll(spec, pageable);
 

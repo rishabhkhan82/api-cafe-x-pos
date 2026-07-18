@@ -33,18 +33,9 @@ public class UserTypeServiceImpl implements UserTypeService {
     @Override
     public UserTypePageResponse getUserTypesWithFilters(String name, Boolean isActive, int page, int size) {
         log.info("Fetching user types with filters - name: {}, isActive: {}, page: {}, size: {}", name, isActive, page, size);
-        List<UserTypeResponse> all = getAllUserTypes();
+
         UserTypePageResponse allResponse = new UserTypePageResponse();
-        allResponse.setData(all);
-        allResponse.setCurrentPage(1);
-        allResponse.setPageCount(1);
-        allResponse.setTotalRowCount(all.size());
 
-        if (page == 0 && size == 0) {
-            return allResponse;
-        }
-
-        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
         Specification<UserTypesMaster> spec = (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
             if (name != null && !name.trim().isEmpty()) {
@@ -57,6 +48,17 @@ public class UserTypeServiceImpl implements UserTypeService {
             return predicate;
         };
 
+        if (page == 0 && size == 0) {
+            List<UserTypesMaster> filteredTypes = userTypesMasterRepository.findAll(spec);
+            List<UserTypeResponse> content = filteredTypes.stream().map(this::convertToResponse).collect(Collectors.toList());
+            allResponse.setData(content);
+            allResponse.setCurrentPage(1);
+            allResponse.setPageCount(1);
+            allResponse.setTotalRowCount(content.size());
+            return allResponse;
+        }
+
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
         Page<UserTypesMaster> typePage = userTypesMasterRepository.findAll(spec, pageable);
         List<UserTypeResponse> content = typePage.getContent().stream().map(this::convertToResponse).collect(Collectors.toList());
 

@@ -33,18 +33,9 @@ public class TrialDayServiceImpl implements TrialDayService {
     @Override
     public TrialDayPageResponse getTrialDaysWithFilters(String name, Boolean isActive, int page, int size) {
         log.info("Fetching trial days with filters - name: {}, isActive: {}, page: {}, size: {}", name, isActive, page, size);
-        List<TrialDayResponse> all = getAllTrialDays();
+
         TrialDayPageResponse allResponse = new TrialDayPageResponse();
-        allResponse.setData(all);
-        allResponse.setCurrentPage(1);
-        allResponse.setPageCount(1);
-        allResponse.setTotalRowCount(all.size());
 
-        if (page == 0 && size == 0) {
-            return allResponse;
-        }
-
-        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
         Specification<TrialDaysMaster> spec = (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
             if (name != null && !name.trim().isEmpty()) {
@@ -57,6 +48,17 @@ public class TrialDayServiceImpl implements TrialDayService {
             return predicate;
         };
 
+        if (page == 0 && size == 0) {
+            List<TrialDaysMaster> filteredDays = trialDaysMasterRepository.findAll(spec);
+            List<TrialDayResponse> content = filteredDays.stream().map(this::convertToResponse).collect(Collectors.toList());
+            allResponse.setData(content);
+            allResponse.setCurrentPage(1);
+            allResponse.setPageCount(1);
+            allResponse.setTotalRowCount(content.size());
+            return allResponse;
+        }
+
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
         Page<TrialDaysMaster> typePage = trialDaysMasterRepository.findAll(spec, pageable);
         List<TrialDayResponse> content = typePage.getContent().stream().map(this::convertToResponse).collect(Collectors.toList());
 

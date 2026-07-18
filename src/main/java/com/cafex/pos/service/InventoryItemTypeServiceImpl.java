@@ -36,16 +36,6 @@ public class InventoryItemTypeServiceImpl implements InventoryItemTypeService {
                 name, isActive, page, size);
 
         InventoryItemTypePageResponse allResponse = new InventoryItemTypePageResponse();
-        allResponse.setData(getAllInventoryItemTypes());
-        allResponse.setCurrentPage(1);
-        allResponse.setPageCount(1);
-        allResponse.setTotalRowCount(allResponse.getData().size());
-
-        if (page == 0 && size == 0) {
-            return allResponse;
-        }
-
-        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
         Specification<InventoryItemTypesMaster> spec = (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
@@ -63,6 +53,20 @@ public class InventoryItemTypeServiceImpl implements InventoryItemTypeService {
 
             return predicate;
         };
+
+        if (page == 0 && size == 0) {
+            List<InventoryItemTypesMaster> filteredTypes = inventoryItemTypesMasterRepository.findAll(spec);
+            List<InventoryItemTypeResponse> content = filteredTypes.stream()
+                    .map(this::convertToResponse)
+                    .collect(Collectors.toList());
+            allResponse.setData(content);
+            allResponse.setCurrentPage(1);
+            allResponse.setPageCount(1);
+            allResponse.setTotalRowCount(content.size());
+            return allResponse;
+        }
+
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
         Page<InventoryItemTypesMaster> typePage = inventoryItemTypesMasterRepository.findAll(spec, pageable);
 
