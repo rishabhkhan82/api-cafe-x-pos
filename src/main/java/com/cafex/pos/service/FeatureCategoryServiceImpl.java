@@ -36,16 +36,6 @@ public class FeatureCategoryServiceImpl implements FeatureCategoryService {
                 name, isActive, page, size);
 
         FeatureCategoryPageResponse allResponse = new FeatureCategoryPageResponse();
-        allResponse.setData(getAllFeatureCategories());
-        allResponse.setCurrentPage(1);
-        allResponse.setPageCount(1);
-        allResponse.setTotalRowCount(allResponse.getData().size());
-
-        if (page == 0 && size == 0) {
-            return allResponse;
-        }
-
-        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
         Specification<FeatureCategoriesMaster> spec = (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
@@ -63,6 +53,20 @@ public class FeatureCategoryServiceImpl implements FeatureCategoryService {
 
             return predicate;
         };
+
+        if (page == 0 && size == 0) {
+            List<FeatureCategoriesMaster> filteredCategories = featureCategoriesMasterRepository.findAll(spec);
+            List<FeatureCategoryResponse> content = filteredCategories.stream()
+                    .map(this::convertToResponse)
+                    .collect(Collectors.toList());
+            allResponse.setData(content);
+            allResponse.setCurrentPage(1);
+            allResponse.setPageCount(1);
+            allResponse.setTotalRowCount(content.size());
+            return allResponse;
+        }
+
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
         Page<FeatureCategoriesMaster> categoryPage = featureCategoriesMasterRepository.findAll(spec, pageable);
 
