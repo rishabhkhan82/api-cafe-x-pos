@@ -4,7 +4,7 @@ import com.cafex.pos.dto.RestaurantRequest;
 import com.cafex.pos.dto.RestaurantResponse;
 import com.cafex.pos.dto.OperationResponse;
 import com.cafex.pos.dto.RestaurantPageResponse;
-import com.cafex.pos.dto.RestaurantSubscriptionRequest;
+import com.cafex.pos.dto.RestaurantSubscriptionDetailsRequest;
 import com.cafex.pos.entity.Restaurant;
 import com.cafex.pos.entity.User;
 import com.cafex.pos.repository.RestaurantRepository;
@@ -304,7 +304,7 @@ public class RestaurantService {
         return response;
     }
 
-    public void updateRestaurantSubscriptionDetails(Long id, RestaurantSubscriptionRequest request) {
+    public void updateRestaurantSubscriptionDetails(Long id, RestaurantSubscriptionDetailsRequest request) {
         log.info("Updating restaurant subscription details for ID: {}", id);
 
         Restaurant existingRestaurant = restaurantRepository.findById(id)
