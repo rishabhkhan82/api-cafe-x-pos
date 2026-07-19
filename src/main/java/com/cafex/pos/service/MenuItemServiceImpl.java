@@ -94,7 +94,7 @@ public class MenuItemServiceImpl implements MenuItemService {
 
         log.info("Menu item saved successfully with ID: {}", savedMenuItem.getId());
 
-        messagingTemplate.convertAndSend(TOPIC_PREFIX + savedMenuItem.getRestaurantId() + "/menu-items", convertToResponse(savedMenuItem));
+        messagingTemplate.convertAndSend(TOPIC_PREFIX + savedMenuItem.getRestaurantId() + "/menu-items", savedMenuItem);
 
         return convertToResponse(savedMenuItem);
     }
@@ -154,7 +154,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         MenuItem updatedMenuItem = menuItemRepository.save(existingMenuItem);
         log.info("Menu item updated successfully with ID: {}", updatedMenuItem.getId());
 
-        messagingTemplate.convertAndSend(TOPIC_PREFIX + updatedMenuItem.getRestaurantId() + "/menu-items", convertToResponse(updatedMenuItem));
+        messagingTemplate.convertAndSend(TOPIC_PREFIX + updatedMenuItem.getRestaurantId() + "/menu-items", updatedMenuItem);
 
         return convertToResponse(updatedMenuItem);
     }
@@ -280,7 +280,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         menuItemRepository.deleteById(id);
         log.info("Menu item deleted successfully with ID: {}", id);
 
-        messagingTemplate.convertAndSend(TOPIC_PREFIX + menuItem.getRestaurantId() + "/menu-items", Map.of("id", id, "deleted", true));
+        messagingTemplate.convertAndSend(TOPIC_PREFIX + menuItem.getRestaurantId() + "/menu-items", menuItem);
     }
 
     private void deleteImageFile(String imageUrl) throws IOException {
