@@ -189,6 +189,8 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         existing.setDiscountCode(request.getDiscountCode());
         existing.setDiscountAmount(request.getDiscountAmount());
         existing.setFinalAmount(request.getFinalAmount());
+        existing.setGstAmount(request.getGstAmount());
+        existing.setGstPercentage(request.getGstPercentage());
         existing.setPlanPriceAtSubscription(request.getPlanPriceAtSubscription());
         existing.setOfferNameAtSubscription(request.getOfferNameAtSubscription());
         existing.setOfferDiscountPercentageAtSubscription(request.getOfferDiscountPercentageAtSubscription());
@@ -307,6 +309,8 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         entity.setDiscountCode(request.getDiscountCode());
         entity.setDiscountAmount(request.getDiscountAmount());
         entity.setFinalAmount(request.getFinalAmount());
+        entity.setGstAmount(request.getGstAmount());
+        entity.setGstPercentage(request.getGstPercentage());
         entity.setPlanPriceAtSubscription(request.getPlanPriceAtSubscription());
         entity.setOfferNameAtSubscription(request.getOfferNameAtSubscription());
         entity.setOfferDiscountPercentageAtSubscription(request.getOfferDiscountPercentageAtSubscription());
@@ -353,6 +357,8 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         response.setDiscountCode(entity.getDiscountCode());
         response.setDiscountAmount(entity.getDiscountAmount());
         response.setFinalAmount(entity.getFinalAmount());
+        response.setGstAmount(entity.getGstAmount());
+        response.setGstPercentage(entity.getGstPercentage());
         response.setPlanPriceAtSubscription(entity.getPlanPriceAtSubscription());
         response.setOfferNameAtSubscription(entity.getOfferNameAtSubscription());
         response.setOfferDiscountPercentageAtSubscription(entity.getOfferDiscountPercentageAtSubscription());

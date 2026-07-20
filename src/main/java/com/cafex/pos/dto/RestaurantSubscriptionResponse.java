@@ -74,6 +74,12 @@ public class RestaurantSubscriptionResponse {
     @JsonProperty("final_amount")
     private BigDecimal finalAmount;
 
+    @JsonProperty("gst_amount")
+    private BigDecimal gstAmount;
+
+    @JsonProperty("gst_percentage")
+    private String gstPercentage;
+
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
 

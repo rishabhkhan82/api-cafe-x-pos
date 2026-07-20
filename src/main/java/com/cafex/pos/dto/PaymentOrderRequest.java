@@ -8,4 +8,6 @@ public class PaymentOrderRequest {
     private Integer months;
     private Double calculatedAmount;
     private Long restaurantId;
+    private String gstPercentage;
+    private Double gstAmount;
 }

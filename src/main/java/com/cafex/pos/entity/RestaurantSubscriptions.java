@@ -77,6 +77,12 @@ public class RestaurantSubscriptions {
     @Column(name = "final_amount", nullable = false)
     private BigDecimal finalAmount = BigDecimal.ZERO;
 
+    @Column(name = "gst_amount", nullable = false)
+    private BigDecimal gstAmount = BigDecimal.ZERO;
+
+    @Column(name = "gst_percentage", nullable = false)
+    private String gstPercentage = "0";
+
     @Column(name = "plan_price_at_subscription", nullable = false)
     private BigDecimal planPriceAtSubscription = BigDecimal.ZERO;
 
@@ -296,6 +302,22 @@ public class RestaurantSubscriptions {
 
     public void setFinalAmount(BigDecimal finalAmount) {
         this.finalAmount = finalAmount;
+    }
+
+    public BigDecimal getGstAmount() {
+        return gstAmount;
+    }
+
+    public void setGstAmount(BigDecimal gstAmount) {
+        this.gstAmount = gstAmount;
+    }
+
+    public String getGstPercentage() {
+        return gstPercentage;
+    }
+
+    public void setGstPercentage(String gstPercentage) {
+        this.gstPercentage = gstPercentage;
     }
 
     public BigDecimal getPlanPriceAtSubscription() {

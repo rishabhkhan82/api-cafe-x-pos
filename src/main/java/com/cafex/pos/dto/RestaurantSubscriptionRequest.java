@@ -66,6 +66,12 @@ public class RestaurantSubscriptionRequest {
     @JsonProperty("final_amount")
     private BigDecimal finalAmount;
 
+    @JsonProperty("gst_amount")
+    private BigDecimal gstAmount;
+
+    @JsonProperty("gst_percentage")
+    private String gstPercentage;
+
     @JsonProperty("plan_price_at_subscription")
     private BigDecimal planPriceAtSubscription;
 

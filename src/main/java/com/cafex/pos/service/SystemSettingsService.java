@@ -49,6 +49,8 @@ public class SystemSettingsService {
             settings.setSmsNotifications(Boolean.FALSE);
             settings.setNotificationBatchSize(100);
             settings.setWebhookRetries(3);
+            settings.setIsGst(Boolean.FALSE);
+            settings.setGstPercentage("0");
             return systemSettingsRepository.save(settings);
         }
     }

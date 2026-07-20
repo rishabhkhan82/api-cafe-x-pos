@@ -7,6 +7,8 @@ import com.cafex.pos.exception.ResourceNotFoundException;
 import com.cafex.pos.dto.PaymentOrderRequest;
 import com.cafex.pos.dto.PaymentOrderResponse;
 import com.cafex.pos.dto.SubscriptionPlansResponse;
+import com.cafex.pos.entity.SystemSetting;
+import com.cafex.pos.service.SystemSettingsService;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,6 +28,7 @@ import java.util.Map;
 public class PaymentService {
 
     private final SubscriptionPlansService subscriptionPlansService;
+    private final SystemSettingsService systemSettingsService;
 
     @Value("${razorpay.key.id}")
     private String razorpayKeyId;
@@ -41,12 +45,21 @@ public class PaymentService {
         BigDecimal baseAmount = plan.getPrice().multiply(BigDecimal.valueOf(request.getMonths()));
         BigDecimal discountPercentage = BigDecimal.valueOf(plan.getOffer_discount_percentage() != null ? plan.getOffer_discount_percentage() : 0);
         BigDecimal discountAmount = baseAmount.multiply(discountPercentage).divide(BigDecimal.valueOf(100));
-        BigDecimal expectedAmount = baseAmount.subtract(discountAmount);
+        BigDecimal subtotal = baseAmount.subtract(discountAmount);
+
+        // Apply GST if enabled
+        BigDecimal gstAmount = BigDecimal.ZERO;
+        SystemSetting systemSettings = systemSettingsService.getSystemSettings();
+        if (systemSettings.getIsGst() != null && systemSettings.getIsGst() && systemSettings.getGstPercentage() != null) {
+            BigDecimal gstPercentage = new BigDecimal(systemSettings.getGstPercentage());
+            gstAmount = subtotal.multiply(gstPercentage).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        }
+        BigDecimal expectedAmount = subtotal.add(gstAmount);
 
         // Validate calculated amount matches expected (with small tolerance for floating point precision)
         BigDecimal receivedAmount = BigDecimal.valueOf(request.getCalculatedAmount());
         BigDecimal difference = expectedAmount.subtract(receivedAmount).abs();
-        if (difference.compareTo(BigDecimal.valueOf(0.01)) > 0) { // Allow 1 paise difference
+        if (difference.compareTo(BigDecimal.valueOf(0.01)) > 0) {
             throw new BadRequestException("Amount mismatch: expected " + expectedAmount + ", received " + request.getCalculatedAmount());
         }
 
