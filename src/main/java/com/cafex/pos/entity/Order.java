@@ -72,6 +72,9 @@ public class Order {
     @Column(name = "tax_amount")
     private BigDecimal taxAmount;
 
+    @Column(name = "tax_percentage")
+    private Integer taxPercentage;
+
     @Column(name = "discount_amount")
     private BigDecimal discountAmount;
 
@@ -254,6 +257,14 @@ public class Order {
 
     public void setTaxAmount(BigDecimal taxAmount) {
         this.taxAmount = taxAmount;
+    }
+
+    public Integer getTaxPercentage() {
+        return taxPercentage;
+    }
+
+    public void setTaxPercentage(Integer taxPercentage) {
+        this.taxPercentage = taxPercentage;
     }
 
     public BigDecimal getDiscountAmount() {

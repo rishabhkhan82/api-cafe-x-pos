@@ -136,6 +136,8 @@ public class RestaurantService {
         restaurant.setEmail(restaurantRequest.getEmail());
         restaurant.setGstNumber(restaurantRequest.getGstNumber());
         restaurant.setLicenseNumber(restaurantRequest.getLicenseNumber());
+        restaurant.setIsGst(restaurantRequest.getIsGst());
+        restaurant.setGstPercentage(restaurantRequest.getGstPercentage());
         restaurant.setOwnerName(restaurantRequest.getOwnerName());
         restaurant.setOwnerPhone(restaurantRequest.getOwnerPhone());
         restaurant.setOwnerEmail(restaurantRequest.getOwnerEmail());
@@ -219,6 +221,8 @@ public class RestaurantService {
         existingRestaurant.setEmail(restaurantRequest.getEmail());
         existingRestaurant.setGstNumber(restaurantRequest.getGstNumber());
         existingRestaurant.setLicenseNumber(restaurantRequest.getLicenseNumber());
+        existingRestaurant.setIsGst(restaurantRequest.getIsGst());
+        existingRestaurant.setGstPercentage(restaurantRequest.getGstPercentage());
         existingRestaurant.setOwnerName(restaurantRequest.getOwnerName());
         existingRestaurant.setOwnerPhone(restaurantRequest.getOwnerPhone());
         existingRestaurant.setOwnerEmail(restaurantRequest.getOwnerEmail());
@@ -367,6 +371,8 @@ public class RestaurantService {
         response.setEmail(restaurant.getEmail());
         response.setGstNumber(restaurant.getGstNumber());
         response.setLicenseNumber(restaurant.getLicenseNumber());
+        response.setIsGst(restaurant.getIsGst());
+        response.setGstPercentage(restaurant.getGstPercentage());
         response.setOwnerName(restaurant.getOwnerName());
         response.setOwnerPhone(restaurant.getOwnerPhone());
         response.setOwnerEmail(restaurant.getOwnerEmail());

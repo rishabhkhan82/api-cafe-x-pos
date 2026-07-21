@@ -64,6 +64,9 @@ public class OrderResponse {
     @JsonProperty("tax_amount")
     private BigDecimal taxAmount;
 
+    @JsonProperty("tax_percentage")
+    private Integer taxPercentage;
+
     @JsonProperty("discount_amount")
     private BigDecimal discountAmount;
 

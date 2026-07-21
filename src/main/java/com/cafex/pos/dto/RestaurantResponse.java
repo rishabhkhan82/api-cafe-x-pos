@@ -33,6 +33,12 @@ public class RestaurantResponse {
     @JsonProperty("license_number")
     private String licenseNumber;
 
+    @JsonProperty("is_gst")
+    private Boolean isGst;
+
+    @JsonProperty("gst_percentage")
+    private String gstPercentage;
+
     @JsonProperty("owner_name")
     private String ownerName;
 

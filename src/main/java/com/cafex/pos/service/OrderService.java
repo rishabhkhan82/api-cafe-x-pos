@@ -99,6 +99,7 @@ public class OrderService {
         order.setDeliveredAt(orderRequest.getDeliveredAt());
         order.setPriority(orderRequest.getPriority());
         order.setTaxAmount(orderRequest.getTaxAmount());
+        order.setTaxPercentage(orderRequest.getTaxPercentage());
         order.setDiscountAmount(orderRequest.getDiscountAmount());
         order.setLoyaltyDiscountAmount(orderRequest.getLoyaltyDiscountAmount());
         order.setRestaurant(restaurant);
@@ -332,6 +333,7 @@ public class OrderService {
         existingOrder.setDeliveredAt(orderRequest.getDeliveredAt());
         existingOrder.setPriority(orderRequest.getPriority());
         existingOrder.setTaxAmount(orderRequest.getTaxAmount());
+        existingOrder.setTaxPercentage(orderRequest.getTaxPercentage());
         existingOrder.setDiscountAmount(orderRequest.getDiscountAmount());
         existingOrder.setLoyaltyDiscountAmount(orderRequest.getLoyaltyDiscountAmount());
         existingOrder.setUpdatedAt(LocalDateTime.now());
@@ -412,6 +414,7 @@ public class OrderService {
         response.setDeliveredAt(order.getDeliveredAt());
         response.setPriority(order.getPriority());
         response.setTaxAmount(order.getTaxAmount());
+        response.setTaxPercentage(order.getTaxPercentage());
         response.setDiscountAmount(order.getDiscountAmount());
         response.setLoyaltyDiscountAmount(order.getLoyaltyDiscountAmount());
         response.setRestaurantId(order.getRestaurant() != null ? order.getRestaurant().getId() : null);

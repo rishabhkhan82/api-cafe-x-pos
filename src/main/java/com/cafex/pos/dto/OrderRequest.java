@@ -67,6 +67,9 @@ public class OrderRequest {
     @JsonProperty("tax_amount")
     private BigDecimal taxAmount;
 
+    @JsonProperty("tax_percentage")
+    private Integer taxPercentage;
+
     @DecimalMin(value = "0.0", inclusive = true, message = "Discount amount must be non-negative")
     @JsonProperty("discount_amount")
     private BigDecimal discountAmount;

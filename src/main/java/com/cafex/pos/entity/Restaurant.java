@@ -33,6 +33,12 @@ public class Restaurant {
     @Column(name = "license_number")
     private String licenseNumber;
 
+    @Column(name = "is_gst", nullable = false)
+    private Boolean isGst = false;
+
+    @Column(name = "gst_percentage")
+    private String gstPercentage;
+
     @Column(name = "owner_name")
     private String ownerName;
 
@@ -166,6 +172,22 @@ public class Restaurant {
 
     public void setLicenseNumber(String licenseNumber) {
         this.licenseNumber = licenseNumber;
+    }
+
+    public Boolean getIsGst() {
+        return isGst;
+    }
+
+    public void setIsGst(Boolean isGst) {
+        this.isGst = isGst;
+    }
+
+    public String getGstPercentage() {
+        return gstPercentage;
+    }
+
+    public void setGstPercentage(String gstPercentage) {
+        this.gstPercentage = gstPercentage;
     }
 
     public String getOwnerName() {
