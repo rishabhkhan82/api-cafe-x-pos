@@ -50,12 +50,17 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
     public RestaurantSubscriptionResponse saveRestaurantSubscription(RestaurantSubscriptionRequest request) {
         log.info("Saving new restaurant subscription: {}", request.getSubscriptionId());
 
-        // Check if subscriptionId already exists
         if (restaurantSubscriptionRepository.findAll().stream().anyMatch(rs -> request.getSubscriptionId().equals(rs.getSubscriptionId()))) {
             throw new ConflictException("Subscription ID already exists: " + request.getSubscriptionId());
         }
 
         RestaurantSubscriptions entity = convertToEntity(request);
+
+        if (request.getPlanPriceAtSubscription() != null
+                && request.getPlanPriceAtSubscription().compareTo(java.math.BigDecimal.ZERO) > 0
+                && request.getEndDate() == null) {
+            throw new BadRequestException("end_date is required for paid subscriptions");
+        }
         entity.setCreatedAt(request.getCreatedAt() != null ? request.getCreatedAt() : LocalDateTime.now());
         entity.setUpdatedAt(request.getUpdatedAt() != null ? request.getUpdatedAt() : LocalDateTime.now());
 
@@ -170,6 +175,12 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
 
         RestaurantSubscriptions existing = restaurantSubscriptionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Restaurant subscription not found with ID: " + id));
+
+        if (request.getPlanPriceAtSubscription() != null
+                && request.getPlanPriceAtSubscription().compareTo(java.math.BigDecimal.ZERO) > 0
+                && request.getEndDate() == null) {
+            throw new BadRequestException("end_date is required for paid subscriptions");
+        }
 
         // Update fields
         existing.setSubscriptionId(request.getSubscriptionId());
