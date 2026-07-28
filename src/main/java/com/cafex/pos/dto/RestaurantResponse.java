@@ -33,6 +33,12 @@ public class RestaurantResponse {
     @JsonProperty("license_number")
     private String licenseNumber;
 
+    @JsonProperty("is_gst")
+    private Boolean isGst;
+
+    @JsonProperty("gst_percentage")
+    private String gstPercentage;
+
     @JsonProperty("owner_name")
     private String ownerName;
 
@@ -59,6 +65,9 @@ public class RestaurantResponse {
 
     @JsonProperty("logo_image")
     private String logoImage;
+
+    @JsonProperty("banner_image")
+    private String bannerImage;
 
     @JsonProperty("created_by")
     private Long createdBy;

@@ -23,12 +23,8 @@ public class SystemSettingsController {
      */
     @GetMapping("/get-system-settings")
     public ResponseEntity<SystemSetting> getSystemSettings() {
-        try {
-            SystemSetting settings = systemSettingsService.getSystemSettings();
-            return ResponseEntity.ok(settings);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
+        SystemSetting settings = systemSettingsService.getSystemSettings();
+        return ResponseEntity.ok(settings);
     }
 
     /**
@@ -37,12 +33,8 @@ public class SystemSettingsController {
     @PutMapping("/save-system-settings")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SystemSetting> saveSystemSettings(@RequestBody SystemSetting settings) {
-        try {
-            SystemSetting savedSettings = systemSettingsService.saveSystemSettings(settings);
-            return ResponseEntity.ok(savedSettings);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
+        SystemSetting savedSettings = systemSettingsService.saveSystemSettings(settings);
+        return ResponseEntity.ok(savedSettings);
     }
 
 }

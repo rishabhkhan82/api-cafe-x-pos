@@ -3,9 +3,12 @@ package com.cafex.pos.service;
 import com.cafex.pos.dto.UserRequest;
 import com.cafex.pos.dto.UserResponse;
 import com.cafex.pos.entity.User;
+import com.cafex.pos.entity.Restaurant;
 import com.cafex.pos.repository.UserRepository;
+import com.cafex.pos.repository.RestaurantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +24,11 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -36,7 +44,11 @@ import jakarta.persistence.criteria.Predicate;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final RestaurantRepository restaurantRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     public List<UserResponse> getAllUsers() {
         log.info("Fetching all users");
@@ -68,10 +80,11 @@ public class UserService {
 
             // Restaurant filter
             if (restaurantId != null && !restaurantId.trim().isEmpty()) {
-                if ("none".equals(restaurantId)) {
-                    predicate = criteriaBuilder.and(predicate, criteriaBuilder.isNull(root.get("restaurantId")));
-                } else {
-                    predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("restaurantId"), restaurantId));
+                try {
+                    Long id = Long.parseLong(restaurantId);
+                    predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("restaurantId"), id));
+                } catch (NumberFormatException e) {
+                    // invalid, ignore
                 }
             }
 
@@ -165,26 +178,44 @@ public class UserService {
         return avatar;
     }
 
+    private void deleteImageFile(String imageUrl) throws IOException {
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            return;
+        }
+
+        // Extract file path from URL
+        String filePath = imageUrl.replace("/uploads/", "uploads/");
+        Path path = Paths.get(filePath);
+
+        if (Files.exists(path)) {
+            Files.delete(path);
+            log.info("Deleted avatar file: {}", filePath);
+        }
+    }
+
     public UserResponse saveUser(UserRequest userRequest) {
         log.info("Saving new user: {}", userRequest.getUsername());
 
         // Check if username already exists
         if (userRepository.existsByUsername(userRequest.getUsername())) {
-            throw new RuntimeException("Username already exists: " + userRequest.getUsername());
+            throw new ConflictException("Username already exists: " + userRequest.getUsername());
         }
 
         // Check if email already exists
         if (userRepository.existsByEmail(userRequest.getEmail())) {
-            throw new RuntimeException("Email already exists: " + userRequest.getEmail());
+            throw new ConflictException("Email already exists: " + userRequest.getEmail());
         }
+
+        String plaintextPassword = userRequest.getPassword();
 
         User user = new User();
         user.setUsername(userRequest.getUsername());
-        user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+        user.setPassword(passwordEncoder.encode(plaintextPassword));
         user.setName(userRequest.getName());
         user.setEmail(userRequest.getEmail());
         user.setPhone(userRequest.getPhone());
         user.setRole(userRequest.getRole());
+        user.setUserType(userRequest.getUserType());
         user.setAvatar(processAvatar(userRequest.getAvatar()));
         user.setRestaurantId(userRequest.getRestaurantId());
         user.setIsActive(userRequest.getIsActive());
@@ -197,25 +228,62 @@ public class UserService {
         User savedUser = userRepository.save(user);
         log.info("User saved successfully with ID: {}", savedUser.getId());
 
-        return convertToResponse(savedUser);
+        UserResponse response = convertToResponse(savedUser);
+
+        try {
+            String restaurantName = "CafeX POS";
+            if (savedUser.getRestaurantId() != null && !savedUser.getRestaurantId().isEmpty()) {
+                try {
+                    Long restaurantIdLong = Long.parseLong(savedUser.getRestaurantId());
+                    Restaurant restaurant = restaurantRepository.findById(restaurantIdLong).orElse(null);
+                    if (restaurant != null) {
+                        restaurantName = restaurant.getName();
+                    }
+                } catch (NumberFormatException e) {
+                    log.warn("Invalid restaurant ID format for user {}: {}", savedUser.getId(), savedUser.getRestaurantId());
+                }
+            }
+
+            java.util.Map<String, Object> emailVariables = new java.util.HashMap<>();
+            emailVariables.put("username", savedUser.getUsername());
+            emailVariables.put("email", savedUser.getEmail());
+            emailVariables.put("password", plaintextPassword);
+            emailVariables.put("restaurant_name", restaurantName);
+
+            emailService.sendHtmlEmail(
+                savedUser.getEmail(),
+                "Welcome to CafeX POS - Your Account is Ready",
+                "user_created",
+                emailVariables
+            );
+            log.info("User created email sent to: {}", savedUser.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send user created email to: {} for user ID: {}. Error: {}", savedUser.getEmail(), savedUser.getId(), e.getMessage());
+        }
+
+        // Publish to platform-wide topic
+        emitUserUpdate(getAllUsers());
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
+
+        return response;
     }
 
     public UserResponse updateUser(Long id, UserRequest userRequest) {
         log.info("Updating user with ID: {}", id);
 
         User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
 
         // Check username uniqueness if changed
         if (!existingUser.getUsername().equals(userRequest.getUsername()) &&
             userRepository.existsByUsername(userRequest.getUsername())) {
-            throw new RuntimeException("Username already exists: " + userRequest.getUsername());
+            throw new ConflictException("Username already exists: " + userRequest.getUsername());
         }
 
         // Check email uniqueness if changed
         if (!existingUser.getEmail().equals(userRequest.getEmail()) &&
             userRepository.existsByEmail(userRequest.getEmail())) {
-            throw new RuntimeException("Email already exists: " + userRequest.getEmail());
+            throw new ConflictException("Email already exists: " + userRequest.getEmail());
         }
 
         // Update fields
@@ -230,7 +298,25 @@ public class UserService {
         existingUser.setEmail(userRequest.getEmail());
         existingUser.setPhone(userRequest.getPhone());
         existingUser.setRole(userRequest.getRole());
-        existingUser.setAvatar(processAvatar(userRequest.getAvatar()));
+        existingUser.setUserType(userRequest.getUserType());
+
+        // Handle avatar change if provided as base64
+        if (userRequest.getAvatar() != null && !userRequest.getAvatar().isEmpty() && userRequest.getAvatar().startsWith("data:image/")) {
+            try {
+                // Delete old avatar if exists
+                if (existingUser.getAvatar() != null && !existingUser.getAvatar().isEmpty() && !existingUser.getAvatar().startsWith("data:image/")) {
+                    deleteImageFile(existingUser.getAvatar());
+                }
+                // Process new avatar
+                existingUser.setAvatar(processAvatar(userRequest.getAvatar()));
+            } catch (Exception e) {
+                log.error("Failed to update avatar for user {}: {}", existingUser.getId(), e.getMessage());
+                // Continue without avatar change
+            }
+        } else {
+            // If not a base64 image, just set it directly (could be URL or unchanged)
+            existingUser.setAvatar(userRequest.getAvatar());
+        }
         existingUser.setRestaurantId(userRequest.getRestaurantId());
         existingUser.setIsActive(userRequest.getIsActive());
         existingUser.setUpdatedAt(LocalDateTime.now());
@@ -238,18 +324,35 @@ public class UserService {
         User updatedUser = userRepository.save(existingUser);
         log.info("User updated successfully with ID: {}", updatedUser.getId());
 
+        // Publish to platform-wide topic
+        emitUserUpdate(getAllUsers());
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
+
         return convertToResponse(updatedUser);
     }
 
     public void deleteUser(Long id) {
         log.info("Deleting user with ID: {}", id);
 
-        if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User not found with ID: " + id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
+
+        // Delete associated avatar if exists
+        if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
+            try {
+                deleteImageFile(user.getAvatar());
+            } catch (Exception e) {
+                log.error("Failed to delete avatar for user {}: {}", id, e.getMessage());
+                // Continue with deletion
+            }
         }
 
         userRepository.deleteById(id);
         log.info("User deleted successfully with ID: {}", id);
+
+        // Publish to platform-wide topic
+        emitUserUpdate(getAllUsers());
+        eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
     }
 
     public boolean existsByUsername(String username) {
@@ -278,5 +381,9 @@ public class UserService {
         response.setIsActive(user.getIsActive());
         response.setLastLogin(user.getLastLogin());
         return response;
+    }
+
+    private void emitUserUpdate(List<UserResponse> users) {
+        messagingTemplate.convertAndSend("/topic/users", users);
     }
 }

@@ -21,11 +21,8 @@ public class NavigationMenuRequest {
     @JsonProperty("parent_id")
     private String parentId;
 
-    @NotBlank(message = "Role is required")
-    @JsonProperty("role")
-    private String role;
 
-    @NotBlank(message = "Path is required")
+
     @JsonProperty("path")
     private String path;
 

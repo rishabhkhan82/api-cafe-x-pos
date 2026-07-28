@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Backup Notification</title>
+</head>
+<body style="margin:0; padding:0; font-family: Arial, Helvetica, sans-serif; background-color:#f4f4f4;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f4f4f4;">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px 40px; text-align:center;">
+                            <h1 style="color:#ffffff; margin:0; font-size:28px; font-weight:bold;" th:text="${platformName}">CafeX POS</h1>
+                            <p style="color:#d1fae5; margin:8px 0 0 0; font-size:14px;" th:text="${success ? 'Database Backup Successful' : 'Database Backup Failed'}">Backup Status</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="color:#333333; margin-top:0; font-size:22px;" th:text="${success ? 'Backup Completed Successfully' : 'Backup Failed'}">Backup Status</h2>
+                            <p style="color:#555555; font-size:16px; line-height:1.6;">
+                                The database backup for <strong th:text="${platformName}">CafeX POS</strong> has been processed.
+                            </p>
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f9f9f9; border-left:4px solid #10b981; margin:20px 0;" th:if="${success}">
+                                <tr>
+                                    <td style="padding:20px;">
+                                        <p style="margin:0 0 10px 0; color:#333333; font-size:15px;">
+                                            <strong>Filename:</strong> <span th:text="${filename}" style="color:#555555;">--</span>
+                                        </p>
+                                        <p style="margin:0 0 10px 0; color:#333333; font-size:15px;">
+                                            <strong>Backup Date:</strong> <span th:text="${backupDate}" style="color:#555555;">--</span>
+                                        </p>
+                                        <p style="margin:0; color:#333333; font-size:15px;">
+                                            <strong>Status:</strong> <span style="color:#059669; font-weight:bold;">Success</span>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f9f9f9; border-left:4px solid #ef4444; margin:20px 0;" th:unless="${success}">
+                                <tr>
+                                    <td style="padding:20px;">
+                                        <p style="margin:0 0 10px 0; color:#333333; font-size:15px;">
+                                            <strong>Filename:</strong> <span th:text="${filename}" style="color:#555555;">--</span>
+                                        </p>
+                                        <p style="margin:0 0 10px 0; color:#333333; font-size:15px;">
+                                            <strong>Backup Date:</strong> <span th:text="${backupDate}" style="color:#555555;">--</span>
+                                        </p>
+                                        <p style="margin:0; color:#333333; font-size:15px;">
+                                            <strong>Error:</strong> <span th:text="${errorMessage}" style="color:#ef4444;">--</span>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:30px 0;" th:if="${success}">
+                                <tr>
+                                    <td style="background-color:#10b981; border-radius:4px; text-align:center;">
+                                        <a th:href="${downloadUrl}" style="display:inline-block; padding:14px 30px; color:#ffffff; text-decoration:none; font-size:16px; font-weight:bold;">
+                                            Download Backup
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="color:#777777; font-size:14px; line-height:1.5;">
+                                Backup files are stored on the server for <span th:text="${retentionDays}">30</span> days.
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color:#f9f9f9; padding:20px 40px; text-align:center; border-top:1px solid #eeeeee;">
+                            <p style="color:#888888; font-size:12px; margin:0;">&copy; 2026 CafeX POS. All rights reserved.</p>
+                            <p style="color:#888888; font-size:12px; margin:5px 0 0 0;">This is an automated message. Please do not reply to this email.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

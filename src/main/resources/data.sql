@@ -42,3 +42,7 @@ CREATE TABLE IF NOT EXISTS user_role_permissions (
     PRIMARY KEY (role_id, permission),
     FOREIGN KEY (role_id) REFERENCES user_roles(role_id) ON DELETE CASCADE
 );
+
+-- Modify avatar columns to LONGTEXT for base64 images
+ALTER TABLE customers MODIFY COLUMN avatar LONGTEXT;
+ALTER TABLE users MODIFY COLUMN avatar LONGTEXT;

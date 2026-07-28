@@ -32,8 +32,14 @@ public class RestaurantSubscriptions {
     @Column(name = "end_date")
     private LocalDateTime endDate;
 
+    @Column(name = "trial_start_date")
+    private LocalDateTime trialStartDate;
+
     @Column(name = "trial_end_date")
     private LocalDateTime trialEndDate;
+
+    @Column(name = "is_trial_used", nullable = false)
+    private Boolean isTrialUsed = false;
 
     @Column(name = "next_billing_date")
     private LocalDateTime nextBillingDate;
@@ -71,6 +77,24 @@ public class RestaurantSubscriptions {
     @Column(name = "final_amount", nullable = false)
     private BigDecimal finalAmount = BigDecimal.ZERO;
 
+    @Column(name = "gst_amount", nullable = false)
+    private BigDecimal gstAmount = BigDecimal.ZERO;
+
+    @Column(name = "gst_percentage", nullable = false)
+    private String gstPercentage = "0";
+
+    @Column(name = "plan_price_at_subscription", nullable = false)
+    private BigDecimal planPriceAtSubscription = BigDecimal.ZERO;
+
+    @Column(name = "offer_name_at_subscription")
+    private String offerNameAtSubscription;
+
+    @Column(name = "offer_discount_percentage_at_subscription", nullable = false)
+    private Integer offerDiscountPercentageAtSubscription = 0;
+
+    @Column(name = "plan_name_at_subscription", nullable = false)
+    private String planNameAtSubscription;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private User createdBy;
@@ -93,8 +117,12 @@ public class RestaurantSubscriptions {
         this.billingCycle = billingCycle;
         this.cancelAtPeriodEnd = false;
         this.autoRenew = true;
+        this.isTrialUsed = false;
         this.discountAmount = BigDecimal.ZERO;
         this.finalAmount = BigDecimal.ZERO;
+        this.planPriceAtSubscription = BigDecimal.ZERO;
+        this.offerDiscountPercentageAtSubscription = 0;
+        this.planNameAtSubscription = "";
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -156,12 +184,28 @@ public class RestaurantSubscriptions {
         this.endDate = endDate;
     }
 
+    public LocalDateTime getTrialStartDate() {
+        return trialStartDate;
+    }
+
+    public void setTrialStartDate(LocalDateTime trialStartDate) {
+        this.trialStartDate = trialStartDate;
+    }
+
     public LocalDateTime getTrialEndDate() {
         return trialEndDate;
     }
 
     public void setTrialEndDate(LocalDateTime trialEndDate) {
         this.trialEndDate = trialEndDate;
+    }
+
+    public Boolean getIsTrialUsed() {
+        return isTrialUsed;
+    }
+
+    public void setIsTrialUsed(Boolean isTrialUsed) {
+        this.isTrialUsed = isTrialUsed;
     }
 
     public LocalDateTime getNextBillingDate() {
@@ -258,6 +302,54 @@ public class RestaurantSubscriptions {
 
     public void setFinalAmount(BigDecimal finalAmount) {
         this.finalAmount = finalAmount;
+    }
+
+    public BigDecimal getGstAmount() {
+        return gstAmount;
+    }
+
+    public void setGstAmount(BigDecimal gstAmount) {
+        this.gstAmount = gstAmount;
+    }
+
+    public String getGstPercentage() {
+        return gstPercentage;
+    }
+
+    public void setGstPercentage(String gstPercentage) {
+        this.gstPercentage = gstPercentage;
+    }
+
+    public BigDecimal getPlanPriceAtSubscription() {
+        return planPriceAtSubscription;
+    }
+
+    public void setPlanPriceAtSubscription(BigDecimal planPriceAtSubscription) {
+        this.planPriceAtSubscription = planPriceAtSubscription;
+    }
+
+    public String getOfferNameAtSubscription() {
+        return offerNameAtSubscription;
+    }
+
+    public void setOfferNameAtSubscription(String offerNameAtSubscription) {
+        this.offerNameAtSubscription = offerNameAtSubscription;
+    }
+
+    public Integer getOfferDiscountPercentageAtSubscription() {
+        return offerDiscountPercentageAtSubscription;
+    }
+
+    public void setOfferDiscountPercentageAtSubscription(Integer offerDiscountPercentageAtSubscription) {
+        this.offerDiscountPercentageAtSubscription = offerDiscountPercentageAtSubscription;
+    }
+
+    public String getPlanNameAtSubscription() {
+        return planNameAtSubscription;
+    }
+
+    public void setPlanNameAtSubscription(String planNameAtSubscription) {
+        this.planNameAtSubscription = planNameAtSubscription;
     }
 
     public User getCreatedBy() {

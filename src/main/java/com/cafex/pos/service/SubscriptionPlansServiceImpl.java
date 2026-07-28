@@ -5,6 +5,7 @@ import com.cafex.pos.dto.SubscriptionPlansResponse;
 import com.cafex.pos.dto.SubscriptionPlansPageResponse;
 import com.cafex.pos.entity.SubscriptionPlans;
 import com.cafex.pos.entity.User;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import com.cafex.pos.repository.SubscriptionPlansRepository;
 import com.cafex.pos.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +39,7 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
     @Override
     public SubscriptionPlansResponse updateSubscriptionPlan(Long id, SubscriptionPlansRequest subscriptionPlansRequest) {
         SubscriptionPlans existingPlan = subscriptionPlansRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Subscription plan not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found"));
         updateEntityFromRequest(existingPlan, subscriptionPlansRequest);
         existingPlan.setUpdatedAt(LocalDateTime.now());
         existingPlan = subscriptionPlansRepository.save(existingPlan);
@@ -59,11 +60,12 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
             String billingCycle,
             Boolean isActive,
             Boolean isPopular,
+            Boolean isComingSoon,
             int page,
             int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        Specification<SubscriptionPlans> spec = buildSpecification(name, billingCycle, isActive, isPopular);
+        Specification<SubscriptionPlans> spec = buildSpecification(name, billingCycle, isActive, isPopular, isComingSoon);
         Page<SubscriptionPlans> subscriptionPlansPage = subscriptionPlansRepository.findAll(spec, pageable);
         List<SubscriptionPlansResponse> responses = subscriptionPlansPage.getContent().stream()
                 .map(this::mapToResponse)
@@ -91,7 +93,8 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
             String name,
             String billingCycle,
             Boolean isActive,
-            Boolean isPopular
+            Boolean isPopular,
+            Boolean isComingSoon
     ) {
         return (root, query, criteriaBuilder) -> {
             Specification<SubscriptionPlans> spec = Specification.where(null);
@@ -106,6 +109,9 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
             }
             if (isPopular != null) {
                 spec = spec.and((r, q, cb) -> cb.equal(r.get("isPopular"), isPopular));
+            }
+            if (isComingSoon != null) {
+                spec = spec.and((r, q, cb) -> cb.equal(r.get("isComingSoon"), isComingSoon));
             }
             return spec.toPredicate(root, query, criteriaBuilder);
         };
@@ -122,11 +128,24 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
         subscriptionPlan.setBillingCycle(request.getBilling_cycle());
         subscriptionPlan.setMaxRestaurants(request.getMax_restaurants());
         subscriptionPlan.setMaxUsers(request.getMax_users());
-        subscriptionPlan.setFeatures(request.getFeatures());
         subscriptionPlan.setIsActive(request.getIs_active());
         subscriptionPlan.setIsPopular(request.getIs_popular());
+        subscriptionPlan.setIsComingSoon(request.getIs_coming_soon());
         subscriptionPlan.setTrialDays(request.getTrial_days());
         subscriptionPlan.setSetupFee(request.getSetup_fee());
+        if (request.getSubscriber_count() != null) {
+            subscriptionPlan.setSubscriberCount(request.getSubscriber_count());
+        }
+        if (request.getRevenue() != null) {
+            subscriptionPlan.setRevenue(request.getRevenue());
+        }
+        if (request.getCreated_by() != null) {
+            User user = userRepository.findById(request.getCreated_by())
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getCreated_by()));
+            subscriptionPlan.setCreatedBy(user);
+        }
+        subscriptionPlan.setOfferName(request.getOffer_name());
+        subscriptionPlan.setOfferDiscountPercentage(request.getOffer_discount_percentage());
         return subscriptionPlan;
     }
 
@@ -140,11 +159,24 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
         subscriptionPlan.setBillingCycle(request.getBilling_cycle());
         subscriptionPlan.setMaxRestaurants(request.getMax_restaurants());
         subscriptionPlan.setMaxUsers(request.getMax_users());
-        subscriptionPlan.setFeatures(request.getFeatures());
         subscriptionPlan.setIsActive(request.getIs_active());
         subscriptionPlan.setIsPopular(request.getIs_popular());
+        subscriptionPlan.setIsComingSoon(request.getIs_coming_soon());
         subscriptionPlan.setTrialDays(request.getTrial_days());
         subscriptionPlan.setSetupFee(request.getSetup_fee());
+        if (request.getSubscriber_count() != null) {
+            subscriptionPlan.setSubscriberCount(request.getSubscriber_count());
+        }
+        if (request.getRevenue() != null) {
+            subscriptionPlan.setRevenue(request.getRevenue());
+        }
+        if (request.getUpdated_by() != null) {
+            User user = userRepository.findById(request.getUpdated_by())
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getUpdated_by()));
+            subscriptionPlan.setUpdatedBy(user);
+        }
+        subscriptionPlan.setOfferName(request.getOffer_name());
+        subscriptionPlan.setOfferDiscountPercentage(request.getOffer_discount_percentage());
     }
 
     private SubscriptionPlansResponse mapToResponse(SubscriptionPlans subscriptionPlan) {
@@ -159,9 +191,9 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
         response.setBilling_cycle(subscriptionPlan.getBillingCycle());
         response.setMax_restaurants(subscriptionPlan.getMaxRestaurants());
         response.setMax_users(subscriptionPlan.getMaxUsers());
-        response.setFeatures(subscriptionPlan.getFeatures());
         response.setIs_active(subscriptionPlan.getIsActive());
         response.setIs_popular(subscriptionPlan.getIsPopular());
+        response.setIs_coming_soon(subscriptionPlan.getIsComingSoon());
         response.setSubscriber_count(subscriptionPlan.getSubscriberCount());
         response.setRevenue(subscriptionPlan.getRevenue());
         response.setTrial_days(subscriptionPlan.getTrialDays());
@@ -170,6 +202,8 @@ public class SubscriptionPlansServiceImpl implements SubscriptionPlansService {
         response.setUpdated_by(subscriptionPlan.getUpdatedBy() != null ? subscriptionPlan.getUpdatedBy().getId() : null);
         response.setCreated_at(subscriptionPlan.getCreatedAt());
         response.setUpdated_at(subscriptionPlan.getUpdatedAt());
+        response.setOffer_name(subscriptionPlan.getOfferName());
+        response.setOffer_discount_percentage(subscriptionPlan.getOfferDiscountPercentage());
         return response;
     }
 }

@@ -18,6 +18,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cafex.pos.exception.ApiException;
+import com.cafex.pos.exception.BadRequestException;
+import com.cafex.pos.exception.ConflictException;
+import com.cafex.pos.exception.ResourceNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -90,14 +94,14 @@ public class MenuAccessPermissionsService {
         log.info("Saving new menu access permission: {}", request.getPermissionId());
 
         if (menuAccessPermissionsRepository.existsByPermissionId(request.getPermissionId())) {
-            throw new RuntimeException("Permission ID already exists: " + request.getPermissionId());
+            throw new ConflictException("Permission ID already exists: " + request.getPermissionId());
         }
 
         NavigationMenu menu = navigationMenuRepository.findById(request.getMenuId())
-                .orElseThrow(() -> new RuntimeException("Menu not found with ID: " + request.getMenuId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Menu not found with ID: " + request.getMenuId()));
 
         UserRoles role = userRolesRepository.findById(request.getRoleId())
-                .orElseThrow(() -> new RuntimeException("Role not found with ID: " + request.getRoleId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with ID: " + request.getRoleId()));
 
         MenuAccessPermissions permission = new MenuAccessPermissions();
         permission.setPermissionId(request.getPermissionId());
@@ -121,18 +125,18 @@ public class MenuAccessPermissionsService {
         log.info("Updating menu access permission with ID: {}", id);
 
         MenuAccessPermissions existingPermission = menuAccessPermissionsRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Menu access permission not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Menu access permission not found with ID: " + id));
 
         if (!existingPermission.getPermissionId().equals(request.getPermissionId()) &&
             menuAccessPermissionsRepository.existsByPermissionId(request.getPermissionId())) {
-            throw new RuntimeException("Permission ID already exists: " + request.getPermissionId());
+            throw new ConflictException("Permission ID already exists: " + request.getPermissionId());
         }
 
         NavigationMenu menu = navigationMenuRepository.findById(request.getMenuId())
-                .orElseThrow(() -> new RuntimeException("Menu not found with ID: " + request.getMenuId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Menu not found with ID: " + request.getMenuId()));
 
         UserRoles role = userRolesRepository.findById(request.getRoleId())
-                .orElseThrow(() -> new RuntimeException("Role not found with ID: " + request.getRoleId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with ID: " + request.getRoleId()));
 
         existingPermission.setPermissionId(request.getPermissionId());
         existingPermission.setMenu(menu);
@@ -153,7 +157,7 @@ public class MenuAccessPermissionsService {
         log.info("Deleting menu access permission with ID: {}", id);
 
         if (!menuAccessPermissionsRepository.existsById(id)) {
-            throw new RuntimeException("Menu access permission not found with ID: " + id);
+            throw new ResourceNotFoundException("Menu access permission not found with ID: " + id);
         }
 
         menuAccessPermissionsRepository.deleteById(id);

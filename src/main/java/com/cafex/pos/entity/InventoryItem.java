@@ -57,11 +57,20 @@ public class InventoryItem {
     @Column(name = "last_stock_update")
     private LocalDateTime lastStockUpdate;
 
+    @Column(name = "type")
+    private String type;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id", nullable = false)
@@ -136,7 +145,6 @@ public class InventoryItem {
     public void setCurrentStock(BigDecimal currentStock) {
         this.currentStock = currentStock;
         this.lastStockUpdate = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
     public BigDecimal getMinimumStock() {
@@ -211,6 +219,14 @@ public class InventoryItem {
         this.lastStockUpdate = lastStockUpdate;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -225,6 +241,22 @@ public class InventoryItem {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Long getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Long getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(Long updatedBy) {
+        this.updatedBy = updatedBy;
     }
 
     public Restaurant getRestaurant() {

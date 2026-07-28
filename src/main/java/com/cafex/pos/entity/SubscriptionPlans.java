@@ -3,7 +3,6 @@ package com.cafex.pos.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "subscription_plans")
@@ -40,11 +39,6 @@ public class SubscriptionPlans {
     @Column(name = "max_users", nullable = false)
     private Integer maxUsers;
 
-    @ElementCollection
-    @CollectionTable(name = "plan_features", joinColumns = @JoinColumn(name = "plan_id"))
-    @Column(name = "feature_id")
-    private List<String> features;
-
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
@@ -62,6 +56,15 @@ public class SubscriptionPlans {
 
     @Column(name = "setup_fee", nullable = false)
     private BigDecimal setupFee = BigDecimal.ZERO;
+
+    @Column(name = "offer_name")
+    private String offerName;
+
+    @Column(name = "offer_discount_percentage")
+    private Integer offerDiscountPercentage = 0;
+
+    @Column(name = "is_coming_soon", nullable = false)
+    private Boolean isComingSoon = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
@@ -91,10 +94,12 @@ public class SubscriptionPlans {
         this.maxUsers = maxUsers;
         this.isActive = true;
         this.isPopular = false;
+        this.isComingSoon = false;
         this.subscriberCount = 0;
         this.revenue = BigDecimal.ZERO;
         this.trialDays = 0;
         this.setupFee = BigDecimal.ZERO;
+        this.offerDiscountPercentage = 0;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -180,14 +185,6 @@ public class SubscriptionPlans {
         this.maxUsers = maxUsers;
     }
 
-    public List<String> getFeatures() {
-        return features;
-    }
-
-    public void setFeatures(List<String> features) {
-        this.features = features;
-    }
-
     public Boolean getIsActive() {
         return isActive;
     }
@@ -202,6 +199,14 @@ public class SubscriptionPlans {
 
     public void setIsPopular(Boolean isPopular) {
         this.isPopular = isPopular;
+    }
+
+    public Boolean getIsComingSoon() {
+        return isComingSoon;
+    }
+
+    public void setIsComingSoon(Boolean isComingSoon) {
+        this.isComingSoon = isComingSoon;
     }
 
     public Integer getSubscriberCount() {
@@ -266,5 +271,21 @@ public class SubscriptionPlans {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getOfferName() {
+        return offerName;
+    }
+
+    public void setOfferName(String offerName) {
+        this.offerName = offerName;
+    }
+
+    public Integer getOfferDiscountPercentage() {
+        return offerDiscountPercentage;
+    }
+
+    public void setOfferDiscountPercentage(Integer offerDiscountPercentage) {
+        this.offerDiscountPercentage = offerDiscountPercentage;
     }
 }

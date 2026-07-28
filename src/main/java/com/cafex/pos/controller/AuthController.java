@@ -2,6 +2,8 @@ package com.cafex.pos.controller;
 
 import com.cafex.pos.dto.LoginRequest;
 import com.cafex.pos.dto.LoginResponse;
+import com.cafex.pos.dto.ForgotPasswordRequest;
+import com.cafex.pos.dto.OperationResponse;
 import com.cafex.pos.entity.User;
 import com.cafex.pos.repository.UserRepository;
 import com.cafex.pos.service.AuthService;
@@ -30,35 +32,29 @@ public class AuthController {
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         log.info("Login request received for user: {}", loginRequest.getUsername());
 
-        try {
-            LoginResponse response = authService.login(loginRequest);
-            log.info("Login successful for user: {}", loginRequest.getUsername());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Login failed for user: {} - {}", loginRequest.getUsername(), e.getMessage());
-            return ResponseEntity.badRequest().build();
-        }
+        LoginResponse response = authService.login(loginRequest);
+        log.info("Login successful for user: {}", loginRequest.getUsername());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<OperationResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        log.info("Forgot password request received for identifier: {}", request.getIdentifier());
+        authService.forgotPassword(request.getIdentifier());
+        log.info("Forgot password processed for identifier: {}", request.getIdentifier());
+        return ResponseEntity.ok(new OperationResponse("success", "PASSWORD_SENT", null, null));
     }
 
     @GetMapping("/debug/db")
     public ResponseEntity<?> debugDatabase() {
-        try {
-            List<User> users = userRepository.findAll();
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "SUCCESS");
-            response.put("database", "connected");
-            response.put("totalUsers", users.size());
-            if (!users.isEmpty()) {
-                response.put("sampleUser", users.get(0).getUsername());
-            }
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Database debug failed: {}", e.getMessage(), e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "ERROR");
-            response.put("database", "disconnected");
-            response.put("error", e.getMessage());
-            return ResponseEntity.ok(response);
+        List<User> users = userRepository.findAll();
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "SUCCESS");
+        response.put("database", "connected");
+        response.put("totalUsers", users.size());
+        if (!users.isEmpty()) {
+            response.put("sampleUser", users.get(0).getUsername());
         }
+        return ResponseEntity.ok(response);
     }
 }

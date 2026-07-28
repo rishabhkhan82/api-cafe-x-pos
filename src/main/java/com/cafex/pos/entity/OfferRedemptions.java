@@ -23,6 +23,9 @@ public class OfferRedemptions {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
+    @Column(name = "invoice_id")
+    private String invoiceId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
@@ -276,6 +279,14 @@ public class OfferRedemptions {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public String getInvoiceId() {
+        return invoiceId;
+    }
+
+    public void setInvoiceId(String invoiceId) {
+        this.invoiceId = invoiceId;
     }
 
     public LocalDateTime getCreatedAt() {

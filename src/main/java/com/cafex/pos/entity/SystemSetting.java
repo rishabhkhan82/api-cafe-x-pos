@@ -101,6 +101,12 @@ public class SystemSetting {
     @Column(name = "webhook_retries")
     private Integer webhookRetries;
 
+    @Column(name = "is_gst")
+    private Boolean isGst;
+
+    @Column(name = "gst_percentage")
+    private String gstPercentage;
+
     // Constructors
     public SystemSetting() {}
 
@@ -194,6 +200,12 @@ public class SystemSetting {
 
     public Integer getWebhookRetries() { return webhookRetries; }
     public void setWebhookRetries(Integer webhookRetries) { this.webhookRetries = webhookRetries; }
+
+    public Boolean getIsGst() { return isGst; }
+    public void setIsGst(Boolean isGst) { this.isGst = isGst; }
+
+    public String getGstPercentage() { return gstPercentage; }
+    public void setGstPercentage(String gstPercentage) { this.gstPercentage = gstPercentage; }
 
     @PrePersist
     protected void onCreate() {

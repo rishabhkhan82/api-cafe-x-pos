@@ -3,7 +3,6 @@ package com.cafex.pos.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "menu_items")
@@ -52,29 +51,38 @@ public class MenuItem {
     @Column(name = "is_popular")
     private Boolean isPopular = false;
 
+    @Column(name = "is_featured")
+    private Boolean isFeatured = false;
+
+    @Column(name = "is_recommended")
+    private Boolean isRecommended = false;
+
     @Column(name = "preparation_time", nullable = false)
     private Integer preparationTime;
 
     @Column(name = "discount")
     private String discount;
 
-    @ElementCollection
-    @CollectionTable(name = "menu_item_allergens", joinColumns = @JoinColumn(name = "menu_item_id"))
-    @Column(name = "allergen")
-    private List<String> allergens;
+    @Column(name = "type")
+    private String type;
 
-    @OneToMany(mappedBy = "menuItem", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<MenuCustomization> customizations;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "restaurant_id")
-    private Restaurant restaurant;
+    @Column(name = "recipe_id")
+    private Long recipeId;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "restaurant_id")
+    private Long restaurantId;
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
 
     // Constructors
     public MenuItem() {}
@@ -209,6 +217,22 @@ public class MenuItem {
         this.isPopular = isPopular;
     }
 
+    public Boolean getIsFeatured() {
+        return isFeatured;
+    }
+
+    public void setIsFeatured(Boolean isFeatured) {
+        this.isFeatured = isFeatured;
+    }
+
+    public Boolean getIsRecommended() {
+        return isRecommended;
+    }
+
+    public void setIsRecommended(Boolean isRecommended) {
+        this.isRecommended = isRecommended;
+    }
+
     public Integer getPreparationTime() {
         return preparationTime;
     }
@@ -225,28 +249,20 @@ public class MenuItem {
         this.discount = discount;
     }
 
-    public List<String> getAllergens() {
-        return allergens;
+    public String getType() {
+        return type;
     }
 
-    public void setAllergens(List<String> allergens) {
-        this.allergens = allergens;
+    public void setType(String type) {
+        this.type = type;
     }
 
-    public List<MenuCustomization> getCustomizations() {
-        return customizations;
+    public Long getRecipeId() {
+        return recipeId;
     }
 
-    public void setCustomizations(List<MenuCustomization> customizations) {
-        this.customizations = customizations;
-    }
-
-    public Restaurant getRestaurant() {
-        return restaurant;
-    }
-
-    public void setRestaurant(Restaurant restaurant) {
-        this.restaurant = restaurant;
+    public void setRecipeId(Long recipeId) {
+        this.recipeId = recipeId;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -264,4 +280,29 @@ public class MenuItem {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public Long getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Long getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(Long updatedBy) {
+        this.updatedBy = updatedBy;
+    }
+
+    public Long getRestaurantId() {
+        return restaurantId;
+    }
+
+    public void setRestaurantId(Long restaurantId) {
+        this.restaurantId = restaurantId;
+    }
 }
+

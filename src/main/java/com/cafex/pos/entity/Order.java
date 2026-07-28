@@ -13,11 +13,11 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "order_id", nullable = false, unique = true)
+    @Column(name = "order_id", unique = true)
     private String orderId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id")
+    @JoinColumn(name = "customer_id", referencedColumnName = "id")
     private Customer customer;
 
     @Column(name = "customer_name", nullable = false)
@@ -45,6 +45,9 @@ public class Order {
     @Column(name = "special_instructions")
     private String specialInstructions;
 
+    @Column(name = "invoice_id")
+    private String invoiceId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_status")
     private PaymentStatus paymentStatus;
@@ -64,13 +67,22 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "priority")
-    private OrderPriority priority;
+    private Priority priority;
 
     @Column(name = "tax_amount")
     private BigDecimal taxAmount;
 
+    @Column(name = "tax_percentage")
+    private Integer taxPercentage;
+
+    @Column(name = "discount_amount")
+    private BigDecimal discountAmount;
+
+    @Column(name = "loyalty_discount_amount")
+    private BigDecimal loyaltyDiscountAmount;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "restaurant_id")
+    @JoinColumn(name = "restaurant_id", referencedColumnName = "id")
     private Restaurant restaurant;
 
     // Constructors
@@ -90,7 +102,8 @@ public class Order {
         this.updatedAt = updatedAt;
         this.paymentStatus = PaymentStatus.PENDING;
         this.orderType = OrderType.DINE_IN;
-        this.priority = OrderPriority.MEDIUM;
+        this.priority = Priority.MEDIUM;
+        this.invoiceId = null;
     }
 
     // Getters and Setters
@@ -182,6 +195,14 @@ public class Order {
         this.specialInstructions = specialInstructions;
     }
 
+    public String getInvoiceId() {
+        return invoiceId;
+    }
+
+    public void setInvoiceId(String invoiceId) {
+        this.invoiceId = invoiceId;
+    }
+
     public PaymentStatus getPaymentStatus() {
         return paymentStatus;
     }
@@ -222,11 +243,11 @@ public class Order {
         this.deliveredAt = deliveredAt;
     }
 
-    public OrderPriority getPriority() {
+    public Priority getPriority() {
         return priority;
     }
 
-    public void setPriority(OrderPriority priority) {
+    public void setPriority(Priority priority) {
         this.priority = priority;
     }
 
@@ -236,6 +257,30 @@ public class Order {
 
     public void setTaxAmount(BigDecimal taxAmount) {
         this.taxAmount = taxAmount;
+    }
+
+    public Integer getTaxPercentage() {
+        return taxPercentage;
+    }
+
+    public void setTaxPercentage(Integer taxPercentage) {
+        this.taxPercentage = taxPercentage;
+    }
+
+    public BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(BigDecimal discountAmount) {
+        this.discountAmount = discountAmount;
+    }
+
+    public BigDecimal getLoyaltyDiscountAmount() {
+        return loyaltyDiscountAmount;
+    }
+
+    public void setLoyaltyDiscountAmount(BigDecimal loyaltyDiscountAmount) {
+        this.loyaltyDiscountAmount = loyaltyDiscountAmount;
     }
 
     public Restaurant getRestaurant() {
@@ -259,7 +304,7 @@ public class Order {
         DINE_IN, TAKEAWAY, DELIVERY
     }
 
-    public enum OrderPriority {
-        LOW, MEDIUM, HIGH
+    public enum Priority {
+        HIGH, LOW, MEDIUM
     }
 }

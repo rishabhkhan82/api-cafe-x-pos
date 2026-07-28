@@ -44,10 +44,13 @@ public class UserRequest {
     @JsonProperty("role")
     private User.UserRole role;
 
+    @JsonProperty("user_type")
+    private User.UserType userType;
+
     @JsonProperty("avatar")
     private String avatar;
 
-    @JsonProperty("restaurantId")
+    @JsonProperty("restaurant_id")
     private String restaurantId;
 
     @NotNull(message = "Active status is required")

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class OrderResponse {
@@ -39,6 +40,9 @@ public class OrderResponse {
     @JsonProperty("special_instructions")
     private String specialInstructions;
 
+    @JsonProperty("invoice_id")
+    private String invoiceId;
+
     @JsonProperty("payment_status")
     private Order.PaymentStatus paymentStatus;
 
@@ -55,13 +59,25 @@ public class OrderResponse {
     private LocalDateTime deliveredAt;
 
     @JsonProperty("priority")
-    private Order.OrderPriority priority;
+    private Order.Priority priority;
 
     @JsonProperty("tax_amount")
     private BigDecimal taxAmount;
 
+    @JsonProperty("tax_percentage")
+    private Integer taxPercentage;
+
+    @JsonProperty("discount_amount")
+    private BigDecimal discountAmount;
+
+    @JsonProperty("loyalty_discount_amount")
+    private BigDecimal loyaltyDiscountAmount;
+
     @JsonProperty("restaurant_id")
     private Long restaurantId;
+
+    @JsonProperty("items")
+    private List<OrderItemResponse> orderItems;
 
     // Helper method to check if order is active
     public boolean isActive() {

@@ -33,6 +33,12 @@ public class Restaurant {
     @Column(name = "license_number")
     private String licenseNumber;
 
+    @Column(name = "is_gst", nullable = false)
+    private Boolean isGst = false;
+
+    @Column(name = "gst_percentage")
+    private String gstPercentage;
+
     @Column(name = "owner_name")
     private String ownerName;
 
@@ -60,6 +66,9 @@ public class Restaurant {
 
     @Column(name = "logo_image")
     private String logoImage;
+
+    @Column(name = "banner_image")
+    private String bannerImage;
 
     @Column(name = "created_by")
     private Long createdBy;
@@ -165,6 +174,22 @@ public class Restaurant {
         this.licenseNumber = licenseNumber;
     }
 
+    public Boolean getIsGst() {
+        return isGst;
+    }
+
+    public void setIsGst(Boolean isGst) {
+        this.isGst = isGst;
+    }
+
+    public String getGstPercentage() {
+        return gstPercentage;
+    }
+
+    public void setGstPercentage(String gstPercentage) {
+        this.gstPercentage = gstPercentage;
+    }
+
     public String getOwnerName() {
         return ownerName;
     }
@@ -251,6 +276,14 @@ public class Restaurant {
 
     public void setLogoImage(String logoImage) {
         this.logoImage = logoImage;
+    }
+
+    public String getBannerImage() {
+        return bannerImage;
+    }
+
+    public void setBannerImage(String bannerImage) {
+        this.bannerImage = bannerImage;
     }
 
     public Long getCreatedBy() {
