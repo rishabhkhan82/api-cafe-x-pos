@@ -13,7 +13,7 @@
     <groupId>com.cafex.pos</groupId>
     <artifactId>cafe-x-pos-backend</artifactId>
     <version>1.0.0</version>
-    <packaging>jar</packaging>
+    <packaging>war</packaging>
 
     <name>Cafe-X POS Backend</name>
     <description>Multi-tenant Point of Sale Backend System</description>
