@@ -178,4 +178,25 @@
             </plugin>
         </plugins>
     </build>
+
+    <!-- ============================================ -->
+    <!-- MAVEN PROFILES: Dev vs Prod                  -->
+    <!-- ============================================ -->
+    <profiles>
+        <!-- ===== DEV PROFILE ===== -->
+        <profile>
+            <id>dev</id>
+            <properties>
+                <spring.profiles.active>dev</spring.profiles.active>
+            </properties>
+        </profile>
+
+        <!-- ===== PROD PROFILE ===== -->
+        <profile>
+            <id>prod</id>
+            <properties>
+                <spring.profiles.active>prod</spring.profiles.active>
+            </properties>
+        </profile>
+    </profiles>
 </project>
