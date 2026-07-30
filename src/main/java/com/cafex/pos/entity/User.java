@@ -82,7 +82,6 @@ public class User {
 
     public enum UserType {
         admin,
-        custom,
-        customer
+        sadmin
     }
 }
