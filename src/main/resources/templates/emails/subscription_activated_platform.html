@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subscription Activated</title>
+    <title>Subscription Activated - Platform Notification</title>
 </head>
 <body style="margin:0; padding:0; font-family: Arial, Helvetica, sans-serif; background-color:#f4f4f4;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f4f4f4;">
@@ -14,18 +14,21 @@
                     <tr>
                         <td style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 30px 40px; text-align:center;">
                             <h1 style="color:#ffffff; margin:0; font-size:28px; font-weight:bold;">CafeX POS</h1>
-                            <p style="color:#fee2e2; margin:8px 0 0 0; font-size:14px;">Subscription Activated</p>
+                            <p style="color:#fee2e2; margin:8px 0 0 0; font-size:14px;">New Subscription Activated</p>
                         </td>
                     </tr>
                     <!-- Body -->
                     <tr>
                         <td style="padding: 40px;">
-                            <h2 style="color:#333333; margin-top:0; font-size:22px;">Your subscription is active!</h2>
+                            <h2 style="color:#333333; margin-top:0; font-size:22px;">A new subscription has been activated!</h2>
                             <p style="color:#555555; font-size:16px; line-height:1.6;">
-                                Congratulations! Your subscription plan <strong th:text="${plan}">--</strong> for restaurant <strong th:text="${restaurant_name}">--</strong> has been activated successfully.
+                                Restaurant <strong th:text="${restaurant_name}">--</strong> has activated the <strong th:text="${plan}">--</strong> subscription plan.
                             </p>
                             <p style="color:#555555; font-size:16px; line-height:1.6;">
                                 Amount paid: <strong>₹<span th:text="${price}">--</span></strong>
+                            </p>
+                            <p style="color:#555555; font-size:16px; line-height:1.6;">
+                                Subscription ID: <strong th:text="${subscription_id}">--</strong>
                             </p>
                             <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:30px 0;">
                                 <tr>
@@ -37,7 +40,7 @@
                                 </tr>
                             </table>
                             <p style="color:#777777; font-size:14px; line-height:1.5;">
-                                Thank you for choosing CafeX POS. If you need any assistance, we are here to help.
+                                Thank you for using CafeX POS. If you need any assistance, we are here to help.
                             </p>
                         </td>
                     </tr>
