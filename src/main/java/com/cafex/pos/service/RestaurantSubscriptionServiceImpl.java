@@ -76,6 +76,11 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         try {
             Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId()).orElse(null);
             SubscriptionPlans plan = subscriptionPlansRepository.findById(request.getPlanId()).orElse(null);
+            log.info("Subscription activated restaurant lookup: restaurant={}, plan={}, ownerEmail={}",
+                restaurant != null ? restaurant.getId() : null,
+                plan != null ? plan.getId() : null,
+                restaurant != null ? restaurant.getOwnerEmail() : null);
+
             if (restaurant != null && plan != null && restaurant.getOwnerEmail() != null) {
                 java.util.Map<String, Object> emailVariables = new java.util.HashMap<>();
                 emailVariables.put("plan", plan.getDisplayName());
@@ -83,19 +88,49 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
                 emailVariables.put("price", saved.getFinalAmount());
                 emailVariables.put("subscription_id", saved.getSubscriptionId());
 
-                emailService.sendHtmlEmail(
-                    restaurant.getOwnerEmail(),
-                    "Subscription Activated",
-                    "subscription_activated",
-                    emailVariables
-                );
-                log.info("Subscription activated email sent to: {}", restaurant.getOwnerEmail());
+                try {
+                    emailService.sendHtmlEmail(
+                        restaurant.getOwnerEmail(),
+                        "Subscription Activated",
+                        "subscription_activated",
+                        emailVariables
+                    );
+                    log.info("Subscription activated email sent to restaurant owner: {}", restaurant.getOwnerEmail());
+                } catch (Exception ex) {
+                    log.error("Failed to send subscription activated email to restaurant owner: {}. Error: {}", restaurant.getOwnerEmail(), ex.getMessage(), ex);
+                }
             } else {
-                log.warn("Skipping subscription email: restaurant={}, plan={}, ownerEmail={}",
+                log.warn("Skipping restaurant owner subscription email: restaurant={}, plan={}, ownerEmail={}",
                     restaurant != null, plan != null, restaurant != null ? restaurant.getOwnerEmail() : null);
             }
+
+            List<User> platformOwners = userRepository.findAll((root, query, cb) -> {
+                Specification<User> spec = Specification.where(null);
+                spec = spec.and((r, q, c) -> c.equal(r.get("role"), User.UserRole.platform_owner));
+                spec = spec.and((r, q, c) -> c.or(c.isNull(r.get("restaurantId")), c.equal(r.get("restaurantId"), "")));
+                spec = spec.and((r, q, c) -> c.equal(r.get("isActive"), User.ActiveStatus.Y));
+                return spec.toPredicate(root, query, cb);
+            });
+
+            for (User owner : platformOwners) {
+                if (owner.getEmail() != null && !owner.getEmail().isEmpty()) {
+                    java.util.Map<String, Object> emailVariables = new java.util.HashMap<>();
+                    emailVariables.put("plan", plan != null ? plan.getDisplayName() : "");
+                    emailVariables.put("restaurant_name", restaurant != null ? restaurant.getName() : "");
+                    emailVariables.put("price", saved.getFinalAmount());
+                    emailVariables.put("subscription_id", saved.getSubscriptionId());
+
+                    emailService.sendHtmlEmail(
+                        owner.getEmail(),
+                        "New Subscription Activated",
+                        "subscription_activated_platform",
+                        emailVariables
+                    );
+                    log.info("Subscription activated platform email sent to: {}", owner.getEmail());
+                }
+            }
         } catch (Exception e) {
-            log.error("Failed to send subscription activated email for subscription ID: {}. Error: {}", saved.getSubscriptionId(), e.getMessage());
+            log.error("Failed to send subscription activated emails for subscription ID: {}. Error: {}", saved.getSubscriptionId(), e.getMessage(), e);
         }
 
         return response;

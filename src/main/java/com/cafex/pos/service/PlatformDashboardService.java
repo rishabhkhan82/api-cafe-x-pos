@@ -86,13 +86,15 @@ public class PlatformDashboardService {
         BigDecimal prevMonthRevenue = restaurantSubscriptionRepository.sumFinalAmountByStartDateBetween(monthStart.minusMonths(1), monthStart);
 
         double revenueGrowth = 0.0;
-        if (prevMonthRevenue != null && prevMonthRevenue.compareTo(BigDecimal.ZERO) > 0) {
+        if (currentMonthRevenue != null && prevMonthRevenue != null && prevMonthRevenue.compareTo(BigDecimal.ZERO) > 0) {
             revenueGrowth = currentMonthRevenue.subtract(prevMonthRevenue)
                     .divide(prevMonthRevenue, java.math.RoundingMode.HALF_UP)
                     .multiply(BigDecimal.valueOf(100))
                     .doubleValue();
         } else if (currentMonthRevenue != null && currentMonthRevenue.compareTo(BigDecimal.ZERO) > 0) {
             revenueGrowth = 100.0;
+        } else if (prevMonthRevenue != null && prevMonthRevenue.compareTo(BigDecimal.ZERO) > 0) {
+            revenueGrowth = -100.0;
         }
 
         List<Object[]> monthlyRows = restaurantSubscriptionRepository.findMonthlyRevenue();
