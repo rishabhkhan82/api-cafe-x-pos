@@ -177,14 +177,14 @@ public class RestaurantService {
 
         RestaurantResponse response = convertToResponse(savedRestaurant);
 
-        try {
-            java.util.Map<String, Object> emailVariables = new java.util.HashMap<>();
-            emailVariables.put("restaurant_name", response.getName());
-            emailVariables.put("restaurant_id", response.getId());
-            emailVariables.put("address", response.getAddress());
-            emailVariables.put("owner_name", response.getOwnerName());
-            emailVariables.put("owner_email", response.getOwnerEmail());
+        java.util.Map<String, Object> emailVariables = new java.util.HashMap<>();
+        emailVariables.put("restaurant_name", response.getName());
+        emailVariables.put("restaurant_id", response.getId());
+        emailVariables.put("address", response.getAddress());
+        emailVariables.put("owner_name", response.getOwnerName());
+        emailVariables.put("owner_email", response.getOwnerEmail());
 
+        try {
             emailService.sendHtmlEmail(
                 response.getOwnerEmail(),
                 "Restaurant Created Successfully",
@@ -194,6 +194,22 @@ public class RestaurantService {
             log.info("Restaurant created email sent to: {}", response.getOwnerEmail());
         } catch (Exception e) {
             log.error("Failed to send restaurant created email to: {} for restaurant ID: {}. Error: {}", response.getOwnerEmail(), response.getId(), e.getMessage());
+        }
+
+        try {
+            List<User> platformOwners = userRepository.findByRole(User.UserRole.platform_owner);
+            for (User platformOwner : platformOwners) {
+                if (platformOwner.getEmail() != null && !platformOwner.getEmail().isEmpty()) {
+                    emailService.sendHtmlEmail(
+                        platformOwner.getEmail(),
+                        "New Restaurant Signup Alert",
+                        "restaurant_created_platform",
+                        emailVariables
+                    );
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to send platform owner notification email for restaurant ID: {}. Error: {}", response.getId(), e.getMessage());
         }
 
         emitRestaurantUpdate(response);

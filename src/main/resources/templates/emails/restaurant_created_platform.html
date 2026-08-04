@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to CafeX POS</title>
+    <title>New Restaurant Signup Alert</title>
 </head>
 <body style="margin:0; padding:0; font-family: Arial, Helvetica, sans-serif; background-color:#f4f4f4;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f4f4f4;">
@@ -14,30 +14,33 @@
                     <tr>
                         <td style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 30px 40px; text-align:center;">
                             <h1 style="color:#ffffff; margin:0; font-size:28px; font-weight:bold;">CafeX POS</h1>
-                            <p style="color:#fee2e2; margin:8px 0 0 0; font-size:14px;">Your restaurant is now on board!</p>
+                            <p style="color:#fee2e2; margin:8px 0 0 0; font-size:14px;">New Restaurant Signup Alert</p>
                         </td>
                     </tr>
                     <!-- Body -->
                     <tr>
                         <td style="padding: 40px;">
-                            <h2 style="color:#333333; margin-top:0; font-size:22px;">Welcome to the CafeX POS family!</h2>
+                            <h2 style="color:#333333; margin-top:0; font-size:22px;">A new restaurant has signed up!</h2>
                             <p style="color:#555555; font-size:16px; line-height:1.6;">
-                                We are thrilled to have you with us. Your restaurant <strong th:text="${restaurant_name}">Restaurant Name</strong> is now fully connected and ready to review.
-                            </p>
-                            <p style="color:#555555; font-size:16px; line-height:1.6;">
-                                Once your application is approved(within 24 hours), we will send you the login credentials and QR codes to your owner email address.
-                            </p>
-                            <p style="color:#555555; font-size:16px; line-height:1.6;">
-                                You can then manage your menu, plans, orders, staff, and much more from one powerful platform.
-                            </p>
-                            <p style="color:#555555; font-size:16px; line-height:1.6;">
-                                Here are your restaurant details:
+                                The following restaurant has submitted an application on Cafe-X POS and is awaiting review.
                             </p>
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 20px 0;">
                                 <tr>
                                     <td style="padding:12px 0; border-bottom:1px solid #eeeeee;">
                                         <strong style="color:#333333;">Restaurant Name:</strong>
                                         <span style="color:#555555; margin-left:8px;" th:text="${restaurant_name}">--</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:12px 0; border-bottom:1px solid #eeeeee;">
+                                        <strong style="color:#333333;">Restaurant ID:</strong>
+                                        <span style="color:#555555; margin-left:8px;" th:text="${restaurant_id}">--</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:12px 0; border-bottom:1px solid #eeeeee;">
+                                        <strong style="color:#333333;">Address:</strong>
+                                        <span style="color:#555555; margin-left:8px;" th:text="${address}">--</span>
                                     </td>
                                 </tr>
                                 <tr>
@@ -53,24 +56,14 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style="padding:12px 0; border-bottom:1px solid #eeeeee;">
-                                        <strong style="color:#333333;">Address:</strong>
-                                        <span style="color:#555555; margin-left:8px;" th:text="${address}">--</span>
-                                    </td>
-                                </tr>
-                            </table>
-                            <!-- CTA Button -->
-                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:30px 0;">
-                                <tr>
-                                    <td style="background-color:#ef4444; border-radius:4px; text-align:center;">
-                                        <a th:href="${'https://cafexpos.in/restaurant-profile/' + restaurant_id}" style="display:inline-block; padding:14px 30px; color:#ffffff; text-decoration:none; font-size:16px; font-weight:bold;">
-                                            View Restaurant
-                                        </a>
+                                    <td style="padding:12px 0;">
+                                        <strong style="color:#333333;">Owner Phone:</strong>
+                                        <span style="color:#555555; margin-left:8px;" th:text="${owner_phone}">--</span>
                                     </td>
                                 </tr>
                             </table>
                             <p style="color:#777777; font-size:14px; line-height:1.5;">
-                                If you have any questions, feel free to reach out to our support team.
+                                Please review the application and set up the restaurant account within 24 hours.
                             </p>
                         </td>
                     </tr>
