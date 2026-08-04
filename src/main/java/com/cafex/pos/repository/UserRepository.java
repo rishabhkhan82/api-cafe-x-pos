@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -23,4 +24,6 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     long countByRole(User.UserRole role);
 
     long countByCreatedAtAfter(java.time.LocalDateTime createdAt);
+
+    List<User> findByRole(User.UserRole role);
 }
