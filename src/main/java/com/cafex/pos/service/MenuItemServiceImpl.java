@@ -5,6 +5,7 @@ import com.cafex.pos.dto.MenuItemResponse;
 import com.cafex.pos.dto.MenuItemPageResponse;
 import com.cafex.pos.entity.MenuItem;
 import com.cafex.pos.repository.MenuItemRepository;
+import com.cafex.pos.repository.RestaurantMenuCategoriesRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -39,6 +40,7 @@ import java.io.IOException;
 public class MenuItemServiceImpl implements MenuItemService {
 
     private final MenuItemRepository menuItemRepository;
+    private final RestaurantMenuCategoriesRepository restaurantMenuCategoriesRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     private static final String TOPIC_PREFIX = "/topic/restaurant/";
@@ -94,6 +96,8 @@ public class MenuItemServiceImpl implements MenuItemService {
 
         log.info("Menu item saved successfully with ID: {}", savedMenuItem.getId());
 
+        recalculateCategoryItemCount(savedMenuItem.getRestaurantId(), savedMenuItem.getCategory());
+
         messagingTemplate.convertAndSend(TOPIC_PREFIX + savedMenuItem.getRestaurantId() + "/menu-items", savedMenuItem);
 
         return convertToResponse(savedMenuItem);
@@ -105,6 +109,9 @@ public class MenuItemServiceImpl implements MenuItemService {
 
         MenuItem existingMenuItem = menuItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with ID: " + id));
+
+        String oldCategory = existingMenuItem.getCategory();
+        Long restaurantId = existingMenuItem.getRestaurantId();
 
         // Check itemId uniqueness if changed
         if (!existingMenuItem.getItemId().equals(menuItemRequest.getItemId()) &&
@@ -153,6 +160,11 @@ public class MenuItemServiceImpl implements MenuItemService {
 
         MenuItem updatedMenuItem = menuItemRepository.save(existingMenuItem);
         log.info("Menu item updated successfully with ID: {}", updatedMenuItem.getId());
+
+        recalculateCategoryItemCount(restaurantId, oldCategory);
+        if (!oldCategory.equals(updatedMenuItem.getCategory())) {
+            recalculateCategoryItemCount(updatedMenuItem.getRestaurantId(), updatedMenuItem.getCategory());
+        }
 
         messagingTemplate.convertAndSend(TOPIC_PREFIX + updatedMenuItem.getRestaurantId() + "/menu-items", updatedMenuItem);
 
@@ -267,6 +279,9 @@ public class MenuItemServiceImpl implements MenuItemService {
         MenuItem menuItem = menuItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with ID: " + id));
 
+        Long restaurantId = menuItem.getRestaurantId();
+        String categoryKey = menuItem.getCategory();
+
         // Delete associated image if exists
         if (menuItem.getImage() != null && !menuItem.getImage().isEmpty()) {
             try {
@@ -280,7 +295,9 @@ public class MenuItemServiceImpl implements MenuItemService {
         menuItemRepository.deleteById(id);
         log.info("Menu item deleted successfully with ID: {}", id);
 
-        messagingTemplate.convertAndSend(TOPIC_PREFIX + menuItem.getRestaurantId() + "/menu-items", menuItem);
+        recalculateCategoryItemCount(restaurantId, categoryKey);
+
+        messagingTemplate.convertAndSend(TOPIC_PREFIX + restaurantId + "/menu-items", menuItem);
     }
 
     private void deleteImageFile(String imageUrl) throws IOException {
@@ -364,5 +381,19 @@ public class MenuItemServiceImpl implements MenuItemService {
         response.setCreatedBy(menuItem.getCreatedBy());
         response.setUpdatedBy(menuItem.getUpdatedBy());
         return response;
+    }
+
+    private void recalculateCategoryItemCount(Long restaurantId, String categoryKey) {
+        if (restaurantId == null || categoryKey == null || categoryKey.trim().isEmpty()) {
+            return;
+        }
+
+        try {
+            long itemCount = menuItemRepository.countByRestaurantIdAndCategory(restaurantId, categoryKey);
+            restaurantMenuCategoriesRepository.updateItemCountByRestaurantAndCategory(restaurantId, categoryKey, (int) itemCount);
+            log.debug("Recalculated item_count for restaurantId={}, categoryKey={}, count={}", restaurantId, categoryKey, itemCount);
+        } catch (Exception e) {
+            log.error("Failed to recalculate item_count for restaurantId={}, categoryKey={}: {}", restaurantId, categoryKey, e.getMessage());
+        }
     }
 }

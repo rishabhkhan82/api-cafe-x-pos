@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "menu_categories")
+@Table(name = "restaurant_menu_categories")
 public class MenuCategories {
 
     @Id
@@ -17,7 +17,7 @@ public class MenuCategories {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "`key`", nullable = false, unique = true)
     private String key;
 
     @Column(columnDefinition = "TEXT")
