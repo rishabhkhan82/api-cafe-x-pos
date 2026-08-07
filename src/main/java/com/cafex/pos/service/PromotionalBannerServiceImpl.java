@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +36,8 @@ import java.util.stream.Collectors;
 public class PromotionalBannerServiceImpl implements PromotionalBannerService {
 
     private final PromotionalBannerRepository promotionalBannerRepository;
+    private final SimpMessagingTemplate messagingTemplate;
+    private static final String TOPIC_PREFIX = "/topic/restaurant/";
 
     @Override
     public PromotionalBannerResponse savePromotionalBanner(PromotionalBannerRequest bannerRequest) {
@@ -66,6 +69,8 @@ public class PromotionalBannerServiceImpl implements PromotionalBannerService {
 
         PromotionalBanner savedBanner = promotionalBannerRepository.save(banner);
         log.info("Promotional banner saved successfully with ID: {}", savedBanner.getId());
+
+        messagingTemplate.convertAndSend(TOPIC_PREFIX + savedBanner.getRestaurantId() + "/promotional-banners", (Object) convertToResponse(savedBanner));
 
         return convertToResponse(savedBanner);
     }
@@ -120,6 +125,8 @@ public class PromotionalBannerServiceImpl implements PromotionalBannerService {
 
         PromotionalBanner updatedBanner = promotionalBannerRepository.save(existingBanner);
         log.info("Promotional banner updated successfully with ID: {}", updatedBanner.getId());
+
+        messagingTemplate.convertAndSend(TOPIC_PREFIX + updatedBanner.getRestaurantId() + "/promotional-banners", (Object) convertToResponse(updatedBanner));
 
         return convertToResponse(updatedBanner);
     }
@@ -185,6 +192,10 @@ public class PromotionalBannerServiceImpl implements PromotionalBannerService {
                 log.error("Failed to delete image for promotional banner {}: {}", id, e.getMessage());
             }
         }
+
+        Long restaurantId = banner.getRestaurantId();
+
+        messagingTemplate.convertAndSend(TOPIC_PREFIX + restaurantId + "/promotional-banners", (Object) banner);
 
         promotionalBannerRepository.deleteById(id);
         log.info("Promotional banner deleted successfully with ID: {}", id);

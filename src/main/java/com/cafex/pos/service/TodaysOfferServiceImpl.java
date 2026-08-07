@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +36,8 @@ import java.util.stream.Collectors;
 public class TodaysOfferServiceImpl implements TodaysOfferService {
 
     private final TodaysOfferRepository todaysOfferRepository;
+    private final SimpMessagingTemplate messagingTemplate;
+    private static final String TOPIC_PREFIX = "/topic/restaurant/";
 
     @Override
     public TodaysOfferResponse saveTodaysOffer(TodaysOfferRequest todaysOfferRequest) {
@@ -53,6 +56,8 @@ public class TodaysOfferServiceImpl implements TodaysOfferService {
 
         TodaysOffer savedTodaysOffer = todaysOfferRepository.save(todaysOffer);
         log.info("Today's offer saved successfully with ID: {}", savedTodaysOffer.getId());
+
+        messagingTemplate.convertAndSend(TOPIC_PREFIX + savedTodaysOffer.getRestaurantId() + "/todays-offers", (Object) convertToResponse(savedTodaysOffer));
 
         return convertToResponse(savedTodaysOffer);
     }
@@ -89,6 +94,8 @@ public class TodaysOfferServiceImpl implements TodaysOfferService {
 
         TodaysOffer updatedTodaysOffer = todaysOfferRepository.save(existingTodaysOffer);
         log.info("Today's offer updated successfully with ID: {}", updatedTodaysOffer.getId());
+
+        messagingTemplate.convertAndSend(TOPIC_PREFIX + updatedTodaysOffer.getRestaurantId() + "/todays-offers", (Object) convertToResponse(updatedTodaysOffer));
 
         return convertToResponse(updatedTodaysOffer);
     }
@@ -150,6 +157,10 @@ public class TodaysOfferServiceImpl implements TodaysOfferService {
             }
         }
 
+        Long restaurantId = todaysOffer.getRestaurantId();
+
+        messagingTemplate.convertAndSend(TOPIC_PREFIX + restaurantId + "/todays-offers", (Object) todaysOffer);
+
         todaysOfferRepository.deleteById(id);
         log.info("Today's offer deleted successfully with ID: {}", id);
     }
@@ -173,13 +184,13 @@ public class TodaysOfferServiceImpl implements TodaysOfferService {
                 byte[] imageBytes = Base64.getDecoder().decode(base64Data);
 
                 String filename = UUID.randomUUID().toString() + "." + extension;
-                Path uploadPath = Paths.get("uploads", "images", "promotional-banners", filename);
+                Path uploadPath = Paths.get("uploads", "images", "todays-offers", filename);
 
                 Files.createDirectories(uploadPath.getParent());
 
                 Files.write(uploadPath, imageBytes);
 
-                return "/uploads/images/promotional-banners/" + filename;
+                return "/uploads/images/todays-offers/" + filename;
             } catch (IOException e) {
                 log.error("Failed to process today's offer image: {}", e.getMessage());
                 return imageUrl;
