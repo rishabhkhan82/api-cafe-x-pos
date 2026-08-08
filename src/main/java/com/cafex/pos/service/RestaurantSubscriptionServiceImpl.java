@@ -158,8 +158,6 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime trialEnd = now.plusDays(plan.getTrialDays());
-        LocalDateTime subscriptionStart = trialEnd; // Subscription starts after trial ends
-        LocalDateTime subscriptionEnd = subscriptionStart.plusMonths(1); // Default 1 month after trial
 
         RestaurantSubscriptions trialSubscription = new RestaurantSubscriptions();
         trialSubscription.setSubscriptionId("trial_" + restaurantId + "_" + now.toString().replace(":", "").replace("-", "").substring(0, 15));
@@ -167,8 +165,8 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
                 .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found with ID: " + restaurantId)));
         trialSubscription.setPlan(plan);
         trialSubscription.setStatus("trial");
-        trialSubscription.setStartDate(subscriptionStart); // Actual subscription starts after trial
-        trialSubscription.setEndDate(subscriptionEnd);
+        trialSubscription.setStartDate(now);
+        trialSubscription.setEndDate(trialEnd);
         trialSubscription.setTrialStartDate(now);
         trialSubscription.setTrialEndDate(trialEnd);
         trialSubscription.setIsTrialUsed(true); // Mark trial as used
@@ -180,7 +178,7 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         trialSubscription.setPlanPriceAtSubscription(plan.getPrice());
         trialSubscription.setOfferNameAtSubscription(plan.getOfferName());
         trialSubscription.setOfferDiscountPercentageAtSubscription(plan.getOfferDiscountPercentage() != null ? plan.getOfferDiscountPercentage() : 0);
-        trialSubscription.setPlanNameAtSubscription(plan.getDisplayName());
+        trialSubscription.setPlanNameAtSubscription(plan.getName());
         trialSubscription.setCreatedBy(userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId)));
         trialSubscription.setCreatedAt(now);
@@ -390,6 +388,7 @@ public class RestaurantSubscriptionServiceImpl implements RestaurantSubscription
         response.setStatus(entity.getStatus());
         response.setStartDate(entity.getStartDate());
         response.setEndDate(entity.getEndDate());
+        response.setTrialStartDate(entity.getTrialStartDate());
         response.setTrialEndDate(entity.getTrialEndDate());
         response.setNextBillingDate(entity.getNextBillingDate());
         response.setBillingCycle(entity.getBillingCycle());
