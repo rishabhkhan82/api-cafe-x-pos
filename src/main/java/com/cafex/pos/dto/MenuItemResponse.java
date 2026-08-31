@@ -26,6 +26,9 @@ public class MenuItemResponse {
     @JsonProperty("original_price")
     private BigDecimal originalPrice;
 
+    @JsonProperty("half_price")
+    private BigDecimal halfPrice;
+
     @JsonProperty("category")
     private String category;
 
