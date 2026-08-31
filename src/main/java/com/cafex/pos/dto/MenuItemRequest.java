@@ -34,6 +34,10 @@ public class MenuItemRequest {
     @JsonProperty("original_price")
     private BigDecimal originalPrice;
 
+    @DecimalMin(value = "0.0", inclusive = true, message = "Half price must be 0 or greater")
+    @JsonProperty("half_price")
+    private BigDecimal halfPrice;
+
     @NotBlank(message = "Category is required")
     @Size(max = 255, message = "Category must not exceed 255 characters")
     @JsonProperty("category")

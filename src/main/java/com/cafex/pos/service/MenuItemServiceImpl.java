@@ -60,6 +60,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         menuItem.setDescription(menuItemRequest.getDescription());
         menuItem.setPrice(menuItemRequest.getPrice());
         menuItem.setOriginalPrice(menuItemRequest.getOriginalPrice());
+        menuItem.setHalfPrice(menuItemRequest.getHalfPrice());
         menuItem.setCategory(menuItemRequest.getCategory());
         menuItem.setImage(null); // Ensure image is null initially
         menuItem.setIsAvailable(menuItemRequest.getIsAvailable() != null ? menuItemRequest.getIsAvailable() : true);
@@ -141,6 +142,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         existingMenuItem.setDescription(menuItemRequest.getDescription());
         existingMenuItem.setPrice(menuItemRequest.getPrice());
         existingMenuItem.setOriginalPrice(menuItemRequest.getOriginalPrice());
+        existingMenuItem.setHalfPrice(menuItemRequest.getHalfPrice());
         existingMenuItem.setCategory(menuItemRequest.getCategory());
         existingMenuItem.setIsAvailable(menuItemRequest.getIsAvailable());
         existingMenuItem.setIsActive(menuItemRequest.getIsActive());
@@ -362,6 +364,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         response.setDescription(menuItem.getDescription());
         response.setPrice(menuItem.getPrice());
         response.setOriginalPrice(menuItem.getOriginalPrice());
+        response.setHalfPrice(menuItem.getHalfPrice());
         response.setCategory(menuItem.getCategory());
         response.setImage(menuItem.getImage());
         response.setIsAvailable(menuItem.getIsAvailable());

@@ -27,6 +27,9 @@ public class MenuItem {
     @Column(name = "original_price")
     private BigDecimal originalPrice;
 
+    @Column(name = "half_price")
+    private BigDecimal halfPrice;
+
     @Column(name = "category", nullable = false)
     private String category;
 
@@ -151,6 +154,14 @@ public class MenuItem {
 
     public void setOriginalPrice(BigDecimal originalPrice) {
         this.originalPrice = originalPrice;
+    }
+
+    public BigDecimal getHalfPrice() {
+        return halfPrice;
+    }
+
+    public void setHalfPrice(BigDecimal halfPrice) {
+        this.halfPrice = halfPrice;
     }
 
     public String getCategory() {
