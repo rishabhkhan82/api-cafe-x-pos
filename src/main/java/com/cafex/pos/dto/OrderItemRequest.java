@@ -11,7 +11,6 @@ public class OrderItemRequest {
     @JsonProperty("order_id")
     private Long orderId;
 
-    @NotNull(message = "Menu item ID is required")
     @JsonProperty("menu_item_id")
     private Long menuItemId;
 
@@ -44,6 +43,9 @@ public class OrderItemRequest {
 
     @JsonProperty("status")
     private String status;
+
+    @JsonProperty("is_custom")
+    private Boolean isCustom;
 
     // For updates
     @JsonProperty("id")

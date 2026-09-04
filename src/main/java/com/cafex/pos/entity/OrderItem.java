@@ -44,6 +44,9 @@ public class OrderItem {
     @Column(name = "status")
     private String status;
 
+    @Column(name = "is_custom", nullable = false)
+    private Boolean isCustom = false;
+
     // Constructors
     public OrderItem() {}
 
@@ -144,5 +147,13 @@ public class OrderItem {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Boolean getIsCustom() {
+        return isCustom;
+    }
+
+    public void setIsCustom(Boolean isCustom) {
+        this.isCustom = isCustom;
     }
 }

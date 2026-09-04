@@ -27,7 +27,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -119,6 +121,16 @@ public class OrderService {
         // Save order items
         if (orderRequest.getOrderItems() != null && !orderRequest.getOrderItems().isEmpty()) {
             for (OrderItemRequest itemRequest : orderRequest.getOrderItems()) {
+                boolean isCustom = Boolean.TRUE.equals(itemRequest.getIsCustom()) || "CUSTOM".equalsIgnoreCase(itemRequest.getCategory());
+                if (isCustom) {
+                    if (itemRequest.getMenuItemId() != null) {
+                        itemRequest.setMenuItemId(null);
+                    }
+                } else {
+                    if (itemRequest.getMenuItemId() == null) {
+                        throw new BadRequestException("Menu item ID is required for non-custom items");
+                    }
+                }
                 OrderItem orderItem = new OrderItem();
                 orderItem.setOrder(savedOrder);
 
@@ -135,6 +147,7 @@ public class OrderService {
                 orderItem.setCategory(itemRequest.getCategory());
                 orderItem.setSpecialInstructions(itemRequest.getSpecialInstructions());
                 orderItem.setStatus(itemRequest.getStatus());
+                orderItem.setIsCustom(isCustom);
                 orderItemRepository.save(orderItem);
             }
         }
@@ -339,10 +352,38 @@ public class OrderService {
         existingOrder.setUpdatedAt(LocalDateTime.now());
         existingOrder.setInvoiceId(orderRequest.getInvoiceId());
 
-        // Update order items in-place by matching ID from payload
+        // Handle order items: update existing, create new, delete removed
         if (orderRequest.getOrderItems() != null && !orderRequest.getOrderItems().isEmpty()) {
+            // Get all existing items for this order
+            List<OrderItem> existingItems = orderItemRepository.findByOrderId(id);
+            
+            // Collect IDs from payload
+            Set<Long> payloadItemIds = orderRequest.getOrderItems().stream()
+                    .map(OrderItemRequest::getId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            
+            // Delete items that are not in the payload
+            for (OrderItem existingItem : existingItems) {
+                if (!payloadItemIds.contains(existingItem.getId())) {
+                    orderItemRepository.delete(existingItem);
+                }
+            }
+            
+            // Update or create items from payload
             for (OrderItemRequest itemRequest : orderRequest.getOrderItems()) {
+                boolean isCustom = Boolean.TRUE.equals(itemRequest.getIsCustom()) || "CUSTOM".equalsIgnoreCase(itemRequest.getCategory());
+                if (isCustom) {
+                    if (itemRequest.getMenuItemId() != null) {
+                        itemRequest.setMenuItemId(null);
+                    }
+                } else {
+                    if (itemRequest.getMenuItemId() == null) {
+                        throw new BadRequestException("Menu item ID is required for non-custom items");
+                    }
+                }
                 if (itemRequest.getId() != null) {
+                    // Update existing item
                     OrderItem existingItem = orderItemRepository.findById(itemRequest.getId()).orElse(null);
                     if (existingItem != null && existingItem.getOrder().getId().equals(id)) {
                         existingItem.setStatus(itemRequest.getStatus());
@@ -352,14 +393,35 @@ public class OrderService {
                         existingItem.setMenuItemName(itemRequest.getMenuItemName());
                         existingItem.setCategory(itemRequest.getCategory());
                         existingItem.setSpecialInstructions(itemRequest.getSpecialInstructions());
+                        existingItem.setIsCustom(isCustom);
                         if (itemRequest.getMenuItemId() != null) {
                             MenuItem menuItem = menuItemRepository.findById(itemRequest.getMenuItemId()).orElse(null);
                             existingItem.setMenuItem(menuItem);
                         }
                         orderItemRepository.save(existingItem);
                     }
+                } else {
+                    // Create new item
+                    OrderItem newItem = new OrderItem();
+                    newItem.setOrder(existingOrder);
+                    if (itemRequest.getMenuItemId() != null) {
+                        MenuItem menuItem = menuItemRepository.findById(itemRequest.getMenuItemId()).orElse(null);
+                        newItem.setMenuItem(menuItem);
+                    }
+                    newItem.setMenuItemName(itemRequest.getMenuItemName());
+                    newItem.setQuantity(itemRequest.getQuantity());
+                    newItem.setUnitPrice(itemRequest.getUnitPrice());
+                    newItem.setTotalPrice(itemRequest.getTotalPrice());
+                    newItem.setCategory(itemRequest.getCategory());
+                    newItem.setSpecialInstructions(itemRequest.getSpecialInstructions());
+                    newItem.setStatus(itemRequest.getStatus());
+                    newItem.setIsCustom(isCustom);
+                    orderItemRepository.save(newItem);
                 }
             }
+        } else {
+            // If no items in payload, delete all existing items
+            orderItemRepository.deleteByOrderId(id);
         }
 
         Order updatedOrder = orderRepository.save(existingOrder);
@@ -443,6 +505,7 @@ public class OrderService {
         response.setCategory(orderItem.getCategory());
         response.setSpecialInstructions(orderItem.getSpecialInstructions());
         response.setStatus(orderItem.getStatus());
+        response.setIsCustom(orderItem.getIsCustom());
         return response;
     }
 

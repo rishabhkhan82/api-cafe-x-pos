@@ -36,4 +36,7 @@ public class OrderItemResponse {
 
     @JsonProperty("status")
     private String status;
+
+    @JsonProperty("is_custom")
+    private Boolean isCustom;
 }
