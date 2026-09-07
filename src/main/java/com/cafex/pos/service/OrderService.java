@@ -249,9 +249,9 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-    public OrderPageResponse getOrdersWithFilters(String orderId, String status, String customerName, String date, Long customerId, int page, int size) {
-        log.info("Fetching orders with filters - orderId: {}, status: {}, customerName: {}, date: {}, page: {}, size: {}",
-                orderId, status, customerName, date, page, size);
+    public OrderPageResponse getOrdersWithFilters(String orderId, String status, String customerName, String date, Long customerId, String invoiceId, int page, int size) {
+        log.info("Fetching orders with filters - orderId: {}, status: {}, customerName: {}, date: {}, customerId: {}, invoiceId: {}, page: {}, size: {}",
+                orderId, status, customerName, date, customerId, invoiceId, page, size);
 
         Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
@@ -295,6 +295,11 @@ public class OrderService {
             // Customer ID filter
             if (customerId != null) {
                 predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("customer").get("id"), customerId));
+            }
+
+            // Invoice ID filter
+            if (invoiceId != null && !invoiceId.trim().isEmpty()) {
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("invoiceId"), invoiceId));
             }
 
             return predicate;
