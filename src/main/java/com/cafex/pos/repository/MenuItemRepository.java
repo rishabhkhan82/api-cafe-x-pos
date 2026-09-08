@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MenuItemRepository extends JpaRepository<MenuItem, Long>, JpaSpecificationExecutor<MenuItem> {
-    boolean existsByItemId(String itemId);
-    boolean existsByItemIdAndIdNot(String itemId, Long id);
+    boolean existsByItemIdAndRestaurantId(String itemId, Long restaurantId);
+    boolean existsByItemIdAndRestaurantIdAndIdNot(String itemId, Long restaurantId, Long id);
 
     @Query("SELECT COUNT(mi) FROM MenuItem mi WHERE mi.restaurantId = :restaurantId AND mi.category = :categoryKey")
     long countByRestaurantIdAndCategory(@Param("restaurantId") Long restaurantId, @Param("categoryKey") String categoryKey);
