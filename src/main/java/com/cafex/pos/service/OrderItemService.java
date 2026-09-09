@@ -6,6 +6,7 @@ import com.cafex.pos.entity.Order;
 import com.cafex.pos.entity.OrderItem;
 import com.cafex.pos.repository.OrderItemRepository;
 import com.cafex.pos.repository.OrderRepository;
+import com.cafex.pos.service.OrderItemAddonService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class OrderItemService {
 
     private final OrderItemRepository orderItemRepository;
     private final OrderRepository orderRepository;
+    private final OrderItemAddonService orderItemAddonService;
 
     public List<OrderItemResponse> getAllOrderItems() {
         log.info("Fetching all order items");
@@ -85,6 +87,10 @@ public class OrderItemService {
         OrderItem savedOrderItem = orderItemRepository.save(orderItem);
         log.info("Order item saved successfully with ID: {}", savedOrderItem.getId());
 
+        if (orderItemRequest.getAddons() != null && !orderItemRequest.getAddons().isEmpty()) {
+            orderItemAddonService.saveAllForOrderItem(savedOrderItem, orderItemRequest.getAddons());
+        }
+
         return convertToResponse(savedOrderItem);
     }
 
@@ -113,6 +119,13 @@ public class OrderItemService {
         OrderItem updatedOrderItem = orderItemRepository.save(existingOrderItem);
         log.info("Order item updated successfully with ID: {}", updatedOrderItem.getId());
 
+        if (orderItemRequest.getAddons() != null) {
+            orderItemAddonService.deleteByOrderItemId(updatedOrderItem.getId());
+            if (!orderItemRequest.getAddons().isEmpty()) {
+                orderItemAddonService.saveAllForOrderItem(updatedOrderItem, orderItemRequest.getAddons());
+            }
+        }
+
         return convertToResponse(updatedOrderItem);
     }
 
@@ -139,6 +152,7 @@ public class OrderItemService {
         response.setCategory(orderItem.getCategory());
         response.setSpecialInstructions(orderItem.getSpecialInstructions());
         response.setStatus(orderItem.getStatus());
+        response.setAddons(orderItemAddonService.getAddonsByOrderItemId(orderItem.getId()));
         return response;
     }
 }

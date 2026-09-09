@@ -16,6 +16,7 @@ import com.cafex.pos.repository.RestaurantRepository;
 import com.cafex.pos.repository.MenuItemRepository;
 import com.cafex.pos.repository.InventoryItemRepository;
 import com.cafex.pos.repository.InventoryStockLogRepository;
+import com.cafex.pos.service.OrderItemAddonService;
 import com.cafex.pos.entity.InventoryItem;
 import com.cafex.pos.entity.InventoryStockLog;
 import lombok.RequiredArgsConstructor;
@@ -63,6 +64,7 @@ public class OrderService {
     private final OwnerDashboardService ownerDashboardService;
     private final InventoryItemRepository inventoryItemRepository;
     private final InventoryStockLogRepository inventoryStockLogRepository;
+    private final OrderItemAddonService orderItemAddonService;
 
     public OrderResponse saveOrder(OrderRequest orderRequest) {
         log.info("Saving new order: {}", orderRequest.getOrderId());
@@ -148,7 +150,11 @@ public class OrderService {
                 orderItem.setSpecialInstructions(itemRequest.getSpecialInstructions());
                 orderItem.setStatus(itemRequest.getStatus());
                 orderItem.setIsCustom(isCustom);
-                orderItemRepository.save(orderItem);
+                OrderItem savedOrderItem = orderItemRepository.save(orderItem);
+
+                if (itemRequest.getAddons() != null && !itemRequest.getAddons().isEmpty()) {
+                    orderItemAddonService.saveAllForOrderItem(savedOrderItem, itemRequest.getAddons());
+                }
             }
         }
 
@@ -404,6 +410,11 @@ public class OrderService {
                             existingItem.setMenuItem(menuItem);
                         }
                         orderItemRepository.save(existingItem);
+
+                        orderItemAddonService.deleteByOrderItemId(existingItem.getId());
+                        if (itemRequest.getAddons() != null && !itemRequest.getAddons().isEmpty()) {
+                            orderItemAddonService.saveAllForOrderItem(existingItem, itemRequest.getAddons());
+                        }
                     }
                 } else {
                     // Create new item
@@ -421,7 +432,11 @@ public class OrderService {
                     newItem.setSpecialInstructions(itemRequest.getSpecialInstructions());
                     newItem.setStatus(itemRequest.getStatus());
                     newItem.setIsCustom(isCustom);
-                    orderItemRepository.save(newItem);
+                    OrderItem savedNewItem = orderItemRepository.save(newItem);
+
+                    if (itemRequest.getAddons() != null && !itemRequest.getAddons().isEmpty()) {
+                        orderItemAddonService.saveAllForOrderItem(savedNewItem, itemRequest.getAddons());
+                    }
                 }
             }
         } else {
@@ -511,6 +526,7 @@ public class OrderService {
         response.setSpecialInstructions(orderItem.getSpecialInstructions());
         response.setStatus(orderItem.getStatus());
         response.setIsCustom(orderItem.getIsCustom());
+        response.setAddons(orderItemAddonService.getAddonsByOrderItemId(orderItem.getId()));
         return response;
     }
 

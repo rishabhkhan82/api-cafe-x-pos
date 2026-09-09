@@ -38,6 +38,9 @@ public class OrderItem {
     @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderCustomization> customizations;
 
+    @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<OrderItemAddon> addons;
+
     @Column(name = "special_instructions")
     private String specialInstructions;
 
@@ -131,6 +134,14 @@ public class OrderItem {
 
     public void setCustomizations(List<OrderCustomization> customizations) {
         this.customizations = customizations;
+    }
+
+    public List<OrderItemAddon> getAddons() {
+        return addons;
+    }
+
+    public void setAddons(List<OrderItemAddon> addons) {
+        this.addons = addons;
     }
 
     public String getSpecialInstructions() {
