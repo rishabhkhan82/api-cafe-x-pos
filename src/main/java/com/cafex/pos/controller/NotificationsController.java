@@ -39,8 +39,8 @@ public class NotificationsController {
             @RequestParam(name = "restaurant_id", required = false) String restaurantId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String type,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
         log.info("Get notifications request received with filters - recipientId: {}, recipientRole: {}, restaurantId: {}, status: {}, type: {}, page: {}, size: {}",
                 recipientId, recipientRole, restaurantId, status, type, page, size);
         NotificationPageResponse response = notificationsService.getNotificationsWithFilters(recipientId, recipientRole, restaurantId, status, type, page, size);
