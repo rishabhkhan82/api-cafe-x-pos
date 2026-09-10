@@ -450,7 +450,13 @@ public class OrderService {
         updatedOrder.setItems(orderItemRepository.findByOrderId(updatedOrder.getId()));
 
         OrderResponse response = convertToResponse(updatedOrder);
-        emitOrderUpdate(response, "UPDATE");
+
+        boolean shouldNotify = orderRequest.getSendNotification() == null || Boolean.TRUE.equals(orderRequest.getSendNotification());
+        if (shouldNotify) {
+            emitOrderUpdate(response, "UPDATE");
+        } else {
+            log.info("Skipping realtime notification emission for order ID: {} (send_notification=false)", id);
+        }
         eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
         if (updatedOrder.getRestaurant() != null && updatedOrder.getRestaurant().getId() != null) {
             ownerDashboardService.emitUpdate(updatedOrder.getRestaurant().getId());

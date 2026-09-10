@@ -95,4 +95,7 @@ public class OrderRequest {
 
     @JsonProperty("updated_at")
     private LocalDateTime updatedAt;
+
+    @JsonProperty("send_notification")
+    private Boolean sendNotification = true;
 }
