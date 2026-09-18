@@ -38,11 +38,17 @@ public class OrderItem {
     @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderCustomization> customizations;
 
+    @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<OrderItemAddon> addons;
+
     @Column(name = "special_instructions")
     private String specialInstructions;
 
     @Column(name = "status")
     private String status;
+
+    @Column(name = "is_custom", nullable = false)
+    private Boolean isCustom = false;
 
     // Constructors
     public OrderItem() {}
@@ -130,6 +136,14 @@ public class OrderItem {
         this.customizations = customizations;
     }
 
+    public List<OrderItemAddon> getAddons() {
+        return addons;
+    }
+
+    public void setAddons(List<OrderItemAddon> addons) {
+        this.addons = addons;
+    }
+
     public String getSpecialInstructions() {
         return specialInstructions;
     }
@@ -144,5 +158,13 @@ public class OrderItem {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Boolean getIsCustom() {
+        return isCustom;
+    }
+
+    public void setIsCustom(Boolean isCustom) {
+        this.isCustom = isCustom;
     }
 }

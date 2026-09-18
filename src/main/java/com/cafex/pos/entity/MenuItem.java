@@ -5,14 +5,16 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "menu_items")
+@Table(name = "menu_items", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"item_id", "restaurant_id"})
+})
 public class MenuItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "item_id", nullable = false, unique = true)
+    @Column(name = "item_id", nullable = false)
     private String itemId;
 
     @Column(name = "name", nullable = false)

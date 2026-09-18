@@ -50,7 +50,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         log.info("Saving new menu item: {}", menuItemRequest.getItemId());
 
         // Check if itemId already exists
-        if (menuItemRepository.existsByItemId(menuItemRequest.getItemId())) {
+        if (menuItemRepository.existsByItemIdAndRestaurantId(menuItemRequest.getItemId(), menuItemRequest.getRestaurantId())) {
             throw new ConflictException("Item ID already exists: " + menuItemRequest.getItemId());
         }
 
@@ -116,7 +116,7 @@ public class MenuItemServiceImpl implements MenuItemService {
 
         // Check itemId uniqueness if changed
         if (!existingMenuItem.getItemId().equals(menuItemRequest.getItemId()) &&
-            menuItemRepository.existsByItemId(menuItemRequest.getItemId())) {
+            menuItemRepository.existsByItemIdAndRestaurantIdAndIdNot(menuItemRequest.getItemId(), menuItemRequest.getRestaurantId(), id)) {
             throw new ConflictException("Item ID already exists: " + menuItemRequest.getItemId());
         }
 

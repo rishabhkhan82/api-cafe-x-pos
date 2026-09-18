@@ -41,12 +41,10 @@ public class NotificationsService {
             String restaurantId,
             String status,
             String type,
-            int page,
-            int size) {
+            Integer page,
+            Integer size) {
         log.info("Fetching notifications with filters - recipientId: {}, recipientRole: {}, restaurantId: {}, status: {}, type: {}, page: {}, size: {}",
                 recipientId, recipientRole, restaurantId, status, type, page, size);
-
-        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
         Specification<Notifications> spec = (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
@@ -73,6 +71,22 @@ public class NotificationsService {
 
             return predicate;
         };
+
+        List<Notifications> allNotifications;
+        if (size == null) {
+            allNotifications = notificationsRepository.findAll(spec);
+            List<NotificationResponse> content = allNotifications.stream()
+                    .map(this::convertToResponse)
+                    .collect(Collectors.toList());
+            return new NotificationPageResponse(
+                    content,
+                    1,
+                    1,
+                    allNotifications.size()
+            );
+        }
+
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
         Page<Notifications> notificationPage = notificationsRepository.findAll(spec, pageable);
 
