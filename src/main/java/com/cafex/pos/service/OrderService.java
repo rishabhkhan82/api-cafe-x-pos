@@ -16,6 +16,7 @@ import com.cafex.pos.repository.RestaurantRepository;
 import com.cafex.pos.repository.MenuItemRepository;
 import com.cafex.pos.repository.InventoryItemRepository;
 import com.cafex.pos.repository.InventoryStockLogRepository;
+import com.cafex.pos.service.OrderItemAddonService;
 import com.cafex.pos.entity.InventoryItem;
 import com.cafex.pos.entity.InventoryStockLog;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -61,6 +64,7 @@ public class OrderService {
     private final OwnerDashboardService ownerDashboardService;
     private final InventoryItemRepository inventoryItemRepository;
     private final InventoryStockLogRepository inventoryStockLogRepository;
+    private final OrderItemAddonService orderItemAddonService;
 
     public OrderResponse saveOrder(OrderRequest orderRequest) {
         log.info("Saving new order: {}", orderRequest.getOrderId());
@@ -119,6 +123,16 @@ public class OrderService {
         // Save order items
         if (orderRequest.getOrderItems() != null && !orderRequest.getOrderItems().isEmpty()) {
             for (OrderItemRequest itemRequest : orderRequest.getOrderItems()) {
+                boolean isCustom = Boolean.TRUE.equals(itemRequest.getIsCustom()) || "CUSTOM".equalsIgnoreCase(itemRequest.getCategory());
+                if (isCustom) {
+                    if (itemRequest.getMenuItemId() != null) {
+                        itemRequest.setMenuItemId(null);
+                    }
+                } else {
+                    if (itemRequest.getMenuItemId() == null) {
+                        throw new BadRequestException("Menu item ID is required for non-custom items");
+                    }
+                }
                 OrderItem orderItem = new OrderItem();
                 orderItem.setOrder(savedOrder);
 
@@ -135,7 +149,12 @@ public class OrderService {
                 orderItem.setCategory(itemRequest.getCategory());
                 orderItem.setSpecialInstructions(itemRequest.getSpecialInstructions());
                 orderItem.setStatus(itemRequest.getStatus());
-                orderItemRepository.save(orderItem);
+                orderItem.setIsCustom(isCustom);
+                OrderItem savedOrderItem = orderItemRepository.save(orderItem);
+
+                if (itemRequest.getAddons() != null && !itemRequest.getAddons().isEmpty()) {
+                    orderItemAddonService.saveAllForOrderItem(savedOrderItem, itemRequest.getAddons());
+                }
             }
         }
 
@@ -236,9 +255,9 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-    public OrderPageResponse getOrdersWithFilters(String orderId, String status, String customerName, String date, Long customerId, int page, int size) {
-        log.info("Fetching orders with filters - orderId: {}, status: {}, customerName: {}, date: {}, page: {}, size: {}",
-                orderId, status, customerName, date, page, size);
+    public OrderPageResponse getOrdersWithFilters(String orderId, String status, String customerName, String date, Long customerId, String invoiceId, int page, int size) {
+        log.info("Fetching orders with filters - orderId: {}, status: {}, customerName: {}, date: {}, customerId: {}, invoiceId: {}, page: {}, size: {}",
+                orderId, status, customerName, date, customerId, invoiceId, page, size);
 
         Pageable pageable = PageRequest.of(Math.max(0, page - 1), size);
 
@@ -282,6 +301,11 @@ public class OrderService {
             // Customer ID filter
             if (customerId != null) {
                 predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("customer").get("id"), customerId));
+            }
+
+            // Invoice ID filter
+            if (invoiceId != null && !invoiceId.trim().isEmpty()) {
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("invoiceId"), invoiceId));
             }
 
             return predicate;
@@ -339,10 +363,38 @@ public class OrderService {
         existingOrder.setUpdatedAt(LocalDateTime.now());
         existingOrder.setInvoiceId(orderRequest.getInvoiceId());
 
-        // Update order items in-place by matching ID from payload
+        // Handle order items: update existing, create new, delete removed
         if (orderRequest.getOrderItems() != null && !orderRequest.getOrderItems().isEmpty()) {
+            // Get all existing items for this order
+            List<OrderItem> existingItems = orderItemRepository.findByOrderId(id);
+            
+            // Collect IDs from payload
+            Set<Long> payloadItemIds = orderRequest.getOrderItems().stream()
+                    .map(OrderItemRequest::getId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            
+            // Delete items that are not in the payload
+            for (OrderItem existingItem : existingItems) {
+                if (!payloadItemIds.contains(existingItem.getId())) {
+                    orderItemRepository.delete(existingItem);
+                }
+            }
+            
+            // Update or create items from payload
             for (OrderItemRequest itemRequest : orderRequest.getOrderItems()) {
+                boolean isCustom = Boolean.TRUE.equals(itemRequest.getIsCustom()) || "CUSTOM".equalsIgnoreCase(itemRequest.getCategory());
+                if (isCustom) {
+                    if (itemRequest.getMenuItemId() != null) {
+                        itemRequest.setMenuItemId(null);
+                    }
+                } else {
+                    if (itemRequest.getMenuItemId() == null) {
+                        throw new BadRequestException("Menu item ID is required for non-custom items");
+                    }
+                }
                 if (itemRequest.getId() != null) {
+                    // Update existing item
                     OrderItem existingItem = orderItemRepository.findById(itemRequest.getId()).orElse(null);
                     if (existingItem != null && existingItem.getOrder().getId().equals(id)) {
                         existingItem.setStatus(itemRequest.getStatus());
@@ -352,14 +404,44 @@ public class OrderService {
                         existingItem.setMenuItemName(itemRequest.getMenuItemName());
                         existingItem.setCategory(itemRequest.getCategory());
                         existingItem.setSpecialInstructions(itemRequest.getSpecialInstructions());
+                        existingItem.setIsCustom(isCustom);
                         if (itemRequest.getMenuItemId() != null) {
                             MenuItem menuItem = menuItemRepository.findById(itemRequest.getMenuItemId()).orElse(null);
                             existingItem.setMenuItem(menuItem);
                         }
                         orderItemRepository.save(existingItem);
+
+                        orderItemAddonService.deleteByOrderItemId(existingItem.getId());
+                        if (itemRequest.getAddons() != null && !itemRequest.getAddons().isEmpty()) {
+                            orderItemAddonService.saveAllForOrderItem(existingItem, itemRequest.getAddons());
+                        }
+                    }
+                } else {
+                    // Create new item
+                    OrderItem newItem = new OrderItem();
+                    newItem.setOrder(existingOrder);
+                    if (itemRequest.getMenuItemId() != null) {
+                        MenuItem menuItem = menuItemRepository.findById(itemRequest.getMenuItemId()).orElse(null);
+                        newItem.setMenuItem(menuItem);
+                    }
+                    newItem.setMenuItemName(itemRequest.getMenuItemName());
+                    newItem.setQuantity(itemRequest.getQuantity());
+                    newItem.setUnitPrice(itemRequest.getUnitPrice());
+                    newItem.setTotalPrice(itemRequest.getTotalPrice());
+                    newItem.setCategory(itemRequest.getCategory());
+                    newItem.setSpecialInstructions(itemRequest.getSpecialInstructions());
+                    newItem.setStatus(itemRequest.getStatus());
+                    newItem.setIsCustom(isCustom);
+                    OrderItem savedNewItem = orderItemRepository.save(newItem);
+
+                    if (itemRequest.getAddons() != null && !itemRequest.getAddons().isEmpty()) {
+                        orderItemAddonService.saveAllForOrderItem(savedNewItem, itemRequest.getAddons());
                     }
                 }
             }
+        } else {
+            // If no items in payload, delete all existing items
+            orderItemRepository.deleteByOrderId(id);
         }
 
         Order updatedOrder = orderRepository.save(existingOrder);
@@ -368,7 +450,13 @@ public class OrderService {
         updatedOrder.setItems(orderItemRepository.findByOrderId(updatedOrder.getId()));
 
         OrderResponse response = convertToResponse(updatedOrder);
-        emitOrderUpdate(response, "UPDATE");
+
+        boolean shouldNotify = orderRequest.getSendNotification() == null || Boolean.TRUE.equals(orderRequest.getSendNotification());
+        if (shouldNotify) {
+            emitOrderUpdate(response, "UPDATE");
+        } else {
+            log.info("Skipping realtime notification emission for order ID: {} (send_notification=false)", id);
+        }
         eventPublisher.publishEvent(new com.cafex.pos.event.DashboardRefreshEvent(this));
         if (updatedOrder.getRestaurant() != null && updatedOrder.getRestaurant().getId() != null) {
             ownerDashboardService.emitUpdate(updatedOrder.getRestaurant().getId());
@@ -443,6 +531,8 @@ public class OrderService {
         response.setCategory(orderItem.getCategory());
         response.setSpecialInstructions(orderItem.getSpecialInstructions());
         response.setStatus(orderItem.getStatus());
+        response.setIsCustom(orderItem.getIsCustom());
+        response.setAddons(orderItemAddonService.getAddonsByOrderItemId(orderItem.getId()));
         return response;
     }
 
